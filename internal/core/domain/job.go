@@ -9,28 +9,28 @@ import (
 // Job represents an async task.
 type Job struct {
 	// ID is the auto-generated job identifier in UUID4 format.
-	ID string
+	ID string `json:"id"`
 
 	// Name is the name of the job.
-	Name string
+	Name string `json:"name"`
 
 	// Description gives some information about the job.
-	Description string
+	Description string `json:"description,omitempty"`
 
 	// Status represents the status of the job.
-	Status JobStatus
+	Status JobStatus `json:"status"`
 
 	// FailureReason holds the error message that led to the job failure, if any.
-	FailureReason string
+	FailureReason string `json:"failure_reason,omitempty"`
 
 	// CreatedAt is the UTC timestamp of the job creation.
-	CreatedAt *time.Time
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 
 	// StartedAt is the UTC timestamp of the moment the job started.
-	StartedAt *time.Time
+	StartedAt *time.Time `json:"started_at,omitempty"`
 
 	// CompletedAt is the UTC timestamp of the moment the job finished.
-	CompletedAt *time.Time
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
 }
 
 // MarkStarted updates the status and timestamp at the moment the job started.
