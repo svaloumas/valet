@@ -18,7 +18,7 @@ const (
 
 // String converts the type to a string.
 func (js JobStatus) String() string {
-	return [...]string{"PENDING", "IN_PROGRESS", "COMPLETED", "FAILED", "POSTPONED"}[js-1]
+	return [...]string{"PENDING", "IN_PROGRESS", "COMPLETED", "FAILED"}[js-1]
 }
 
 // Index returns the integer representation of a JobStatus.
