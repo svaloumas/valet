@@ -2,14 +2,15 @@ package jobsrv
 
 import (
 	"time"
+
 	"valet/internal/core/domain"
 	"valet/internal/core/ports"
+	uuidgen "valet/pkg"
 )
 
 type service struct {
 	jobRepository ports.JobRepository
-	// Implement this.
-	uuidGen string
+	uuidGen       uuidgen.UUIDGen
 }
 
 // New creates a new job service.
@@ -19,9 +20,13 @@ func New(jobRepository ports.JobRepository) *service {
 
 // Create creates a new job.
 func (srv *service) Create(name, description string) (*domain.Job, error) {
+	uuid, err := srv.uuidGen.GenerateRandomUUIDString()
+	if err != nil {
+		return nil, err
+	}
 	createdAt := time.Now()
 	j := &domain.Job{
-		ID:          srv.uuidGen,
+		ID:          uuid,
 		Name:        name,
 		Description: description,
 		Status:      domain.Pending,
