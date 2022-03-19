@@ -10,6 +10,10 @@ type UUIDGenerator interface {
 
 type UUIDGen struct{}
 
+func New() UUIDGenerator {
+	return &UUIDGen{}
+}
+
 func (u *UUIDGen) GenerateRandomUUIDString() (string, error) {
 	uuid, err := uuid.NewRandom()
 	if err != nil {
