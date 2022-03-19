@@ -13,24 +13,27 @@ type service struct {
 }
 
 // New creates a new job service.
-func New() *service {
-	return &service{}
+func New(jobRepository ports.JobRepository) *service {
+	return &service{jobRepository: jobRepository}
 }
 
 // Create creates a new job.
-func (srv *service) Create(name, description string) error {
+func (srv *service) Create(name, description string) (*domain.Job, error) {
 	createdAt := time.Now()
-	job := &domain.Job{
+	j := &domain.Job{
 		ID:          srv.uuidGen,
 		Name:        name,
 		Description: description,
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
-	if err := job.Validate(); err != nil {
-		return err
+	if err := j.Validate(); err != nil {
+		return nil, err
 	}
-	return srv.jobRepository.Create(job)
+	if err := srv.jobRepository.Create(j); err != nil {
+		return nil, err
+	}
+	return j, nil
 }
 
 // Get fetches a job.
