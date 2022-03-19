@@ -1,21 +1,27 @@
 package jobsrv
 
 import (
-	"time"
-
 	"valet/internal/core/domain"
 	"valet/internal/core/ports"
-	uuidgen "valet/pkg"
+	"valet/pkg/time"
+	"valet/pkg/uuidgen"
 )
 
 type service struct {
 	jobRepository ports.JobRepository
-	uuidGen       uuidgen.UUIDGen
+	uuidGen       uuidgen.UUIDGenerator
+	time          time.Time
 }
 
 // New creates a new job service.
-func New(jobRepository ports.JobRepository) *service {
-	return &service{jobRepository: jobRepository}
+func New(jobRepository ports.JobRepository,
+	uuidGen uuidgen.UUIDGenerator,
+	time time.Time) *service {
+	return &service{
+		jobRepository: jobRepository,
+		uuidGen:       uuidGen,
+		time:          time,
+	}
 }
 
 // Create creates a new job.
@@ -24,7 +30,7 @@ func (srv *service) Create(name, description string) (*domain.Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	createdAt := time.Now()
+	createdAt := srv.time.Now()
 	j := &domain.Job{
 		ID:          uuid,
 		Name:        name,
