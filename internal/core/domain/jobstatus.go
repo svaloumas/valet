@@ -14,11 +14,16 @@ const (
 	InProgress                  // 2
 	Completed                   // 3
 	Failed                      // 4
+
+	PENDING     = "PENDING"
+	IN_PROGRESS = "IN_PROGRESS"
+	COMPLETED   = "COMPLETED"
+	FAILED      = "FAILED"
 )
 
 // String converts the type to a string.
 func (js JobStatus) String() string {
-	return [...]string{"PENDING", "IN_PROGRESS", "COMPLETED", "FAILED"}[js-1]
+	return [...]string{PENDING, IN_PROGRESS, COMPLETED, FAILED}[js-1]
 }
 
 // Index returns the integer representation of a JobStatus.
@@ -35,10 +40,10 @@ func (js *JobStatus) MarshalJSON() ([]byte, error) {
 func (js *JobStatus) UnmarshalJSON(data []byte) error {
 	var err error
 	jobStatuses := map[string]JobStatus{
-		"PEDNING":     Pending,
-		"IN_PROGRESS": InProgress,
-		"COMPLETED":   Completed,
-		"FAILED":      Failed,
+		PENDING:     Pending,
+		IN_PROGRESS: InProgress,
+		COMPLETED:   Completed,
+		FAILED:      Failed,
 	}
 
 	unquotedJobStatus, err := strconv.Unquote(string(data))
