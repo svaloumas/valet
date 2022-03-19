@@ -7,11 +7,14 @@ import (
 // JobRepository represents the driven actors interface.
 type JobRepository interface {
 	// Create creates a new job to the repository.
-	Create(*domain.Job) error
+	Create(j *domain.Job) error
+
 	// Get fetches a job from the repository.
 	Get(id string) (*domain.Job, error)
+
 	// Update updates a job to the repository.
-	Update(*domain.Job) error
+	Update(id string, j *domain.Job) error
+
 	// Delete deletes a job from the repository.
 	Delete(id string) error
 }
@@ -19,9 +22,11 @@ type JobRepository interface {
 // JobService represents the driver actors interface.
 type JobService interface {
 	// Create creates a new job.
-	Create(name, description string) error
+	Create(name, description string) (*domain.Job, error)
+
 	// Get fetches a job.
-	Get(id string) *domain.Job
+	Get(id string) (*domain.Job, error)
+
 	// Delete deletes a job.
 	Delete(id string) error
 }
