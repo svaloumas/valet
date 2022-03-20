@@ -26,6 +26,7 @@ var (
 	jobQueueCapacity = 100
 	wpConcurrency    = runtime.NumCPU() / 2
 	wpBacklog        = wpConcurrency * 2
+	tickInterval     = 500 * time.Millisecond
 )
 
 func main() {
@@ -34,11 +35,13 @@ func main() {
 	wp := workerpool.NewWorkerPoolImpl(wpConcurrency, wpBacklog, task)
 	wp.Start()
 
+	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
+
 	jobRepository := jobrepo.NewMemDB()
 	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
 	jobService := jobsrv.New(jobRepository, jobQueue, uuidgen.New(), rtime.New())
 
-	jobTransmitter := workerpool.NewTransmitter(jobQueue, wp)
+	jobTransmitter := workerpool.NewTransmitter(jobQueue, wp, int(tickInterval))
 	go jobTransmitter.Transmit()
 
 	jobHandhler := jobhdl.NewHTTPHandler(jobService)
@@ -55,19 +58,23 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			log.Printf("[http] %s", err)
+			logger.Printf("%s", err)
 		}
 	}()
 
 	gracefulTerm := make(chan os.Signal, 1)
 	signal.Notify(gracefulTerm, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-gracefulTerm
-	log.Printf("[http] server notified %+v", sig)
+	logger.Printf("server notified %+v", sig)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("[http] failed to properly shutdown the server:", err)
+		logger.Fatal("failed to properly shutdown the server:", err)
 	}
-	log.Println("[http] server exiting...")
+	logger.Println("server exiting...")
+
+	jobTransmitter.Stop()
+	jobQueue.Close()
+	wp.Stop()
 }

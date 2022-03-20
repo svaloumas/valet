@@ -1,6 +1,9 @@
 package jobqueue
 
-import "valet/internal/core/domain"
+import (
+	"log"
+	"valet/internal/core/domain"
+)
 
 type fifoqueue struct {
 	jobs     chan *domain.Job
@@ -26,10 +29,11 @@ func (q *fifoqueue) Push(j *domain.Job) bool {
 }
 
 // Pop removes and returns the head job from the queue.
-func (q *fifoqueue) Pop() *domain.Job {
-	return <-q.jobs
+func (q *fifoqueue) Pop() <-chan *domain.Job {
+	return q.jobs
 }
 
 func (q *fifoqueue) Close() {
 	close(q.jobs)
+	log.Println("[job-queue] exiting...")
 }

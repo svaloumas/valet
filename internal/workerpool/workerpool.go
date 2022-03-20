@@ -3,6 +3,7 @@ package workerpool
 import (
 	"fmt"
 	"log"
+	"os"
 	"sync"
 
 	"valet/internal/core/domain"
@@ -47,17 +48,20 @@ type WorkerPoolImpl struct {
 	// tasks to the pool will return an error.
 	backlog int
 
-	queue chan workItem
-	wg    sync.WaitGroup
+	queue  chan workItem
+	wg     sync.WaitGroup
+	logger log.Logger
 }
 
 // NewWorkerPoolImpl initializes and returns a new worker pool.
 func NewWorkerPoolImpl(concurrency, backlog int, task ports.Task) *WorkerPoolImpl {
+	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
 	return &WorkerPoolImpl{
 		task:        task,
 		concurrency: concurrency,
 		backlog:     backlog,
 		queue:       make(chan workItem, backlog),
+		logger:      *logger,
 	}
 }
 
@@ -66,7 +70,7 @@ func (wp *WorkerPoolImpl) Start() {
 		wp.wg.Add(1)
 		go wp.schedule(i, wp.queue, &wp.wg)
 	}
-	log.Printf("[worker-pool] Set up %d workers with a queue of backlog %d", wp.concurrency, wp.backlog)
+	wp.logger.Printf("set up %d workers with a queue of backlog %d", wp.concurrency, wp.backlog)
 }
 
 // Send schedules the job. An error is returned if the job backlog is full.
@@ -88,24 +92,26 @@ func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
 // Stop signals the workers to stop working gracefully.
 func (wp *WorkerPoolImpl) Stop() {
 	close(wp.queue)
+	wp.logger.Println("waiting for ongoing tasks to finish...")
 	wp.wg.Wait()
+	wp.logger.Println("exiting...")
 }
 
 func (wp *WorkerPoolImpl) schedule(id int, queue <-chan workItem, wg *sync.WaitGroup) {
 	defer wg.Done()
-	logPrefix := fmt.Sprintf("[worker %d", id)
+	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
-		log.Printf("%s executing work...", logPrefix)
+		wp.logger.Printf("%s executing work...", logPrefix)
 		metadata, err := wp.task.Run(item.job)
 
 		select {
 		case item.resultQueue <- WorkResult{Metadata: metadata, Error: err}:
-			log.Printf("%s task finished!", logPrefix)
+			wp.logger.Printf("%s task finished!", logPrefix)
 		default:
 			// This should never happen as the result queue chan should be unique for this worker.
-			log.Panicf("%s failed to write result to the result queue channel", logPrefix)
+			wp.logger.Panicf("%s failed to write result to the result queue channel", logPrefix)
 		}
 		close(item.resultQueue)
 	}
-	log.Printf("%s exiting...", logPrefix)
+	wp.logger.Printf("%s exiting...", logPrefix)
 }
