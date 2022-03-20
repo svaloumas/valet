@@ -21,7 +21,7 @@ type JobQueue interface {
 	// Push adds a job to the queue. Returns false if queue is full.
 	Push(j *domain.Job) bool
 	// Pop removes and returns the head job from the queue.
-	Pop() *domain.Job
+	Pop() <-chan *domain.Job
 }
 
 // WorkerPool represents a driven actor worker pool interface.
@@ -42,6 +42,8 @@ type Task interface {
 type Transmitter interface {
 	// Transmit transmits the job from the job queue to the worker pool.
 	Transmit()
+	// Stop stops the transmitter.
+	Stop()
 }
 
 // JobService represents a driver actor service interface.
