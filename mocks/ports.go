@@ -91,6 +91,191 @@ func (mr *MockJobRepositoryMockRecorder) Update(id, j interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockJobRepository)(nil).Update), id, j)
 }
 
+// MockJobQueue is a mock of JobQueue interface.
+type MockJobQueue struct {
+	ctrl     *gomock.Controller
+	recorder *MockJobQueueMockRecorder
+}
+
+// MockJobQueueMockRecorder is the mock recorder for MockJobQueue.
+type MockJobQueueMockRecorder struct {
+	mock *MockJobQueue
+}
+
+// NewMockJobQueue creates a new mock instance.
+func NewMockJobQueue(ctrl *gomock.Controller) *MockJobQueue {
+	mock := &MockJobQueue{ctrl: ctrl}
+	mock.recorder = &MockJobQueueMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockJobQueue) EXPECT() *MockJobQueueMockRecorder {
+	return m.recorder
+}
+
+// Pop mocks base method.
+func (m *MockJobQueue) Pop() *domain.Job {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Pop")
+	ret0, _ := ret[0].(*domain.Job)
+	return ret0
+}
+
+// Pop indicates an expected call of Pop.
+func (mr *MockJobQueueMockRecorder) Pop() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pop", reflect.TypeOf((*MockJobQueue)(nil).Pop))
+}
+
+// Push mocks base method.
+func (m *MockJobQueue) Push(j *domain.Job) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Push", j)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Push indicates an expected call of Push.
+func (mr *MockJobQueueMockRecorder) Push(j interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Push", reflect.TypeOf((*MockJobQueue)(nil).Push), j)
+}
+
+// MockWorkerPool is a mock of WorkerPool interface.
+type MockWorkerPool struct {
+	ctrl     *gomock.Controller
+	recorder *MockWorkerPoolMockRecorder
+}
+
+// MockWorkerPoolMockRecorder is the mock recorder for MockWorkerPool.
+type MockWorkerPoolMockRecorder struct {
+	mock *MockWorkerPool
+}
+
+// NewMockWorkerPool creates a new mock instance.
+func NewMockWorkerPool(ctrl *gomock.Controller) *MockWorkerPool {
+	mock := &MockWorkerPool{ctrl: ctrl}
+	mock.recorder = &MockWorkerPoolMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockWorkerPool) EXPECT() *MockWorkerPoolMockRecorder {
+	return m.recorder
+}
+
+// Send mocks base method.
+func (m *MockWorkerPool) Send(j *domain.Job) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Send", j)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Send indicates an expected call of Send.
+func (mr *MockWorkerPoolMockRecorder) Send(j interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockWorkerPool)(nil).Send), j)
+}
+
+// Start mocks base method.
+func (m *MockWorkerPool) Start() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Start")
+}
+
+// Start indicates an expected call of Start.
+func (mr *MockWorkerPoolMockRecorder) Start() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockWorkerPool)(nil).Start))
+}
+
+// Stop mocks base method.
+func (m *MockWorkerPool) Stop() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Stop")
+}
+
+// Stop indicates an expected call of Stop.
+func (mr *MockWorkerPoolMockRecorder) Stop() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockWorkerPool)(nil).Stop))
+}
+
+// MockTask is a mock of Task interface.
+type MockTask struct {
+	ctrl     *gomock.Controller
+	recorder *MockTaskMockRecorder
+}
+
+// MockTaskMockRecorder is the mock recorder for MockTask.
+type MockTaskMockRecorder struct {
+	mock *MockTask
+}
+
+// NewMockTask creates a new mock instance.
+func NewMockTask(ctrl *gomock.Controller) *MockTask {
+	mock := &MockTask{ctrl: ctrl}
+	mock.recorder = &MockTaskMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTask) EXPECT() *MockTaskMockRecorder {
+	return m.recorder
+}
+
+// Run mocks base method.
+func (m *MockTask) Run(j *domain.Job) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Run", j)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Run indicates an expected call of Run.
+func (mr *MockTaskMockRecorder) Run(j interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockTask)(nil).Run), j)
+}
+
+// MockTransmitter is a mock of Transmitter interface.
+type MockTransmitter struct {
+	ctrl     *gomock.Controller
+	recorder *MockTransmitterMockRecorder
+}
+
+// MockTransmitterMockRecorder is the mock recorder for MockTransmitter.
+type MockTransmitterMockRecorder struct {
+	mock *MockTransmitter
+}
+
+// NewMockTransmitter creates a new mock instance.
+func NewMockTransmitter(ctrl *gomock.Controller) *MockTransmitter {
+	mock := &MockTransmitter{ctrl: ctrl}
+	mock.recorder = &MockTransmitterMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTransmitter) EXPECT() *MockTransmitterMockRecorder {
+	return m.recorder
+}
+
+// Transmit mocks base method.
+func (m *MockTransmitter) Transmit() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Transmit")
+}
+
+// Transmit indicates an expected call of Transmit.
+func (mr *MockTransmitterMockRecorder) Transmit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transmit", reflect.TypeOf((*MockTransmitter)(nil).Transmit))
+}
+
 // MockJobService is a mock of JobService interface.
 type MockJobService struct {
 	ctrl     *gomock.Controller
