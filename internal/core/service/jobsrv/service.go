@@ -29,7 +29,7 @@ func New(jobRepository port.JobRepository,
 }
 
 // Create creates a new job.
-func (srv *jobservice) Create(name, description string) (*domain.Job, error) {
+func (srv *jobservice) Create(name, description string, metadata interface{}) (*domain.Job, error) {
 	uuid, err := srv.uuidGen.GenerateRandomUUIDString()
 	if err != nil {
 		return nil, err
@@ -39,6 +39,7 @@ func (srv *jobservice) Create(name, description string) (*domain.Job, error) {
 		ID:          uuid,
 		Name:        name,
 		Description: description,
+		Metadata:    metadata,
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}

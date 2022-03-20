@@ -7,6 +7,7 @@ import (
 	"time"
 	"valet/internal/core/domain"
 	"valet/internal/core/service"
+	"valet/internal/workerpool/task"
 	"valet/mocks"
 
 	"github.com/golang/mock/gomock"
@@ -28,6 +29,7 @@ func TestCreateErrorCases(t *testing.T) {
 		ID:          "auuid4",
 		Name:        "job_name",
 		Description: "some description",
+		Metadata:    task.NewDummyMetadata(),
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
@@ -92,7 +94,7 @@ func TestCreateErrorCases(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		_, err := service.Create(tt.name, expectedJob.Description)
+		_, err := service.Create(tt.name, expectedJob.Description, expectedJob.Metadata)
 		if err == nil {
 			t.Error("service created expected error, returned nil instead")
 		}
@@ -118,6 +120,7 @@ func TestCreate(t *testing.T) {
 		ID:          "auuid4",
 		Name:        "job_name",
 		Description: "some description",
+		Metadata:    task.NewDummyMetadata(),
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
@@ -144,7 +147,7 @@ func TestCreate(t *testing.T) {
 		Times(1)
 
 	service := New(jobRepository, jobQueue, uuidGen, freezed)
-	j, err := service.Create(expectedJob.Name, expectedJob.Description)
+	j, err := service.Create(expectedJob.Name, expectedJob.Description, expectedJob.Metadata)
 	if err != nil {
 		t.Errorf("create service returned unexpected error: %#v", err)
 	}

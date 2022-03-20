@@ -33,7 +33,7 @@ type Job struct {
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
 
 	// Metadata is the payload provided for the specific job.
-	Metadata interface{} `json:"metadata,omitempty"`
+	Metadata interface{} `json:"metadata"`
 }
 
 // MarkStarted updates the status and timestamp at the moment the job started.

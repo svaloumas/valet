@@ -34,11 +34,6 @@ type WorkerPool interface {
 	Send(j *domain.Job) error
 }
 
-type Task interface {
-	// Run performs a given task.
-	Run(j *domain.Job) ([]byte, error)
-}
-
 type Transmitter interface {
 	// Transmit transmits the job from the job queue to the worker pool.
 	Transmit()
@@ -49,11 +44,22 @@ type Transmitter interface {
 // JobService represents a driver actor service interface.
 type JobService interface {
 	// Create creates a new job.
-	Create(name, description string) (*domain.Job, error)
+	Create(name, description string, metadata interface{}) (*domain.Job, error)
 	// Get fetches a job.
 	Get(id string) (*domain.Job, error)
 	// Update updates a job.
 	Update(id, name, description string) error
 	// Delete deletes a job.
 	Delete(id string) error
+}
+
+type Task interface {
+	// Run performs a given task.
+	Run(j *domain.Job) ([]byte, error)
+}
+
+type Metadata interface {
+	// TaskMetadata is a placeholder method
+	// for the metadata types to implement.
+	TaskMetadata()
 }
