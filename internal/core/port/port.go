@@ -1,4 +1,4 @@
-package ports
+package port
 
 import (
 	"valet/internal/core/domain"

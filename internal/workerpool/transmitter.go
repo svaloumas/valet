@@ -4,18 +4,18 @@ import (
 	"log"
 	"os"
 	"time"
-	"valet/internal/core/ports"
+	"valet/internal/core/port"
 )
 
 type jobtransmitter struct {
-	jobQueue     ports.JobQueue
-	wp           ports.WorkerPool
+	jobQueue     port.JobQueue
+	wp           port.WorkerPool
 	done         chan struct{}
 	tickInterval int
 }
 
 // NewTransmitter initializes and returns a new transmitter concrete implementation.
-func NewTransmitter(jobQueue ports.JobQueue, wp ports.WorkerPool, tickInterval int) *jobtransmitter {
+func NewTransmitter(jobQueue port.JobQueue, wp port.WorkerPool, tickInterval int) *jobtransmitter {
 	return &jobtransmitter{
 		jobQueue:     jobQueue,
 		wp:           wp,
@@ -35,10 +35,12 @@ func (t *jobtransmitter) Transmit() {
 			return
 		case j := <-t.jobQueue.Pop():
 			// TODO: revisit this.
+			logger.Printf("sending job with ID: %s to worker pool", j.ID)
 			err := t.wp.Send(j)
 			if err != nil {
+				logger.Print("worker pool backlog is full, pushing job back to queue")
 				if ok := t.jobQueue.Push(j); !ok {
-					logger.Printf("job queue is full - try again later")
+					logger.Print("job queue is full - try again later")
 				}
 			}
 		case <-ticker.C:

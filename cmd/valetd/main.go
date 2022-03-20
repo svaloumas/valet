@@ -12,11 +12,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"valet/internal/core/services/jobsrv"
-	"valet/internal/handlers/jobhdl"
-	"valet/internal/repositories/jobqueue"
-	"valet/internal/repositories/jobrepo"
+	"valet/internal/core/service/jobsrv"
+	"valet/internal/handler/jobhdl"
+	"valet/internal/repository/jobqueue"
+	"valet/internal/repository/jobrepo"
 	"valet/internal/workerpool"
+	"valet/internal/workerpool/task"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
 )
@@ -30,7 +31,7 @@ var (
 )
 
 func main() {
-	task := workerpool.NewDummyTask()
+	task := task.NewDummyTask()
 
 	wp := workerpool.NewWorkerPoolImpl(wpConcurrency, wpBacklog, task)
 	wp.Start()

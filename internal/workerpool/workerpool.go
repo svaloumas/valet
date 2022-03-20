@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"valet/internal/core/domain"
-	"valet/internal/core/ports"
+	"valet/internal/core/port"
 )
 
 // WorkResult contains the result of a job.
@@ -41,7 +41,7 @@ type workItem struct {
 // WorkerPoolImpl is a concrete implementation of WorkerPool.
 type WorkerPoolImpl struct {
 	// The type of task that should be run.
-	task ports.Task
+	task port.Task
 	// The fixed amount of goroutines that will be handling running jobs.
 	concurrency int
 	// The maximum capacity of the worker pool queue. If exceeded, sending new
@@ -50,18 +50,18 @@ type WorkerPoolImpl struct {
 
 	queue  chan workItem
 	wg     sync.WaitGroup
-	logger log.Logger
+	logger *log.Logger
 }
 
 // NewWorkerPoolImpl initializes and returns a new worker pool.
-func NewWorkerPoolImpl(concurrency, backlog int, task ports.Task) *WorkerPoolImpl {
+func NewWorkerPoolImpl(concurrency, backlog int, task port.Task) *WorkerPoolImpl {
 	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
 	return &WorkerPoolImpl{
 		task:        task,
 		concurrency: concurrency,
 		backlog:     backlog,
 		queue:       make(chan workItem, backlog),
-		logger:      *logger,
+		logger:      logger,
 	}
 }
 

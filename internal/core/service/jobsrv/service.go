@@ -2,25 +2,25 @@ package jobsrv
 
 import (
 	"valet/internal/core/domain"
-	"valet/internal/core/ports"
-	"valet/internal/core/services"
+	"valet/internal/core/port"
+	"valet/internal/core/service"
 	"valet/pkg/time"
 	"valet/pkg/uuidgen"
 )
 
-type service struct {
-	jobRepository ports.JobRepository
-	jobQueue      ports.JobQueue
+type jobservice struct {
+	jobRepository port.JobRepository
+	jobQueue      port.JobQueue
 	uuidGen       uuidgen.UUIDGenerator
 	time          time.Time
 }
 
 // New creates a new job service.
-func New(jobRepository ports.JobRepository,
-	jobQueue ports.JobQueue,
+func New(jobRepository port.JobRepository,
+	jobQueue port.JobQueue,
 	uuidGen uuidgen.UUIDGenerator,
-	time time.Time) *service {
-	return &service{
+	time time.Time) *jobservice {
+	return &jobservice{
 		jobRepository: jobRepository,
 		jobQueue:      jobQueue,
 		uuidGen:       uuidGen,
@@ -29,7 +29,7 @@ func New(jobRepository ports.JobRepository,
 }
 
 // Create creates a new job.
-func (srv *service) Create(name, description string) (*domain.Job, error) {
+func (srv *jobservice) Create(name, description string) (*domain.Job, error) {
 	uuid, err := srv.uuidGen.GenerateRandomUUIDString()
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (srv *service) Create(name, description string) (*domain.Job, error) {
 		return nil, err
 	}
 	if ok := srv.jobQueue.Push(j); !ok {
-		return nil, &services.FullQueueErr{}
+		return nil, &service.FullQueueErr{}
 	}
 	if err := srv.jobRepository.Create(j); err != nil {
 		return nil, err
@@ -55,12 +55,12 @@ func (srv *service) Create(name, description string) (*domain.Job, error) {
 }
 
 // Get fetches a job.
-func (srv *service) Get(id string) (*domain.Job, error) {
+func (srv *jobservice) Get(id string) (*domain.Job, error) {
 	return srv.jobRepository.Get(id)
 }
 
 // Update updates a job.
-func (srv *service) Update(id, name, description string) error {
+func (srv *jobservice) Update(id, name, description string) error {
 	j, err := srv.jobRepository.Get(id)
 	if err != nil {
 		return err
@@ -71,6 +71,6 @@ func (srv *service) Update(id, name, description string) error {
 }
 
 // Delete deletes a job.
-func (srv *service) Delete(id string) error {
+func (srv *jobservice) Delete(id string) error {
 	return srv.jobRepository.Delete(id)
 }

@@ -6,15 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
-	"valet/internal/core/ports"
-	"valet/internal/repositories"
+	"valet/internal/core/port"
+	"valet/internal/repository"
 )
 
 type HTTPHandler struct {
-	jobService ports.JobService
+	jobService port.JobService
 }
 
-func NewHTTPHandler(jobService ports.JobService) *HTTPHandler {
+func NewHTTPHandler(jobService port.JobService) *HTTPHandler {
 	return &HTTPHandler{
 		jobService: jobService,
 	}
@@ -35,7 +35,7 @@ func (hdl *HTTPHandler) Create(c *gin.Context) {
 
 func (hdl *HTTPHandler) Get(c *gin.Context) {
 	j, err := hdl.jobService.Get(c.Param("id"))
-	if err != nil && xerrors.Is(err, &repositories.NotFoundError{}) {
+	if err != nil && xerrors.Is(err, &repository.NotFoundError{}) {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 		return
 	}
@@ -51,7 +51,7 @@ func (hdl *HTTPHandler) Update(c *gin.Context) {
 	c.BindJSON(&body)
 
 	err := hdl.jobService.Update(c.Param("id"), body.Name, body.Description)
-	if err != nil && xerrors.Is(err, &repositories.NotFoundError{}) {
+	if err != nil && xerrors.Is(err, &repository.NotFoundError{}) {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 		return
 	}
@@ -64,7 +64,7 @@ func (hdl *HTTPHandler) Update(c *gin.Context) {
 func (hdl *HTTPHandler) Delete(c *gin.Context) {
 	err := hdl.jobService.Delete(c.Param("id"))
 	if err != nil {
-		if xerrors.Is(err, &repositories.NotFoundError{}) {
+		if xerrors.Is(err, &repository.NotFoundError{}) {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
 		}
