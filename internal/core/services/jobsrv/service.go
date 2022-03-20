@@ -52,6 +52,17 @@ func (srv *service) Get(id string) (*domain.Job, error) {
 	return srv.jobRepository.Get(id)
 }
 
+// Update updates a job.
+func (srv *service) Update(id, name, description string) error {
+	j, err := srv.jobRepository.Get(id)
+	if err != nil {
+		return err
+	}
+	j.Name = name
+	j.Description = description
+	return srv.jobRepository.Update(id, j)
+}
+
 // Delete deletes a job.
 func (srv *service) Delete(id string) error {
 	return srv.jobRepository.Delete(id)

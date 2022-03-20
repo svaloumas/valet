@@ -27,6 +27,9 @@ type JobService interface {
 	// Get fetches a job.
 	Get(id string) (*domain.Job, error)
 
+	// Update updates a job.
+	Update(id, name, description string) error
+
 	// Delete deletes a job.
 	Delete(id string) error
 }

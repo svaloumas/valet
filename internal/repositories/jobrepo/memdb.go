@@ -35,12 +35,9 @@ func (repo *memdb) Get(id string) (*domain.Job, error) {
 }
 
 func (repo *memdb) Update(id string, j *domain.Job) error {
-	if _, ok := repo.db[id]; !ok {
-		return &repositories.NotFoundError{ID: id, ResourceName: "job"}
-	}
 	serializedJob, err := json.Marshal(j)
 	if err != nil {
-		return nil
+		return err
 	}
 	repo.db[j.ID] = serializedJob
 	return nil

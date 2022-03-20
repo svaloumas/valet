@@ -4,16 +4,16 @@ import (
 	"valet/internal/core/domain"
 )
 
-// CreateBody is the DTO for a job creation.
-type CreateBody struct {
+// BodyDTO is the data transfer object used for a job creation or update.
+type BodyDTO struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-// CreateResponse is the response DTO for a job creation.
-type CreateResponse *domain.Job
+// ResponseDTO is the response data transfer object used for a job creation or update.
+type ResponseDTO *domain.Job
 
-// BuildCreateResponse creates a new CreateResponse.
-func BuildCreateResponse(resource *domain.Job) CreateResponse {
-	return CreateResponse(resource)
+// BuildResponseDTO creates a new ResponseDTO.
+func BuildResponseDTO(resource *domain.Job) ResponseDTO {
+	return ResponseDTO(resource)
 }

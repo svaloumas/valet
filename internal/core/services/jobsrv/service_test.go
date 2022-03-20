@@ -127,3 +127,214 @@ func TestCreate(t *testing.T) {
 		t.Errorf("create service returned wrong job, got %#v want %#v", j, expectedJob)
 	}
 }
+
+func TestGet(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mocks.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	createdAt := freezed.Now()
+	expectedJob := &domain.Job{
+		ID:          "auuid4",
+		Name:        "job_name",
+		Description: "some description",
+		Status:      domain.Pending,
+		CreatedAt:   &createdAt,
+	}
+
+	jobRepositoryErr := errors.New("some repository error")
+	invalidID := "invalid_id"
+	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
+
+	jobRepository := mocks.NewMockJobRepository(ctrl)
+	jobRepository.
+		EXPECT().
+		Get(expectedJob.ID).
+		Return(expectedJob, nil).
+		Times(1)
+	jobRepository.
+		EXPECT().
+		Get(invalidID).
+		Return(nil, jobRepositoryErr).
+		Times(1)
+
+	service := New(jobRepository, uuidGen, freezed)
+
+	tests := []struct {
+		id  string
+		err error
+	}{
+		{
+			expectedJob.ID,
+			nil,
+		},
+		{
+			invalidID,
+			jobRepositoryErr,
+		},
+	}
+
+	for _, tt := range tests {
+		j, err := service.Get(tt.id)
+		if err != nil {
+			if err.Error() != tt.err.Error() {
+				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+			}
+		} else {
+			if eq := reflect.DeepEqual(j, expectedJob); !eq {
+				t.Errorf("service get returned wrong job: got %#v want %#v", j, expectedJob)
+			}
+		}
+	}
+}
+
+func TestDelete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mocks.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	createdAt := freezed.Now()
+	expectedJob := &domain.Job{
+		ID:          "auuid4",
+		Name:        "job_name",
+		Description: "some description",
+		Status:      domain.Pending,
+		CreatedAt:   &createdAt,
+	}
+
+	invalidID := "invalid_id"
+	jobRepositoryErr := errors.New("some repository error")
+	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
+
+	jobRepository := mocks.NewMockJobRepository(ctrl)
+	jobRepository.
+		EXPECT().
+		Delete(expectedJob.ID).
+		Return(nil).
+		Times(1)
+	jobRepository.
+		EXPECT().
+		Delete(invalidID).
+		Return(jobRepositoryErr).
+		Times(1)
+
+	service := New(jobRepository, uuidGen, freezed)
+
+	tests := []struct {
+		id  string
+		err error
+	}{
+		{
+			expectedJob.ID,
+			nil,
+		},
+		{
+			invalidID,
+			jobRepositoryErr,
+		},
+	}
+
+	for _, tt := range tests {
+		err := service.Delete(tt.id)
+		if err != nil {
+			if err.Error() != tt.err.Error() {
+				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+			}
+		}
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mocks.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	createdAt := freezed.Now()
+	expectedJob := &domain.Job{
+		ID:          "auuid4",
+		Name:        "job_name",
+		Description: "some description",
+		Status:      domain.Pending,
+		CreatedAt:   &createdAt,
+	}
+
+	updatedJob := &domain.Job{}
+	*updatedJob = *expectedJob
+	updatedJob.Name = "updated job_name"
+	updatedJob.Description = "updated description"
+
+	invalidID := "invalid_id"
+
+	jobRepositoryErr := errors.New("some job repository error")
+
+	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
+
+	jobRepository := mocks.NewMockJobRepository(ctrl)
+	jobRepository.
+		EXPECT().
+		Get(expectedJob.ID).
+		Return(expectedJob, nil).
+		Times(2)
+	jobRepository.
+		EXPECT().
+		Update(expectedJob.ID, updatedJob).
+		Return(jobRepositoryErr).
+		Times(1)
+	jobRepository.
+		EXPECT().
+		Update(expectedJob.ID, updatedJob).
+		Return(nil).
+		Times(1)
+	jobRepository.
+		EXPECT().
+		Get(invalidID).
+		Return(nil, jobRepositoryErr).
+		Times(1)
+
+	service := New(jobRepository, uuidGen, freezed)
+
+	tests := []struct {
+		id  string
+		err error
+	}{
+		{
+			expectedJob.ID,
+			jobRepositoryErr,
+		},
+		{
+			expectedJob.ID,
+			nil,
+		},
+		{
+			invalidID,
+			jobRepositoryErr,
+		},
+	}
+
+	for _, tt := range tests {
+		err := service.Update(tt.id, updatedJob.Name, updatedJob.Description)
+		if err != nil {
+			if err.Error() != tt.err.Error() {
+				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+			}
+		}
+	}
+}

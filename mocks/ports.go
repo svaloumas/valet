@@ -157,3 +157,17 @@ func (mr *MockJobServiceMockRecorder) Get(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockJobService)(nil).Get), id)
 }
+
+// Update mocks base method.
+func (m *MockJobService) Update(id, name, description string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", id, name, description)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockJobServiceMockRecorder) Update(id, name, description interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockJobService)(nil).Update), id, name, description)
+}

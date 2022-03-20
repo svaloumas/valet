@@ -21,7 +21,7 @@ func NewHTTPHandler(jobService ports.JobService) *HTTPHandler {
 }
 
 func (hdl *HTTPHandler) Create(c *gin.Context) {
-	body := CreateBody{}
+	body := BodyDTO{}
 	c.BindJSON(&body)
 
 	j, err := hdl.jobService.Create(body.Name, body.Description)
@@ -30,20 +30,35 @@ func (hdl *HTTPHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusAccepted, BuildCreateResponse(j))
+	c.JSON(http.StatusAccepted, BuildResponseDTO(j))
 }
 
 func (hdl *HTTPHandler) Get(c *gin.Context) {
 	j, err := hdl.jobService.Get(c.Param("id"))
+	if err != nil && xerrors.Is(err, &repositories.NotFoundError{}) {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		return
+	}
 	if err != nil {
-		if xerrors.Is(err, &repositories.NotFoundError{}) {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
-			return
-		}
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, j)
+}
+
+func (hdl *HTTPHandler) Update(c *gin.Context) {
+	body := BodyDTO{}
+	c.BindJSON(&body)
+
+	err := hdl.jobService.Update(c.Param("id"), body.Name, body.Description)
+	if err != nil && xerrors.Is(err, &repositories.NotFoundError{}) {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+		return
+	}
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
 }
 
 func (hdl *HTTPHandler) Delete(c *gin.Context) {
