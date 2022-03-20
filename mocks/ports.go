@@ -115,10 +115,10 @@ func (m *MockJobQueue) EXPECT() *MockJobQueueMockRecorder {
 }
 
 // Pop mocks base method.
-func (m *MockJobQueue) Pop() *domain.Job {
+func (m *MockJobQueue) Pop() <-chan *domain.Job {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Pop")
-	ret0, _ := ret[0].(*domain.Job)
+	ret0, _ := ret[0].(<-chan *domain.Job)
 	return ret0
 }
 
@@ -262,6 +262,18 @@ func NewMockTransmitter(ctrl *gomock.Controller) *MockTransmitter {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTransmitter) EXPECT() *MockTransmitterMockRecorder {
 	return m.recorder
+}
+
+// Stop mocks base method.
+func (m *MockTransmitter) Stop() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Stop")
+}
+
+// Stop indicates an expected call of Stop.
+func (mr *MockTransmitterMockRecorder) Stop() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockTransmitter)(nil).Stop))
 }
 
 // Transmit mocks base method.
