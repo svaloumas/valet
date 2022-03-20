@@ -3,22 +3,26 @@ package jobsrv
 import (
 	"valet/internal/core/domain"
 	"valet/internal/core/ports"
+	"valet/internal/core/services"
 	"valet/pkg/time"
 	"valet/pkg/uuidgen"
 )
 
 type service struct {
 	jobRepository ports.JobRepository
+	jobQueue      ports.JobQueue
 	uuidGen       uuidgen.UUIDGenerator
 	time          time.Time
 }
 
 // New creates a new job service.
 func New(jobRepository ports.JobRepository,
+	jobQueue ports.JobQueue,
 	uuidGen uuidgen.UUIDGenerator,
 	time time.Time) *service {
 	return &service{
 		jobRepository: jobRepository,
+		jobQueue:      jobQueue,
 		uuidGen:       uuidGen,
 		time:          time,
 	}
@@ -40,6 +44,9 @@ func (srv *service) Create(name, description string) (*domain.Job, error) {
 	}
 	if err := j.Validate(); err != nil {
 		return nil, err
+	}
+	if ok := srv.jobQueue.Push(j); !ok {
+		return nil, &services.FullQueueErr{}
 	}
 	if err := srv.jobRepository.Create(j); err != nil {
 		return nil, err

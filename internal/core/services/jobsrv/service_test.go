@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 	"valet/internal/core/domain"
+	"valet/internal/core/services"
 	"valet/mocks"
 
 	"github.com/golang/mock/gomock"
@@ -20,7 +21,7 @@ func TestCreateErrorCases(t *testing.T) {
 		EXPECT().
 		Now().
 		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
-		Times(3)
+		Times(4)
 
 	createdAt := freezed.Now()
 	expectedJob := &domain.Job{
@@ -33,13 +34,14 @@ func TestCreateErrorCases(t *testing.T) {
 	uuidGenErr := errors.New("some uuid generator error")
 	jobValidateErr := errors.New("name required")
 	jobRepositoryErr := errors.New("some job repository error")
+	jobQueueErr := &services.FullQueueErr{}
 
 	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
 		Return(expectedJob.ID, nil).
-		Times(2)
+		Times(3)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
@@ -53,7 +55,19 @@ func TestCreateErrorCases(t *testing.T) {
 		Return(jobRepositoryErr).
 		Times(1)
 
-	service := New(jobRepository, uuidGen, freezed)
+	jobQueue := mocks.NewMockJobQueue(ctrl)
+	jobQueue.
+		EXPECT().
+		Push(expectedJob).
+		Return(true).
+		Times(1)
+	jobQueue.
+		EXPECT().
+		Push(expectedJob).
+		Return(false).
+		Times(1)
+
+	service := New(jobRepository, jobQueue, uuidGen, freezed)
 
 	tests := []struct {
 		name string
@@ -66,6 +80,10 @@ func TestCreateErrorCases(t *testing.T) {
 		{
 			"job_name",
 			jobRepositoryErr,
+		},
+		{
+			"job_name",
+			jobQueueErr,
 		},
 		{
 			"job_name",
@@ -118,7 +136,14 @@ func TestCreate(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	service := New(jobRepository, uuidGen, freezed)
+	jobQueue := mocks.NewMockJobQueue(ctrl)
+	jobQueue.
+		EXPECT().
+		Push(expectedJob).
+		Return(true).
+		Times(1)
+
+	service := New(jobRepository, jobQueue, uuidGen, freezed)
 	j, err := service.Create(expectedJob.Name, expectedJob.Description)
 	if err != nil {
 		t.Errorf("create service returned unexpected error: %#v", err)
@@ -164,7 +189,9 @@ func TestGet(t *testing.T) {
 		Return(nil, jobRepositoryErr).
 		Times(1)
 
-	service := New(jobRepository, uuidGen, freezed)
+	jobQueue := mocks.NewMockJobQueue(ctrl)
+
+	service := New(jobRepository, jobQueue, uuidGen, freezed)
 
 	tests := []struct {
 		id  string
@@ -230,7 +257,9 @@ func TestDelete(t *testing.T) {
 		Return(jobRepositoryErr).
 		Times(1)
 
-	service := New(jobRepository, uuidGen, freezed)
+	jobQueue := mocks.NewMockJobQueue(ctrl)
+
+	service := New(jobRepository, jobQueue, uuidGen, freezed)
 
 	tests := []struct {
 		id  string
@@ -309,7 +338,9 @@ func TestUpdate(t *testing.T) {
 		Return(nil, jobRepositoryErr).
 		Times(1)
 
-	service := New(jobRepository, uuidGen, freezed)
+	jobQueue := mocks.NewMockJobQueue(ctrl)
+
+	service := New(jobRepository, jobQueue, uuidGen, freezed)
 
 	tests := []struct {
 		id  string
