@@ -3,7 +3,7 @@ package task
 import (
 	"log"
 	"time"
-	"valet/internal/core/domain"
+	"valet/internal/core/port"
 )
 
 type dummytask struct{}
@@ -12,9 +12,9 @@ func NewDummyTask() *dummytask {
 	return &dummytask{}
 }
 
-func (dt *dummytask) Run(j *domain.Job) ([]byte, error) {
+func (dt *dummytask) Run(metadata port.Metadata) ([]byte, error) {
 	log.Printf("[dummy task] hello from dummy task")
-	log.Printf("metadata: %v", j.Metadata)
+	log.Printf("metadata: %v", metadata)
 	time.Sleep(1 * time.Second)
 	return make([]byte, 0), nil
 }

@@ -102,7 +102,7 @@ func (wp *WorkerPoolImpl) schedule(id int, queue <-chan workItem, wg *sync.WaitG
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
 		wp.logger.Printf("%s executing work...", logPrefix)
-		metadata, err := wp.task.Run(item.job)
+		metadata, err := wp.task.Run(item.job.Metadata)
 
 		select {
 		case item.resultQueue <- WorkResult{Metadata: metadata, Error: err}:

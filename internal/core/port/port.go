@@ -55,7 +55,7 @@ type JobService interface {
 
 type Task interface {
 	// Run performs a given task.
-	Run(j *domain.Job) ([]byte, error)
+	Run(metadata Metadata) ([]byte, error)
 }
 
 type Metadata interface {
