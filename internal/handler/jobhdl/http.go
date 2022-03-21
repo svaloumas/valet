@@ -45,7 +45,7 @@ func (hdl *HTTPHandler) Get(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, j)
+	c.JSON(http.StatusOK, BuildResponseDTO(j))
 }
 
 func (hdl *HTTPHandler) Update(c *gin.Context) {
@@ -61,6 +61,7 @@ func (hdl *HTTPHandler) Update(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
+	c.Writer.WriteHeader(http.StatusNoContent)
 }
 
 func (hdl *HTTPHandler) Delete(c *gin.Context) {
