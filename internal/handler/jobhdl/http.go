@@ -11,19 +11,17 @@ import (
 )
 
 type HTTPHandler struct {
-	jobService   port.JobService
-	taskMetadata port.Metadata
+	jobService port.JobService
 }
 
-func NewHTTPHandler(jobService port.JobService, taskMetadata port.Metadata) *HTTPHandler {
+func NewHTTPHandler(jobService port.JobService) *HTTPHandler {
 	return &HTTPHandler{
-		jobService:   jobService,
-		taskMetadata: taskMetadata,
+		jobService: jobService,
 	}
 }
 
 func (hdl *HTTPHandler) Create(c *gin.Context) {
-	body := NewBodyDTO(hdl.taskMetadata)
+	body := NewBodyDTO()
 	c.BindJSON(&body)
 
 	j, err := hdl.jobService.Create(body.Name, body.Description, body.Metadata)

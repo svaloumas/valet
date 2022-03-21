@@ -29,7 +29,7 @@ func TestCreateErrorCases(t *testing.T) {
 		ID:          "auuid4",
 		Name:        "job_name",
 		Description: "some description",
-		Metadata:    task.NewDummyMetadata(),
+		Metadata:    &task.DummyMetadata{},
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
@@ -120,7 +120,7 @@ func TestCreate(t *testing.T) {
 		ID:          "auuid4",
 		Name:        "job_name",
 		Description: "some description",
-		Metadata:    task.NewDummyMetadata(),
+		Metadata:    &task.DummyMetadata{},
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}

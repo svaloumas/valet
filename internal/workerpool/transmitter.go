@@ -34,7 +34,7 @@ func (t *jobtransmitter) Transmit() {
 			logger.Printf("exiting...")
 			return
 		case j := <-t.jobQueue.Pop():
-			// TODO: revisit this.
+			// TODO: Implement a proper re-try mechanism.
 			logger.Printf("sending job with ID: %s to worker pool", j.ID)
 			err := t.wp.Send(j)
 			if err != nil {

@@ -3,28 +3,20 @@ package task
 import (
 	"log"
 	"time"
-	"valet/internal/core/port"
+
+	"github.com/mitchellh/mapstructure"
 )
 
-type dummytask struct{}
-
-func NewDummyTask() *dummytask {
-	return &dummytask{}
-}
-
-func (dt *dummytask) Run(metadata port.Metadata) ([]byte, error) {
-	log.Printf("[dummy task] hello from dummy task")
-	log.Printf("metadata: %v", metadata)
-	time.Sleep(1 * time.Second)
-	return make([]byte, 0), nil
-}
-
-type dummymetadata struct {
+type DummyMetadata struct {
 	URL string `json:"url,omitempty"`
 }
 
-func NewDummyMetadata() *dummymetadata {
-	return &dummymetadata{}
-}
+func DummyTask(metadata interface{}) ([]byte, error) {
+	taskMetadata := &DummyMetadata{}
+	mapstructure.Decode(metadata, taskMetadata)
 
-func (dm *dummymetadata) TaskMetadata() {}
+	log.Println("hello from dummy task")
+	log.Printf("metadata: %s", taskMetadata.URL)
+	time.Sleep(1)
+	return make([]byte, 0), nil
+}

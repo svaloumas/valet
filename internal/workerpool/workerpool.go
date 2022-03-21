@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"valet/internal/core/domain"
-	"valet/internal/core/port"
+	"valet/internal/workerpool/task"
 )
 
 // WorkResult contains the result of a job.
@@ -40,8 +40,8 @@ type workItem struct {
 
 // WorkerPoolImpl is a concrete implementation of WorkerPool.
 type WorkerPoolImpl struct {
-	// The type of task that should be run.
-	task port.Task
+	// The task that should be run.
+	task task.TaskFunc
 	// The fixed amount of goroutines that will be handling running jobs.
 	concurrency int
 	// The maximum capacity of the worker pool queue. If exceeded, sending new
@@ -54,7 +54,7 @@ type WorkerPoolImpl struct {
 }
 
 // NewWorkerPoolImpl initializes and returns a new worker pool.
-func NewWorkerPoolImpl(concurrency, backlog int, task port.Task) *WorkerPoolImpl {
+func NewWorkerPoolImpl(concurrency, backlog int, task task.TaskFunc) *WorkerPoolImpl {
 	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
 	return &WorkerPoolImpl{
 		task:        task,
@@ -102,10 +102,10 @@ func (wp *WorkerPoolImpl) schedule(id int, queue <-chan workItem, wg *sync.WaitG
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
 		wp.logger.Printf("%s executing work...", logPrefix)
-		metadata, err := wp.task.Run(item.job.Metadata)
+		resultMetadata, err := exec(item.job.Metadata, wp.task)
 
 		select {
-		case item.resultQueue <- WorkResult{Metadata: metadata, Error: err}:
+		case item.resultQueue <- WorkResult{Metadata: resultMetadata, Error: err}:
 			wp.logger.Printf("%s task finished!", logPrefix)
 		default:
 			// This should never happen as the result queue chan should be unique for this worker.
@@ -114,4 +114,8 @@ func (wp *WorkerPoolImpl) schedule(id int, queue <-chan workItem, wg *sync.WaitG
 		close(item.resultQueue)
 	}
 	wp.logger.Printf("%s exiting...", logPrefix)
+}
+
+func exec(metadata interface{}, callback task.TaskFunc) ([]byte, error) {
+	return callback(metadata)
 }

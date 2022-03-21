@@ -31,10 +31,7 @@ var (
 )
 
 func main() {
-	taskType := task.NewDummyTask()
-	taskMetadata := task.NewDummyMetadata()
-
-	wp := workerpool.NewWorkerPoolImpl(wpConcurrency, wpBacklog, taskType)
+	wp := workerpool.NewWorkerPoolImpl(wpConcurrency, wpBacklog, task.DummyTask)
 	wp.Start()
 
 	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
@@ -46,7 +43,7 @@ func main() {
 	jobTransmitter := workerpool.NewTransmitter(jobQueue, wp, int(tickInterval))
 	go jobTransmitter.Transmit()
 
-	jobHandhler := jobhdl.NewHTTPHandler(jobService, taskMetadata)
+	jobHandhler := jobhdl.NewHTTPHandler(jobService)
 
 	router := gin.New()
 	router.POST("/jobs", jobHandhler.Create)

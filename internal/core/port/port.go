@@ -52,14 +52,3 @@ type JobService interface {
 	// Delete deletes a job.
 	Delete(id string) error
 }
-
-type Task interface {
-	// Run performs a given task.
-	Run(metadata Metadata) ([]byte, error)
-}
-
-type Metadata interface {
-	// TaskMetadata is a placeholder method
-	// for the metadata types to implement.
-	TaskMetadata()
-}
