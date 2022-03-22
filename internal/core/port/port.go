@@ -40,14 +40,6 @@ type WorkerPool interface {
 	Send(j *domain.Job) error
 }
 
-type Transmitter interface {
-	// Transmit transmits the job from the job queue to the worker pool.
-	Transmit()
-
-	// Stop stops the transmitter.
-	Stop()
-}
-
 // JobService represents a driver actor service interface.
 type JobService interface {
 	// Create creates a new job.
