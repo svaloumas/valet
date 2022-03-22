@@ -30,7 +30,7 @@ func (repo *memdb) Create(j *domain.Job) error {
 func (repo *memdb) Get(id string) (*domain.Job, error) {
 	serializedJob, ok := repo.db[id]
 	if !ok {
-		return nil, &repository.NotFoundError{ID: id, ResourceName: "job"}
+		return nil, &repository.NotFoundErr{ID: id, ResourceName: "job"}
 	}
 	j := &domain.Job{}
 	json.Unmarshal(serializedJob, j)
@@ -50,7 +50,7 @@ func (repo *memdb) Update(id string, j *domain.Job) error {
 // Delete deletes a job from the repository.
 func (repo *memdb) Delete(id string) error {
 	if _, ok := repo.db[id]; !ok {
-		return &repository.NotFoundError{ID: id, ResourceName: "job"}
+		return &repository.NotFoundErr{ID: id, ResourceName: "job"}
 	}
 	delete(repo.db, id)
 	return nil

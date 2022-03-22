@@ -48,6 +48,7 @@ func (t *jobtransmitter) Transmit() {
 	}
 }
 
+// Stop stops the transmitter.
 func (t *jobtransmitter) Stop() {
 	t.done <- struct{}{}
 }

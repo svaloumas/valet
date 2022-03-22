@@ -65,6 +65,7 @@ func NewWorkerPoolImpl(concurrency, backlog int, task task.TaskFunc) *WorkerPool
 	}
 }
 
+// Start starts the worker pool.
 func (wp *WorkerPoolImpl) Start() {
 	for i := 0; i < wp.concurrency; i++ {
 		wp.wg.Add(1)

@@ -11,6 +11,7 @@ type BodyDTO struct {
 	Metadata    interface{} `json:"metadata"`
 }
 
+// NewBodyDTO initializes and returns a new BodyDTO instance.
 func NewBodyDTO() *BodyDTO {
 	return &BodyDTO{}
 }

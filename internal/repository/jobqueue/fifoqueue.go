@@ -38,6 +38,7 @@ func (q *fifoqueue) Pop() <-chan *domain.Job {
 	return q.jobs
 }
 
+// Close closes tha job queue channel.
 func (q *fifoqueue) Close() {
 	close(q.jobs)
 	q.logger.Println("exiting...")
