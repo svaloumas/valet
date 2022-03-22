@@ -7,9 +7,12 @@ import (
 	"sync"
 
 	"valet/internal/core/domain"
+	"valet/internal/core/port"
 	"valet/internal/repository"
 	"valet/internal/repository/workerpool/task"
 )
+
+var _ port.WorkerPool = &WorkerPoolImpl{}
 
 // WorkResult contains the result of a job.
 type WorkResult struct {

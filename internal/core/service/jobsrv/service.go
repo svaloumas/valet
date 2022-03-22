@@ -8,6 +8,8 @@ import (
 	"valet/pkg/uuidgen"
 )
 
+var _ port.JobService = &jobservice{}
+
 type jobservice struct {
 	jobRepository port.JobRepository
 	jobQueue      port.JobQueue

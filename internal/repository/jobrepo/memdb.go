@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 
 	"valet/internal/core/domain"
+	"valet/internal/core/port"
 	"valet/internal/repository"
 )
+
+var _ port.JobRepository = &memdb{}
 
 type memdb struct {
 	db map[string][]byte

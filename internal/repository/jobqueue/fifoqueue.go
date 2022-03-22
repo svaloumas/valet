@@ -5,7 +5,10 @@ import (
 	"os"
 
 	"valet/internal/core/domain"
+	"valet/internal/core/port"
 )
+
+var _ port.JobQueue = &fifoqueue{}
 
 type fifoqueue struct {
 	jobs     chan *domain.Job
