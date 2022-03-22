@@ -24,26 +24,29 @@ type WorkerPoolImpl struct {
 	// tasks to the pool will return an error.
 	backlog int
 
-	jobService port.JobService
-	queue      chan domain.JobItem
-	wg         sync.WaitGroup
-	logger     *log.Logger
+	jobService    port.JobService
+	resultService port.ResultService
+	queue         chan domain.JobItem
+	wg            sync.WaitGroup
+	logger        *log.Logger
 }
 
 // NewWorkerPoolImpl initializes and returns a new worker pool.
 func NewWorkerPoolImpl(
 	jobService port.JobService,
+	resultService port.ResultService,
 	concurrency, backlog int,
 	task task.TaskFunc) *WorkerPoolImpl {
 
 	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
 	return &WorkerPoolImpl{
-		task:        task,
-		concurrency: concurrency,
-		backlog:     backlog,
-		jobService:  jobService,
-		queue:       make(chan domain.JobItem, backlog),
-		logger:      logger,
+		task:          task,
+		concurrency:   concurrency,
+		backlog:       backlog,
+		jobService:    jobService,
+		resultService: resultService,
+		queue:         make(chan domain.JobItem, backlog),
+		logger:        logger,
 	}
 }
 
@@ -66,6 +69,11 @@ func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
 
 	select {
 	case wp.queue <- wi:
+		go func() {
+			if err := wp.resultService.Create(domain.FutureJobResult{Result: wi.Result}); err != nil {
+				wp.logger.Printf("could not create job result to the repository")
+			}
+		}()
 		return nil
 	default:
 		return &repository.FullWorkerPoolBacklog{}
@@ -83,7 +91,7 @@ func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.JobItem, wg *sync
 	defer wg.Done()
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
-		wp.logger.Printf("%s executing work...", logPrefix)
+		wp.logger.Printf("%s executing task...", logPrefix)
 		if err := wp.jobService.Exec(item, wp.task); err != nil {
 			wp.logger.Printf("could not update job status: %s", err)
 		}

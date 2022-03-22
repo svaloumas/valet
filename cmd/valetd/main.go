@@ -44,7 +44,8 @@ func main() {
 	resultRepository := resultrepo.NewResultDB()
 	resultService := resultsrv.New(resultRepository)
 
-	wp := workerpool.NewWorkerPoolImpl(jobService, wpConcurrency, wpBacklog, taskFunc)
+	wp := workerpool.NewWorkerPoolImpl(
+		jobService, resultService, wpConcurrency, wpBacklog, taskFunc)
 	wp.Start()
 
 	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
@@ -60,8 +61,8 @@ func main() {
 	router.GET("/jobs/:id", jobHandhler.Get)
 	router.DELETE("/jobs/:id", jobHandhler.Delete)
 
-	router.GET("/results/:id", resultHandhler.Get)
-	router.DELETE("/results/:id", resultHandhler.Delete)
+	router.GET("/jobs/:id/results", resultHandhler.Get)
+	router.DELETE("/jobs/:id/results", resultHandhler.Delete)
 
 	srv := http.Server{
 		Addr:    addr,

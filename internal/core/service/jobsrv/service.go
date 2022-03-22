@@ -87,26 +87,27 @@ func (srv *jobservice) Exec(item domain.JobItem, callback task.TaskFunc) error {
 		return err
 	}
 
-	resultMetadata, joberr := callback(item.Job.Metadata)
+	// Perform the actual work.
+	resultMetadata, jobErr := callback(item.Job.Metadata)
 
 	select {
 	case item.Result <- domain.JobResult{
-		ID:       item.Job.ID,
 		JobID:    item.Job.ID,
 		Metadata: resultMetadata,
-		Error:    joberr}:
+		Error:    jobErr}:
 	default:
 		// This should never happen as the result queue chan should be unique for this worker.
 		panic("failed to write result to the result queue channel")
 	}
 	close(item.Result)
 
-	if joberr != nil {
+	if jobErr != nil {
 		failedAt := srv.time.Now()
-		item.Job.MarkFailed(&failedAt, joberr.Error())
+		item.Job.MarkFailed(&failedAt, jobErr.Error())
 		if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
 			return err
 		}
+		return nil
 	}
 
 	completedAt := srv.time.Now()

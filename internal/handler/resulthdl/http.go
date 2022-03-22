@@ -23,7 +23,7 @@ func NewResultHTTPHandler(resultService port.ResultService) *ResultHTTPHandler {
 
 // Get fetches a job result.
 func (hdl *ResultHTTPHandler) Get(c *gin.Context) {
-	jr, err := hdl.resultService.Get(c.Param("id"))
+	result, err := hdl.resultService.Get(c.Param("id"))
 	if err != nil && xerrors.Is(err, &repository.NotFoundErr{}) {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 		return
@@ -32,7 +32,7 @@ func (hdl *ResultHTTPHandler) Get(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, BuildResponseDTO(jr))
+	c.JSON(http.StatusOK, BuildResponseDTO(result))
 }
 
 // Delete deletes a job result.

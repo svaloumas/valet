@@ -20,12 +20,12 @@ func NewResultDB() *resultdb {
 }
 
 // Create adds new job result to the repository.
-func (repo *resultdb) Create(jr *domain.JobResult) error {
-	serializedJobResult, err := json.Marshal(jr)
+func (repo *resultdb) Create(result *domain.JobResult) error {
+	serializedJobResult, err := json.Marshal(result)
 	if err != nil {
 		return err
 	}
-	repo.db[jr.ID] = serializedJobResult
+	repo.db[result.JobID] = serializedJobResult
 	return nil
 }
 
@@ -35,18 +35,18 @@ func (repo *resultdb) Get(id string) (*domain.JobResult, error) {
 	if !ok {
 		return nil, &repository.NotFoundErr{ID: id, ResourceName: "job result"}
 	}
-	jr := &domain.JobResult{}
-	json.Unmarshal(serializedJobResult, jr)
-	return jr, nil
+	result := &domain.JobResult{}
+	json.Unmarshal(serializedJobResult, result)
+	return result, nil
 }
 
 // Update updates a job result to the repository.
-func (repo *resultdb) Update(id string, jr *domain.JobResult) error {
-	serializedJobResult, err := json.Marshal(jr)
+func (repo *resultdb) Update(id string, result *domain.JobResult) error {
+	serializedJobResult, err := json.Marshal(result)
 	if err != nil {
 		return err
 	}
-	repo.db[jr.ID] = serializedJobResult
+	repo.db[result.JobID] = serializedJobResult
 	return nil
 }
 

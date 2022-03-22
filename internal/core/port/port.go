@@ -23,7 +23,7 @@ type JobRepository interface {
 // ResultRepository represents a driven actor repository interface.
 type ResultRepository interface {
 	// Create adds a new job result to the repository.
-	Create(jr *domain.JobResult) error
+	Create(result *domain.JobResult) error
 
 	// Get fetches a job result from the repository.
 	Get(id string) (*domain.JobResult, error)
@@ -73,6 +73,10 @@ type JobService interface {
 
 // ResultService represents a driver actor service interface.
 type ResultService interface {
+	// Create waits until the result is available and
+	// creates a new result in the repository.
+	Create(futureResult domain.FutureJobResult) error
+
 	// Get fetches a job result.
 	Get(id string) (*domain.JobResult, error)
 
