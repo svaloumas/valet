@@ -28,10 +28,12 @@ var (
 	wpConcurrency    = runtime.NumCPU() / 2
 	wpBacklog        = wpConcurrency * 2
 	tickInterval     = 500 * time.Millisecond
+	taskType         = "dummytask"
 )
 
 func main() {
-	wp := workerpool.NewWorkerPoolImpl(wpConcurrency, wpBacklog, task.DummyTask)
+	taskFunc := task.TaskTypes[taskType]
+	wp := workerpool.NewWorkerPoolImpl(wpConcurrency, wpBacklog, taskFunc)
 	wp.Start()
 
 	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
