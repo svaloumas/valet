@@ -19,7 +19,8 @@ func DummyTask(metadata interface{}) ([]byte, error) {
 	mapstructure.Decode(metadata, taskMetadata)
 
 	log.Println("Hello from dummy task")
-	log.Printf("I got some metadata: %#v", taskMetadata)
+
+	taskMetadata.URL = "http://www.test-url.com"
 	time.Sleep(1 * time.Second)
 	serializedMetadata, err := json.Marshal(taskMetadata)
 	if err != nil {

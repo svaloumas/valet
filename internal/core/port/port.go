@@ -2,6 +2,7 @@ package port
 
 import (
 	"valet/internal/core/domain"
+	"valet/internal/repository/workerpool/task"
 )
 
 // JobRepository represents a driven actor repository interface.
@@ -19,7 +20,16 @@ type JobRepository interface {
 	Delete(id string) error
 }
 
+// ResultRepository represents a driven actor repository interface.
 type ResultRepository interface {
+	// Create adds a new job result to the repository.
+	Create(jr *domain.JobResult) error
+
+	// Get fetches a job result from the repository.
+	Get(id string) (*domain.JobResult, error)
+
+	// Delete deletes a job result from the repository.
+	Delete(id string) error
 }
 
 // JobQueue represents a driven actor queue interface.
@@ -55,5 +65,17 @@ type JobService interface {
 	Update(id, name, description string) error
 
 	// Delete deletes a job.
+	Delete(id string) error
+
+	// Exec executes a job.
+	Exec(item domain.JobItem, callback task.TaskFunc) error
+}
+
+// ResultService represents a driver actor service interface.
+type ResultService interface {
+	// Get fetches a job result.
+	Get(id string) (*domain.JobResult, error)
+
+	// Delete deletes a job result.
 	Delete(id string) error
 }

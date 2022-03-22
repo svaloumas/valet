@@ -16,6 +16,7 @@ var _ port.WorkerPool = &WorkerPoolImpl{}
 
 // WorkerPoolImpl is a concrete implementation of WorkerPool.
 type WorkerPoolImpl struct {
+	jobService port.JobService
 	// The task that should be run.
 	task task.TaskFunc
 	// The fixed amount of goroutines that will be handling running jobs.
@@ -30,12 +31,17 @@ type WorkerPoolImpl struct {
 }
 
 // NewWorkerPoolImpl initializes and returns a new worker pool.
-func NewWorkerPoolImpl(concurrency, backlog int, task task.TaskFunc) *WorkerPoolImpl {
+func NewWorkerPoolImpl(
+	jobService port.JobService,
+	concurrency, backlog int,
+	task task.TaskFunc) *WorkerPoolImpl {
+
 	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
 	return &WorkerPoolImpl{
 		task:        task,
 		concurrency: concurrency,
 		backlog:     backlog,
+		jobService:  jobService,
 		queue:       make(chan domain.JobItem, backlog),
 		logger:      logger,
 	}
@@ -79,20 +85,10 @@ func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.JobItem, wg *sync
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
 		wp.logger.Printf("%s executing work...", logPrefix)
-		resultMetadata, err := exec(item.Job.Metadata, wp.task)
-
-		select {
-		case item.ResultQueue <- domain.JobResult{Metadata: resultMetadata, Error: err}:
-			wp.logger.Printf("%s task finished!", logPrefix)
-		default:
-			// This should never happen as the result queue chan should be unique for this worker.
-			wp.logger.Panicf("%s failed to write result to the result queue channel", logPrefix)
+		if err := wp.jobService.Exec(item, wp.task); err != nil {
+			wp.logger.Printf("could not update job status: %s", err)
 		}
-		close(item.ResultQueue)
+		wp.logger.Printf("%s task finished!", logPrefix)
 	}
 	wp.logger.Printf("%s exiting...", logPrefix)
-}
-
-func exec(metadata interface{}, callback task.TaskFunc) ([]byte, error) {
-	return callback(metadata)
 }

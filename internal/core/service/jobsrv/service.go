@@ -4,6 +4,7 @@ import (
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
 	"valet/internal/core/service"
+	"valet/internal/repository/workerpool/task"
 	"valet/pkg/time"
 	"valet/pkg/uuidgen"
 )
@@ -76,4 +77,42 @@ func (srv *jobservice) Update(id, name, description string) error {
 // Delete deletes a job.
 func (srv *jobservice) Delete(id string) error {
 	return srv.jobRepository.Delete(id)
+}
+
+// Exec executes the job.
+func (srv *jobservice) Exec(item domain.JobItem, callback task.TaskFunc) error {
+	startedAt := srv.time.Now()
+	item.Job.MarkStarted(&startedAt)
+	if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
+		return err
+	}
+
+	resultMetadata, joberr := callback(item.Job.Metadata)
+
+	select {
+	case item.ResultQueue <- domain.JobResult{
+		ID:       item.Job.ID,
+		JobID:    item.Job.ID,
+		Metadata: resultMetadata,
+		Error:    joberr}:
+	default:
+		// This should never happen as the result queue chan should be unique for this worker.
+		panic("failed to write result to the result queue channel")
+	}
+	close(item.ResultQueue)
+
+	if joberr != nil {
+		failedAt := srv.time.Now()
+		item.Job.MarkFailed(&failedAt, joberr.Error())
+		if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
+			return err
+		}
+	}
+
+	completedAt := srv.time.Now()
+	item.Job.MarkCompleted(&completedAt)
+	if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
+		return err
+	}
+	return nil
 }

@@ -13,9 +13,12 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"valet/internal/core/service/jobsrv"
+	"valet/internal/core/service/resultsrv"
 	"valet/internal/handler/jobhdl"
+	"valet/internal/handler/resulthdl"
 	"valet/internal/repository/jobqueue"
 	"valet/internal/repository/jobrepo"
+	"valet/internal/repository/resultrepo"
 	"valet/internal/repository/workerpool"
 	"valet/internal/repository/workerpool/task"
 	rtime "valet/pkg/time"
@@ -33,24 +36,32 @@ var (
 
 func main() {
 	taskFunc := task.TaskTypes[taskType]
-	wp := workerpool.NewWorkerPoolImpl(wpConcurrency, wpBacklog, taskFunc)
+
+	jobRepository := jobrepo.NewJobDB()
+	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
+	jobService := jobsrv.New(jobRepository, jobQueue, uuidgen.New(), rtime.New())
+
+	resultRepository := resultrepo.NewResultDB()
+	resultService := resultsrv.New(resultRepository)
+
+	wp := workerpool.NewWorkerPoolImpl(jobService, wpConcurrency, wpBacklog, taskFunc)
 	wp.Start()
 
 	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
 
-	jobRepository := jobrepo.NewMemDB()
-	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
-	jobService := jobsrv.New(jobRepository, jobQueue, uuidgen.New(), rtime.New())
-
 	jobTransmitter := NewTransmitter(jobQueue, wp, int(tickInterval))
 	go jobTransmitter.Transmit()
 
-	jobHandhler := jobhdl.NewHTTPHandler(jobService)
+	jobHandhler := jobhdl.NewJobHTTPHandler(jobService)
+	resultHandhler := resulthdl.NewResultHTTPHandler(resultService)
 
 	router := gin.New()
 	router.POST("/jobs", jobHandhler.Create)
 	router.GET("/jobs/:id", jobHandhler.Get)
 	router.DELETE("/jobs/:id", jobHandhler.Delete)
+
+	router.GET("/results/:id", resultHandhler.Get)
+	router.DELETE("/results/:id", resultHandhler.Delete)
 
 	srv := http.Server{
 		Addr:    addr,

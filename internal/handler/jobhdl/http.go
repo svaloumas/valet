@@ -10,20 +10,20 @@ import (
 	"valet/internal/repository"
 )
 
-// HTTPHandler is an HTTP handler.
-type HTTPHandler struct {
+// JobHTTPHandler is an HTTP handler that exposes job endpoints.
+type JobHTTPHandler struct {
 	jobService port.JobService
 }
 
-// NewHTTPHandler creates and returns a new HTTPHandler.
-func NewHTTPHandler(jobService port.JobService) *HTTPHandler {
-	return &HTTPHandler{
+// NewJobHTTPHandler creates and returns a new JobHTTPHandler.
+func NewJobHTTPHandler(jobService port.JobService) *JobHTTPHandler {
+	return &JobHTTPHandler{
 		jobService: jobService,
 	}
 }
 
 // Create creates a new job.
-func (hdl *HTTPHandler) Create(c *gin.Context) {
+func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 	body := NewBodyDTO()
 	c.BindJSON(&body)
 
@@ -37,7 +37,7 @@ func (hdl *HTTPHandler) Create(c *gin.Context) {
 }
 
 // Get fetches a job.
-func (hdl *HTTPHandler) Get(c *gin.Context) {
+func (hdl *JobHTTPHandler) Get(c *gin.Context) {
 	j, err := hdl.jobService.Get(c.Param("id"))
 	if err != nil && xerrors.Is(err, &repository.NotFoundErr{}) {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
@@ -51,7 +51,7 @@ func (hdl *HTTPHandler) Get(c *gin.Context) {
 }
 
 // Update updates a job.
-func (hdl *HTTPHandler) Update(c *gin.Context) {
+func (hdl *JobHTTPHandler) Update(c *gin.Context) {
 	body := BodyDTO{}
 	c.BindJSON(&body)
 
@@ -68,7 +68,7 @@ func (hdl *HTTPHandler) Update(c *gin.Context) {
 }
 
 // Delete deletes a job.
-func (hdl *HTTPHandler) Delete(c *gin.Context) {
+func (hdl *JobHTTPHandler) Delete(c *gin.Context) {
 	err := hdl.jobService.Delete(c.Param("id"))
 	if err != nil {
 		if xerrors.Is(err, &repository.NotFoundErr{}) {
