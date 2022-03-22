@@ -2,9 +2,9 @@ package domain
 
 // JobResult contains the result of a job.
 type JobResult struct {
-	JobID    string `json:"job_id"`
-	Metadata []byte `json:"metadata"`
-	Error    error  `json:"error,omitempty"`
+	JobID    string      `json:"job_id"`
+	Metadata interface{} `json:"metadata"`
+	Error    error       `json:"error,omitempty"`
 }
 
 // FutureJobResult is a WorkResult that may not yet

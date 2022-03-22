@@ -1,7 +1,6 @@
 package task
 
 import (
-	"encoding/json"
 	"log"
 	"time"
 
@@ -14,17 +13,12 @@ type DummyMetadata struct {
 }
 
 // DummyTask is a dummy task callback.
-func DummyTask(metadata interface{}) ([]byte, error) {
+func DummyTask(metadata interface{}) (interface{}, error) {
 	taskMetadata := &DummyMetadata{}
 	mapstructure.Decode(metadata, taskMetadata)
 
 	log.Println("Hello from dummy task")
-
 	taskMetadata.URL = "http://www.test-url.com"
 	time.Sleep(1 * time.Second)
-	serializedMetadata, err := json.Marshal(taskMetadata)
-	if err != nil {
-		return nil, err
-	}
-	return serializedMetadata, nil
+	return taskMetadata, nil
 }
