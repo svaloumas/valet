@@ -1,9 +1,10 @@
-package workerpool
+package main
 
 import (
 	"log"
 	"os"
 	"time"
+
 	"valet/internal/core/port"
 )
 

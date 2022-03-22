@@ -16,8 +16,8 @@ import (
 	"valet/internal/handler/jobhdl"
 	"valet/internal/repository/jobqueue"
 	"valet/internal/repository/jobrepo"
-	"valet/internal/workerpool"
-	"valet/internal/workerpool/task"
+	"valet/internal/repository/workerpool"
+	"valet/internal/repository/workerpool/task"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
 )
@@ -40,7 +40,7 @@ func main() {
 	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
 	jobService := jobsrv.New(jobRepository, jobQueue, uuidgen.New(), rtime.New())
 
-	jobTransmitter := workerpool.NewTransmitter(jobQueue, wp, int(tickInterval))
+	jobTransmitter := NewTransmitter(jobQueue, wp, int(tickInterval))
 	go jobTransmitter.Transmit()
 
 	jobHandhler := jobhdl.NewHTTPHandler(jobService)

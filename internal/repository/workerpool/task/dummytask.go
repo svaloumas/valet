@@ -1,6 +1,7 @@
 package task
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 
@@ -20,5 +21,9 @@ func DummyTask(metadata interface{}) ([]byte, error) {
 	log.Println("Hello from dummy task")
 	log.Printf("I got some metadata: %#v", taskMetadata)
 	time.Sleep(1 * time.Second)
-	return make([]byte, 0), nil
+	serializedMetadata, err := json.Marshal(taskMetadata)
+	if err != nil {
+		return nil, err
+	}
+	return serializedMetadata, nil
 }

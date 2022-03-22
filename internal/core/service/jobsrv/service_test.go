@@ -7,7 +7,7 @@ import (
 	"time"
 	"valet/internal/core/domain"
 	"valet/internal/core/service"
-	"valet/internal/workerpool/task"
+	"valet/internal/repository/workerpool/task"
 	"valet/mocks"
 
 	"github.com/golang/mock/gomock"

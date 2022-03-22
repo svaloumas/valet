@@ -7,7 +7,8 @@ import (
 	"sync"
 
 	"valet/internal/core/domain"
-	"valet/internal/workerpool/task"
+	"valet/internal/repository"
+	"valet/internal/repository/workerpool/task"
 )
 
 // WorkResult contains the result of a job.
@@ -86,7 +87,7 @@ func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
 	case wp.queue <- wi:
 		return nil
 	default:
-		return &FullWorkerPoolBacklog{}
+		return &repository.FullWorkerPoolBacklog{}
 	}
 }
 
