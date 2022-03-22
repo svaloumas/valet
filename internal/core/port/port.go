@@ -19,6 +19,9 @@ type JobRepository interface {
 	Delete(id string) error
 }
 
+type ResultRepository interface {
+}
+
 // JobQueue represents a driven actor queue interface.
 type JobQueue interface {
 	// Push adds a job to the queue. Returns false if queue is full.

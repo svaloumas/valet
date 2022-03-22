@@ -14,34 +14,6 @@ import (
 
 var _ port.WorkerPool = &WorkerPoolImpl{}
 
-// WorkResult contains the result of a job.
-type WorkResult struct {
-	Metadata []byte
-	Error    error
-}
-
-// FutureWorkResult is a WorkResult that may not yet
-// have become available and can be Wait()'ed on.
-type FutureWorkResult struct {
-	resultQueue <-chan WorkResult
-}
-
-// Wait waits for WorkResult to become available and returns it.
-func (f FutureWorkResult) Wait() WorkResult {
-	r, ok := <-f.resultQueue
-	if !ok {
-		// This should never happen, reading from the result
-		// channel is exclusive to this future
-		panic("failed to read from result channel")
-	}
-	return r
-}
-
-type workItem struct {
-	job         *domain.Job
-	resultQueue chan<- WorkResult
-}
-
 // WorkerPoolImpl is a concrete implementation of WorkerPool.
 type WorkerPoolImpl struct {
 	// The task that should be run.
@@ -52,7 +24,7 @@ type WorkerPoolImpl struct {
 	// tasks to the pool will return an error.
 	backlog int
 
-	queue  chan workItem
+	queue  chan domain.JobItem
 	wg     sync.WaitGroup
 	logger *log.Logger
 }
@@ -64,7 +36,7 @@ func NewWorkerPoolImpl(concurrency, backlog int, task task.TaskFunc) *WorkerPool
 		task:        task,
 		concurrency: concurrency,
 		backlog:     backlog,
-		queue:       make(chan workItem, backlog),
+		queue:       make(chan domain.JobItem, backlog),
 		logger:      logger,
 	}
 }
@@ -80,10 +52,10 @@ func (wp *WorkerPoolImpl) Start() {
 
 // Send schedules the job. An error is returned if the job backlog is full.
 func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
-	resultQueue := make(chan WorkResult, 1)
-	wi := workItem{
-		job:         j,
-		resultQueue: resultQueue,
+	resultQueue := make(chan domain.JobResult, 1)
+	wi := domain.JobItem{
+		Job:         j,
+		ResultQueue: resultQueue,
 	}
 
 	select {
@@ -102,21 +74,21 @@ func (wp *WorkerPoolImpl) Stop() {
 	wp.logger.Println("exiting...")
 }
 
-func (wp *WorkerPoolImpl) schedule(id int, queue <-chan workItem, wg *sync.WaitGroup) {
+func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.JobItem, wg *sync.WaitGroup) {
 	defer wg.Done()
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
 		wp.logger.Printf("%s executing work...", logPrefix)
-		resultMetadata, err := exec(item.job.Metadata, wp.task)
+		resultMetadata, err := exec(item.Job.Metadata, wp.task)
 
 		select {
-		case item.resultQueue <- WorkResult{Metadata: resultMetadata, Error: err}:
+		case item.ResultQueue <- domain.JobResult{Metadata: resultMetadata, Error: err}:
 			wp.logger.Printf("%s task finished!", logPrefix)
 		default:
 			// This should never happen as the result queue chan should be unique for this worker.
 			wp.logger.Panicf("%s failed to write result to the result queue channel", logPrefix)
 		}
-		close(item.resultQueue)
+		close(item.ResultQueue)
 	}
 	wp.logger.Printf("%s exiting...", logPrefix)
 }
