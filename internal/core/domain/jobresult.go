@@ -2,14 +2,16 @@ package domain
 
 // JobResult contains the result of a job.
 type JobResult struct {
-	Metadata []byte
-	Error    error
+	ID       string `json:"id"`
+	JobID    string `json:"job_id"`
+	Metadata []byte `json:"metadata"`
+	Error    error  `json:"error,omitempty"`
 }
 
 // FutureJobResult is a WorkResult that may not yet
 // have become available and can be Wait()'ed on.
 type FutureJobResult struct {
-	ResultQueue <-chan JobResult
+	ResultQueue chan JobResult
 }
 
 // Wait waits for JobResult to become available and returns it.
