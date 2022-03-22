@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 	"valet/internal/core/domain"
-	"valet/mocks"
+	"valet/mock"
 
 	"github.com/golang/mock/gomock"
 )
@@ -30,7 +30,7 @@ func TestCreate(t *testing.T) {
 
 	resultRepositoryErr := errors.New("some job result repository error")
 
-	resultRepository := mocks.NewMockResultRepository(ctrl)
+	resultRepository := mock.NewMockResultRepository(ctrl)
 	resultRepository.
 		EXPECT().
 		Create(&result).
@@ -62,7 +62,7 @@ func TestCreate(t *testing.T) {
 		err := service.Create(tt.futureResult)
 		if err != nil {
 			if err.Error() != tt.err.Error() {
-				t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
 			}
 		}
 	}
@@ -81,7 +81,7 @@ func TestGet(t *testing.T) {
 	invalidJobID := "invalid_job_id"
 	resultRepositoryErr := errors.New("some job result repository error")
 
-	resultRepository := mocks.NewMockResultRepository(ctrl)
+	resultRepository := mock.NewMockResultRepository(ctrl)
 	resultRepository.
 		EXPECT().
 		Get(expectedResult.JobID).
@@ -136,7 +136,7 @@ func TestDelete(t *testing.T) {
 	invalidJobID := "invalid_job_id"
 	resultRepositoryErr := errors.New("some job result repository error")
 
-	resultRepository := mocks.NewMockResultRepository(ctrl)
+	resultRepository := mock.NewMockResultRepository(ctrl)
 	resultRepository.
 		EXPECT().
 		Delete(expectedResult.JobID).

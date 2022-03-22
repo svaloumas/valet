@@ -7,7 +7,7 @@ import (
 	"time"
 	"valet/internal/core/domain"
 	"valet/internal/repository/workerpool/task"
-	"valet/mocks"
+	"valet/mock"
 	"valet/pkg/apperrors"
 
 	"github.com/golang/mock/gomock"
@@ -17,7 +17,7 @@ func TestCreateErrorCases(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	freezed := mocks.NewMockTime(ctrl)
+	freezed := mock.NewMockTime(ctrl)
 	freezed.
 		EXPECT().
 		Now().
@@ -38,7 +38,7 @@ func TestCreateErrorCases(t *testing.T) {
 	jobRepositoryErr := errors.New("some job repository error")
 	jobQueueErr := &apperrors.FullQueueErr{}
 
-	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
@@ -50,14 +50,14 @@ func TestCreateErrorCases(t *testing.T) {
 		Return("", uuidGenErr).
 		Times(1)
 
-	jobRepository := mocks.NewMockJobRepository(ctrl)
+	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
 		Create(expectedJob).
 		Return(jobRepositoryErr).
 		Times(1)
 
-	jobQueue := mocks.NewMockJobQueue(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 	jobQueue.
 		EXPECT().
 		Push(expectedJob).
@@ -108,7 +108,7 @@ func TestCreate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	freezed := mocks.NewMockTime(ctrl)
+	freezed := mock.NewMockTime(ctrl)
 	freezed.
 		EXPECT().
 		Now().
@@ -125,21 +125,21 @@ func TestCreate(t *testing.T) {
 		CreatedAt:   &createdAt,
 	}
 
-	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
 		Return(expectedJob.ID, nil).
 		Times(1)
 
-	jobRepository := mocks.NewMockJobRepository(ctrl)
+	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
 		Create(expectedJob).
 		Return(nil).
 		Times(1)
 
-	jobQueue := mocks.NewMockJobQueue(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 	jobQueue.
 		EXPECT().
 		Push(expectedJob).
@@ -160,7 +160,7 @@ func TestGet(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	freezed := mocks.NewMockTime(ctrl)
+	freezed := mock.NewMockTime(ctrl)
 	freezed.
 		EXPECT().
 		Now().
@@ -178,9 +178,9 @@ func TestGet(t *testing.T) {
 
 	jobRepositoryErr := errors.New("some repository error")
 	invalidID := "invalid_id"
-	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 
-	jobRepository := mocks.NewMockJobRepository(ctrl)
+	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
 		Get(expectedJob.ID).
@@ -192,7 +192,7 @@ func TestGet(t *testing.T) {
 		Return(nil, jobRepositoryErr).
 		Times(1)
 
-	jobQueue := mocks.NewMockJobQueue(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
 	service := New(jobRepository, jobQueue, uuidGen, freezed)
 
@@ -228,7 +228,7 @@ func TestUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	freezed := mocks.NewMockTime(ctrl)
+	freezed := mock.NewMockTime(ctrl)
 	freezed.
 		EXPECT().
 		Now().
@@ -253,9 +253,9 @@ func TestUpdate(t *testing.T) {
 
 	jobRepositoryErr := errors.New("some job repository error")
 
-	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 
-	jobRepository := mocks.NewMockJobRepository(ctrl)
+	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
 		Get(expectedJob.ID).
@@ -277,7 +277,7 @@ func TestUpdate(t *testing.T) {
 		Return(nil, jobRepositoryErr).
 		Times(1)
 
-	jobQueue := mocks.NewMockJobQueue(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
 	service := New(jobRepository, jobQueue, uuidGen, freezed)
 
@@ -313,7 +313,7 @@ func TestDelete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	freezed := mocks.NewMockTime(ctrl)
+	freezed := mock.NewMockTime(ctrl)
 	freezed.
 		EXPECT().
 		Now().
@@ -331,9 +331,9 @@ func TestDelete(t *testing.T) {
 
 	invalidID := "invalid_id"
 	jobRepositoryErr := errors.New("some repository error")
-	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 
-	jobRepository := mocks.NewMockJobRepository(ctrl)
+	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
 		Delete(expectedJob.ID).
@@ -345,7 +345,7 @@ func TestDelete(t *testing.T) {
 		Return(jobRepositoryErr).
 		Times(1)
 
-	jobQueue := mocks.NewMockJobQueue(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
 	service := New(jobRepository, jobQueue, uuidGen, freezed)
 
@@ -371,4 +371,8 @@ func TestDelete(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestExec(t *testing.T) {
+	// TODO: Implement this.
 }
