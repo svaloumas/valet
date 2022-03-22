@@ -1,6 +1,6 @@
 package domain
 
 type JobItem struct {
-	Job         *Job
-	ResultQueue chan JobResult
+	Job    *Job
+	Result chan JobResult
 }

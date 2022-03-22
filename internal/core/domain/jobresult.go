@@ -11,12 +11,12 @@ type JobResult struct {
 // FutureJobResult is a WorkResult that may not yet
 // have become available and can be Wait()'ed on.
 type FutureJobResult struct {
-	ResultQueue chan JobResult
+	Result chan JobResult
 }
 
 // Wait waits for JobResult to become available and returns it.
 func (f FutureJobResult) Wait() JobResult {
-	r, ok := <-f.ResultQueue
+	r, ok := <-f.Result
 	if !ok {
 		// This should never happen, reading from the result
 		// channel is exclusive to this future

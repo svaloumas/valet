@@ -90,7 +90,7 @@ func (srv *jobservice) Exec(item domain.JobItem, callback task.TaskFunc) error {
 	resultMetadata, joberr := callback(item.Job.Metadata)
 
 	select {
-	case item.ResultQueue <- domain.JobResult{
+	case item.Result <- domain.JobResult{
 		ID:       item.Job.ID,
 		JobID:    item.Job.ID,
 		Metadata: resultMetadata,
@@ -99,7 +99,7 @@ func (srv *jobservice) Exec(item domain.JobItem, callback task.TaskFunc) error {
 		// This should never happen as the result queue chan should be unique for this worker.
 		panic("failed to write result to the result queue channel")
 	}
-	close(item.ResultQueue)
+	close(item.Result)
 
 	if joberr != nil {
 		failedAt := srv.time.Now()

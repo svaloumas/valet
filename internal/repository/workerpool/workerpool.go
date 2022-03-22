@@ -16,7 +16,6 @@ var _ port.WorkerPool = &WorkerPoolImpl{}
 
 // WorkerPoolImpl is a concrete implementation of WorkerPool.
 type WorkerPoolImpl struct {
-	jobService port.JobService
 	// The task that should be run.
 	task task.TaskFunc
 	// The fixed amount of goroutines that will be handling running jobs.
@@ -25,9 +24,10 @@ type WorkerPoolImpl struct {
 	// tasks to the pool will return an error.
 	backlog int
 
-	queue  chan domain.JobItem
-	wg     sync.WaitGroup
-	logger *log.Logger
+	jobService port.JobService
+	queue      chan domain.JobItem
+	wg         sync.WaitGroup
+	logger     *log.Logger
 }
 
 // NewWorkerPoolImpl initializes and returns a new worker pool.
@@ -77,7 +77,6 @@ func (wp *WorkerPoolImpl) Stop() {
 	close(wp.queue)
 	wp.logger.Println("waiting for ongoing tasks to finish...")
 	wp.wg.Wait()
-	wp.logger.Println("exiting...")
 }
 
 func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.JobItem, wg *sync.WaitGroup) {
