@@ -58,10 +58,10 @@ func (wp *WorkerPoolImpl) Start() {
 
 // Send schedules the job. An error is returned if the job backlog is full.
 func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
-	resultQueue := make(chan domain.JobResult, 1)
+	result := make(chan domain.JobResult, 1)
 	wi := domain.JobItem{
-		Job:         j,
-		ResultQueue: resultQueue,
+		Job:    j,
+		Result: result,
 	}
 
 	select {
