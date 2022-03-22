@@ -5,7 +5,7 @@ import (
 
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
-	"valet/internal/repository"
+	"valet/pkg/apperrors"
 )
 
 var _ port.ResultRepository = &resultdb{}
@@ -33,7 +33,7 @@ func (repo *resultdb) Create(result *domain.JobResult) error {
 func (repo *resultdb) Get(id string) (*domain.JobResult, error) {
 	serializedJobResult, ok := repo.db[id]
 	if !ok {
-		return nil, &repository.NotFoundErr{ID: id, ResourceName: "job result"}
+		return nil, &apperrors.NotFoundErr{ID: id, ResourceName: "job result"}
 	}
 	result := &domain.JobResult{}
 	json.Unmarshal(serializedJobResult, result)
@@ -53,7 +53,7 @@ func (repo *resultdb) Update(id string, result *domain.JobResult) error {
 // Delete deletes a job result from the repository.
 func (repo *resultdb) Delete(id string) error {
 	if _, ok := repo.db[id]; !ok {
-		return &repository.NotFoundErr{ID: id, ResourceName: "job result"}
+		return &apperrors.NotFoundErr{ID: id, ResourceName: "job result"}
 	}
 	delete(repo.db, id)
 	return nil

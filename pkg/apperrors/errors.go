@@ -1,8 +1,16 @@
-package repository
+package apperrors
 
 import (
 	"fmt"
 )
+
+// FullQueueErr is an error to indicate that a queue is full.
+type FullQueueErr struct{}
+
+func (e *FullQueueErr) Error() string {
+	return "job queue is full - try again later"
+
+}
 
 // NotFoundErr is an error indicating an resource is not found.
 type NotFoundErr struct {

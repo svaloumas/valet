@@ -3,7 +3,7 @@ package resulthdl
 import (
 	"net/http"
 	"valet/internal/core/port"
-	"valet/internal/repository"
+	"valet/pkg/apperrors"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
@@ -24,7 +24,7 @@ func NewResultHTTPHandler(resultService port.ResultService) *ResultHTTPHandler {
 // Get fetches a job result.
 func (hdl *ResultHTTPHandler) Get(c *gin.Context) {
 	result, err := hdl.resultService.Get(c.Param("id"))
-	if err != nil && xerrors.Is(err, &repository.NotFoundErr{}) {
+	if err != nil && xerrors.Is(err, &apperrors.NotFoundErr{}) {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 		return
 	}
@@ -39,7 +39,7 @@ func (hdl *ResultHTTPHandler) Get(c *gin.Context) {
 func (hdl *ResultHTTPHandler) Delete(c *gin.Context) {
 	err := hdl.resultService.Delete(c.Param("id"))
 	if err != nil {
-		if xerrors.Is(err, &repository.NotFoundErr{}) {
+		if xerrors.Is(err, &apperrors.NotFoundErr{}) {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
 		}

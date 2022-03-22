@@ -3,8 +3,8 @@ package jobsrv
 import (
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
-	"valet/internal/core/service"
 	"valet/internal/repository/workerpool/task"
+	"valet/pkg/apperrors"
 	"valet/pkg/time"
 	"valet/pkg/uuidgen"
 )
@@ -50,7 +50,7 @@ func (srv *jobservice) Create(name, description string, metadata interface{}) (*
 		return nil, err
 	}
 	if ok := srv.jobQueue.Push(j); !ok {
-		return nil, &service.FullQueueErr{}
+		return nil, &apperrors.FullQueueErr{}
 	}
 	if err := srv.jobRepository.Create(j); err != nil {
 		return nil, err

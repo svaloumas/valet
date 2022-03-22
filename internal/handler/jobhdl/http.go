@@ -7,7 +7,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"valet/internal/core/port"
-	"valet/internal/repository"
+	"valet/pkg/apperrors"
 )
 
 // JobHTTPHandler is an HTTP handler that exposes job endpoints.
@@ -39,7 +39,7 @@ func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 // Get fetches a job.
 func (hdl *JobHTTPHandler) Get(c *gin.Context) {
 	j, err := hdl.jobService.Get(c.Param("id"))
-	if err != nil && xerrors.Is(err, &repository.NotFoundErr{}) {
+	if err != nil && xerrors.Is(err, &apperrors.NotFoundErr{}) {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 		return
 	}
@@ -56,7 +56,7 @@ func (hdl *JobHTTPHandler) Update(c *gin.Context) {
 	c.BindJSON(&body)
 
 	err := hdl.jobService.Update(c.Param("id"), body.Name, body.Description)
-	if err != nil && xerrors.Is(err, &repository.NotFoundErr{}) {
+	if err != nil && xerrors.Is(err, &apperrors.NotFoundErr{}) {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 		return
 	}
@@ -71,7 +71,7 @@ func (hdl *JobHTTPHandler) Update(c *gin.Context) {
 func (hdl *JobHTTPHandler) Delete(c *gin.Context) {
 	err := hdl.jobService.Delete(c.Param("id"))
 	if err != nil {
-		if xerrors.Is(err, &repository.NotFoundErr{}) {
+		if xerrors.Is(err, &apperrors.NotFoundErr{}) {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
 		}

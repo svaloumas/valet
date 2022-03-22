@@ -8,8 +8,8 @@ import (
 
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
-	"valet/internal/repository"
 	"valet/internal/repository/workerpool/task"
+	"valet/pkg/apperrors"
 )
 
 var _ port.WorkerPool = &WorkerPoolImpl{}
@@ -76,7 +76,7 @@ func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
 		}()
 		return nil
 	default:
-		return &repository.FullWorkerPoolBacklog{}
+		return &apperrors.FullWorkerPoolBacklog{}
 	}
 }
 

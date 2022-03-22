@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 	"valet/internal/core/domain"
-	"valet/internal/core/service"
 	"valet/internal/repository/workerpool/task"
 	"valet/mocks"
+	"valet/pkg/apperrors"
 
 	"github.com/golang/mock/gomock"
 )
@@ -36,7 +36,7 @@ func TestCreateErrorCases(t *testing.T) {
 	uuidGenErr := errors.New("some uuid generator error")
 	jobValidateErr := errors.New("name required")
 	jobRepositoryErr := errors.New("some job repository error")
-	jobQueueErr := &service.FullQueueErr{}
+	jobQueueErr := &apperrors.FullQueueErr{}
 
 	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
 	uuidGen.
