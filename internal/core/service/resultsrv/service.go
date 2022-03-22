@@ -12,8 +12,7 @@ type resultservice struct {
 }
 
 // New creates a new job result service.
-func New(
-	resultRepository port.ResultRepository) *resultservice {
+func New(resultRepository port.ResultRepository) *resultservice {
 	return &resultservice{
 		resultRepository: resultRepository,
 	}

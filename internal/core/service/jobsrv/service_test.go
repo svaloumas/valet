@@ -149,10 +149,10 @@ func TestCreate(t *testing.T) {
 	service := New(jobRepository, jobQueue, uuidGen, freezed)
 	j, err := service.Create(expectedJob.Name, expectedJob.Description, expectedJob.Metadata)
 	if err != nil {
-		t.Errorf("create service returned unexpected error: %#v", err)
+		t.Errorf("service create returned unexpected error: %#v", err)
 	}
 	if eq := reflect.DeepEqual(j, expectedJob); !eq {
-		t.Errorf("create service returned wrong job, got %#v want %#v", j, expectedJob)
+		t.Errorf("service create returned wrong job, got %#v want %#v", j, expectedJob)
 	}
 }
 
@@ -214,75 +214,11 @@ func TestGet(t *testing.T) {
 		j, err := service.Get(tt.id)
 		if err != nil {
 			if err.Error() != tt.err.Error() {
-				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
 			}
 		} else {
 			if eq := reflect.DeepEqual(j, expectedJob); !eq {
 				t.Errorf("service get returned wrong job: got %#v want %#v", j, expectedJob)
-			}
-		}
-	}
-}
-
-func TestDelete(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	freezed := mocks.NewMockTime(ctrl)
-	freezed.
-		EXPECT().
-		Now().
-		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
-		Times(1)
-
-	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
-		ID:          "auuid4",
-		Name:        "job_name",
-		Description: "some description",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
-	}
-
-	invalidID := "invalid_id"
-	jobRepositoryErr := errors.New("some repository error")
-	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
-
-	jobRepository := mocks.NewMockJobRepository(ctrl)
-	jobRepository.
-		EXPECT().
-		Delete(expectedJob.ID).
-		Return(nil).
-		Times(1)
-	jobRepository.
-		EXPECT().
-		Delete(invalidID).
-		Return(jobRepositoryErr).
-		Times(1)
-
-	jobQueue := mocks.NewMockJobQueue(ctrl)
-
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
-
-	tests := []struct {
-		id  string
-		err error
-	}{
-		{
-			expectedJob.ID,
-			nil,
-		},
-		{
-			invalidID,
-			jobRepositoryErr,
-		},
-	}
-
-	for _, tt := range tests {
-		err := service.Delete(tt.id)
-		if err != nil {
-			if err.Error() != tt.err.Error() {
-				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
 			}
 		}
 	}
@@ -367,7 +303,71 @@ func TestUpdate(t *testing.T) {
 		err := service.Update(tt.id, updatedJob.Name, updatedJob.Description)
 		if err != nil {
 			if err.Error() != tt.err.Error() {
-				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				t.Errorf("service update returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+			}
+		}
+	}
+}
+
+func TestDelete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mocks.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	createdAt := freezed.Now()
+	expectedJob := &domain.Job{
+		ID:          "auuid4",
+		Name:        "job_name",
+		Description: "some description",
+		Status:      domain.Pending,
+		CreatedAt:   &createdAt,
+	}
+
+	invalidID := "invalid_id"
+	jobRepositoryErr := errors.New("some repository error")
+	uuidGen := mocks.NewMockUUIDGenerator(ctrl)
+
+	jobRepository := mocks.NewMockJobRepository(ctrl)
+	jobRepository.
+		EXPECT().
+		Delete(expectedJob.ID).
+		Return(nil).
+		Times(1)
+	jobRepository.
+		EXPECT().
+		Delete(invalidID).
+		Return(jobRepositoryErr).
+		Times(1)
+
+	jobQueue := mocks.NewMockJobQueue(ctrl)
+
+	service := New(jobRepository, jobQueue, uuidGen, freezed)
+
+	tests := []struct {
+		id  string
+		err error
+	}{
+		{
+			expectedJob.ID,
+			nil,
+		},
+		{
+			invalidID,
+			jobRepositoryErr,
+		},
+	}
+
+	for _, tt := range tests {
+		err := service.Delete(tt.id)
+		if err != nil {
+			if err.Error() != tt.err.Error() {
+				t.Errorf("service delete returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
 			}
 		}
 	}
