@@ -10,12 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
-
 	"valet/internal/core/service/jobsrv"
 	"valet/internal/core/service/resultsrv"
-	"valet/internal/handler/jobhdl"
-	"valet/internal/handler/resulthdl"
 	"valet/internal/repository/jobqueue"
 	"valet/internal/repository/jobrepo"
 	"valet/internal/repository/resultrepo"
@@ -53,20 +49,9 @@ func main() {
 	jobTransmitter := NewTransmitter(jobQueue, wp, int(tickInterval))
 	go jobTransmitter.Transmit()
 
-	jobHandhler := jobhdl.NewJobHTTPHandler(jobService)
-	resultHandhler := resulthdl.NewResultHTTPHandler(resultService)
-
-	router := gin.New()
-	router.POST("/jobs", jobHandhler.Create)
-	router.GET("/jobs/:id", jobHandhler.Get)
-	router.DELETE("/jobs/:id", jobHandhler.Delete)
-
-	router.GET("/jobs/:id/results", resultHandhler.Get)
-	router.DELETE("/jobs/:id/results", resultHandhler.Delete)
-
 	srv := http.Server{
 		Addr:    addr,
-		Handler: router,
+		Handler: NewRouter(jobService, resultService),
 	}
 
 	go func() {
