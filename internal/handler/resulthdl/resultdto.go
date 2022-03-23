@@ -4,10 +4,10 @@ import (
 	"valet/internal/core/domain"
 )
 
-// ResponseDTO is the response data transfer object used for a job result retrieval.
-type ResponseDTO *domain.JobResult
+// ResponseBodyDTO is the response data transfer object used for a job result retrieval.
+type ResponseBodyDTO *domain.JobResult
 
-// BuildResponseDTO creates a new ResponseDTO.
-func BuildResponseDTO(resource *domain.JobResult) ResponseDTO {
-	return ResponseDTO(resource)
+// BuildResponseBodyDTO creates a new ResponseDTO.
+func BuildResponseBodyDTO(resource *domain.JobResult) ResponseBodyDTO {
+	return ResponseBodyDTO(resource)
 }

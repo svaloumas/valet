@@ -19,6 +19,8 @@ import (
 	"valet/internal/repository/workerpool/task"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
+
+	_ "valet/doc/swagger"
 )
 
 var (

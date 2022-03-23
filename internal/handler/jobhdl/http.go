@@ -24,7 +24,7 @@ func NewJobHTTPHandler(jobService port.JobService) *JobHTTPHandler {
 
 // Create creates a new job.
 func (hdl *JobHTTPHandler) Create(c *gin.Context) {
-	body := NewBodyDTO()
+	body := NewRequestBodyDTO()
 	c.BindJSON(&body)
 
 	j, err := hdl.jobService.Create(body.Name, body.Description, body.Metadata)
@@ -33,7 +33,7 @@ func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusAccepted, BuildResponseDTO(j))
+	c.JSON(http.StatusAccepted, BuildResponseBodyDTO(j))
 }
 
 // Get fetches a job.
@@ -47,12 +47,12 @@ func (hdl *JobHTTPHandler) Get(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, BuildResponseDTO(j))
+	c.JSON(http.StatusOK, BuildResponseBodyDTO(j))
 }
 
 // Update updates a job.
 func (hdl *JobHTTPHandler) Update(c *gin.Context) {
-	body := BodyDTO{}
+	body := RequestBodyDTO{}
 	c.BindJSON(&body)
 
 	err := hdl.jobService.Update(c.Param("id"), body.Name, body.Description)

@@ -1,0 +1,110 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  Job:
+    properties:
+      completed_at:
+        description: CompletedAt is the UTC timestamp of the moment the job finished.
+        format: date-time
+        type: string
+        x-go-name: CompletedAt
+      created_at:
+        description: CreatedAt is the UTC timestamp of the job creation.
+        format: date-time
+        type: string
+        x-go-name: CreatedAt
+      description:
+        description: Description gives some information about the job.
+        type: string
+        x-go-name: Description
+      failure_reason:
+        description: FailureReason holds the error message that led to the job failure,
+          if any.
+        type: string
+        x-go-name: FailureReason
+      id:
+        description: ID is the auto-generated job identifier in UUID4 format.
+        type: string
+        x-go-name: ID
+      metadata:
+        description: Metadata is the payload provided for the specific job.
+        type: object
+        x-go-name: Metadata
+      name:
+        description: Name is the name of the job.
+        type: string
+        x-go-name: Name
+      started_at:
+        description: StartedAt is the UTC timestamp of the moment the job started.
+        format: date-time
+        type: string
+        x-go-name: StartedAt
+      status:
+        $ref: '#/definitions/JobStatus'
+    title: Job represents an async task.
+    type: object
+    x-go-package: valet/internal/core/domain
+  JobStatus:
+    format: int64
+    title: JobStatus holds a value for job status ranging from 1 to 5.
+    type: integer
+    x-go-package: valet/internal/core/domain
+  RequestBodyDTO:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      metadata:
+        type: object
+        x-go-name: Metadata
+      name:
+        type: string
+        x-go-name: Name
+    title: RequestBodyDTO is the data transfer object used for a job creation or update.
+    type: object
+    x-go-package: valet/internal/handler/jobhdl
+  errResponse:
+    properties:
+      message:
+        type: string
+        x-go-name: Message
+    type: object
+    x-go-package: valet/doc/swagger
+host: localhost:8080
+info:
+  description: Documentation of valet service API.
+  title: valet service.
+  version: 1.0.0
+paths:
+  /jobs:
+    post:
+      operationId: createJobs
+      parameters:
+      - description: Name, description and metadata of the new job to be performed.
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/RequestBodyDTO'
+      responses:
+        "200":
+          $ref: '#/responses/jobResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Creates a new job.
+      tags:
+      - jobs
+produces:
+- application/json
+responses:
+  errorResponse:
+    description: The API error response body.
+    schema:
+      $ref: '#/definitions/errResponse'
+  jobResponse:
+    description: Returns the newly created job metadata.
+    schema:
+      $ref: '#/definitions/Job'
+schemes:
+- http
+swagger: "2.0"

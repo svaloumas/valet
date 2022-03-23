@@ -32,7 +32,7 @@ func (hdl *ResultHTTPHandler) Get(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, BuildResponseDTO(result))
+	c.JSON(http.StatusOK, BuildResponseBodyDTO(result))
 }
 
 // Delete deletes a job result.
