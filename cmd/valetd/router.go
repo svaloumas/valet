@@ -25,6 +25,7 @@ func NewRouter(jobService port.JobService, resultService port.ResultService) *gi
 	}))
 	r.POST("/jobs", jobHandhler.Create)
 	r.GET("/jobs/:id", jobHandhler.Get)
+	r.PATCH("/jobs/:id", jobHandhler.Update)
 	r.DELETE("/jobs/:id", jobHandhler.Delete)
 
 	r.GET("/jobs/:id/results", resultHandhler.Get)
