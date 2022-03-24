@@ -1,0 +1,277 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "Documentation of valet service API.",
+    "title": "valet service.",
+    "version": "1.0.0"
+  },
+  "host": "localhost:8080",
+  "basePath": "/",
+  "paths": {
+    "/jobs": {
+      "post": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Creates a new job.",
+        "operationId": "createJobs",
+        "parameters": [
+          {
+            "description": "Name, description and metadata of the new job to be performed.",
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/RequestBodyDTO"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/responses/postJobsResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      }
+    },
+    "/jobs/:id": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Returns a specified job.",
+        "operationId": "getJob",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getJobResponse"
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Deletes a specified job.",
+        "operationId": "deleteJob",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Updates a job's name of description.",
+        "operationId": "patchJob",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      }
+    },
+    "/jobs/:id/results": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Returns a specified job's results.",
+        "operationId": "getJobResults",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getJobResultsResponse"
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Deletes a job's results.",
+        "operationId": "deleteJobResults",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Job": {
+      "type": "object",
+      "title": "Job represents an async task.",
+      "properties": {
+        "completed_at": {
+          "description": "CompletedAt is the UTC timestamp of the moment the job finished.",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CompletedAt"
+        },
+        "created_at": {
+          "description": "CreatedAt is the UTC timestamp of the job creation.",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CreatedAt"
+        },
+        "description": {
+          "description": "Description gives some information about the job.",
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "failure_reason": {
+          "description": "FailureReason holds the error message that led to the job failure, if any.",
+          "type": "string",
+          "x-go-name": "FailureReason"
+        },
+        "id": {
+          "description": "ID is the auto-generated job identifier in UUID4 format.",
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "metadata": {
+          "description": "Metadata is the payload provided for the specific job.",
+          "type": "object",
+          "x-go-name": "Metadata"
+        },
+        "name": {
+          "description": "Name is the name of the job.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "started_at": {
+          "description": "StartedAt is the UTC timestamp of the moment the job started.",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "StartedAt"
+        },
+        "status": {
+          "$ref": "#/definitions/JobStatus"
+        }
+      },
+      "x-go-package": "valet/internal/core/domain"
+    },
+    "JobResult": {
+      "type": "object",
+      "title": "JobResult contains the result of a job.",
+      "properties": {
+        "error": {
+          "type": "string",
+          "x-go-name": "Error"
+        },
+        "job_id": {
+          "type": "string",
+          "x-go-name": "JobID"
+        },
+        "metadata": {
+          "type": "object",
+          "x-go-name": "Metadata"
+        }
+      },
+      "x-go-package": "valet/internal/core/domain"
+    },
+    "JobStatus": {
+      "type": "integer",
+      "format": "int64",
+      "title": "JobStatus holds a value for job status ranging from 1 to 5.",
+      "x-go-package": "valet/internal/core/domain"
+    },
+    "RequestBodyDTO": {
+      "type": "object",
+      "title": "RequestBodyDTO is the data transfer object used for a job creation or update.",
+      "properties": {
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "metadata": {
+          "type": "object",
+          "x-go-name": "Metadata"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-package": "valet/internal/handler/jobhdl"
+    },
+    "errResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
+        }
+      },
+      "x-go-package": "valet/doc/swagger"
+    }
+  },
+  "responses": {
+    "errorResponse": {
+      "description": "The API error response body.",
+      "schema": {
+        "$ref": "#/definitions/errResponse"
+      }
+    },
+    "getJobResponse": {
+      "description": "The specified job's metadata.",
+      "schema": {
+        "$ref": "#/definitions/Job"
+      }
+    },
+    "getJobResultsResponse": {
+      "description": "Returns a specified job results.",
+      "schema": {
+        "$ref": "#/definitions/JobResult"
+      }
+    },
+    "postJobsResponse": {
+      "description": "Returns the newly created job metadata.",
+      "schema": {
+        "$ref": "#/definitions/Job"
+      }
+    }
+  }
+}

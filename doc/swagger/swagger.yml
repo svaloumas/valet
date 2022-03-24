@@ -45,6 +45,20 @@ definitions:
     title: Job represents an async task.
     type: object
     x-go-package: valet/internal/core/domain
+  JobResult:
+    properties:
+      error:
+        type: string
+        x-go-name: Error
+      job_id:
+        type: string
+        x-go-name: JobID
+      metadata:
+        type: object
+        x-go-name: Metadata
+    title: JobResult contains the result of a job.
+    type: object
+    x-go-package: valet/internal/core/domain
   JobStatus:
     format: int64
     title: JobStatus holds a value for job status ranging from 1 to 5.
@@ -87,11 +101,73 @@ paths:
         schema:
           $ref: '#/definitions/RequestBodyDTO'
       responses:
-        "200":
-          $ref: '#/responses/jobResponse'
+        "202":
+          $ref: '#/responses/postJobsResponse'
         "500":
           $ref: '#/responses/errorResponse'
       summary: Creates a new job.
+      tags:
+      - jobs
+  /jobs/:id:
+    delete:
+      operationId: deleteJob
+      responses:
+        "204":
+          description: ""
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Deletes a specified job.
+      tags:
+      - jobs
+    get:
+      operationId: getJob
+      responses:
+        "200":
+          $ref: '#/responses/getJobResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Returns a specified job.
+      tags:
+      - jobs
+    patch:
+      operationId: patchJob
+      responses:
+        "204":
+          description: ""
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Updates a job's name of description.
+      tags:
+      - jobs
+  /jobs/:id/results:
+    delete:
+      operationId: deleteJobResults
+      responses:
+        "204":
+          description: ""
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Deletes a job's results.
+      tags:
+      - jobs
+    get:
+      operationId: getJobResults
+      responses:
+        "200":
+          $ref: '#/responses/getJobResultsResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Returns a specified job's results.
       tags:
       - jobs
 produces:
@@ -101,7 +177,15 @@ responses:
     description: The API error response body.
     schema:
       $ref: '#/definitions/errResponse'
-  jobResponse:
+  getJobResponse:
+    description: The specified job's metadata.
+    schema:
+      $ref: '#/definitions/Job'
+  getJobResultsResponse:
+    description: Returns a specified job results.
+    schema:
+      $ref: '#/definitions/JobResult'
+  postJobsResponse:
     description: Returns the newly created job metadata.
     schema:
       $ref: '#/definitions/Job'
