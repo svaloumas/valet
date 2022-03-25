@@ -35,9 +35,9 @@ var (
 
 func main() {
 	taskFunc := task.TaskTypes[taskType]
+	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
 
 	jobRepository := jobrepo.NewJobDB()
-	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
 	jobService := jobsrv.New(jobRepository, jobQueue, uuidgen.New(), rtime.New())
 
 	resultRepository := resultrepo.NewResultDB()
@@ -47,8 +47,6 @@ func main() {
 		jobService, resultService, wpConcurrency, wpBacklog, time.Duration(taskTimeout), taskFunc)
 	wp.Start()
 
-	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
-
 	jobTransmitter := NewTransmitter(jobQueue, wp, int(tickInterval))
 	go jobTransmitter.Transmit()
 
@@ -56,6 +54,8 @@ func main() {
 		Addr:    addr,
 		Handler: NewRouter(jobService, resultService),
 	}
+
+	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
