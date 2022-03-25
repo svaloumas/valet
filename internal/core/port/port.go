@@ -1,6 +1,8 @@
 package port
 
 import (
+	"context"
+	"time"
 	"valet/internal/core/domain"
 	"valet/internal/repository/workerpool/task"
 )
@@ -69,6 +71,9 @@ type JobService interface {
 
 	// Exec executes a job.
 	Exec(item domain.JobItem, callback task.TaskFunc) error
+
+	// ExecWithTimeout executes a job and stops execution if a specified timeout is exceeded.
+	ExecWithTimeout(timeout time.Duration, ctx context.Context, item domain.JobItem, callback task.TaskFunc) error
 }
 
 // ResultService represents a driver actor service interface.

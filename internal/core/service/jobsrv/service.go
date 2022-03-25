@@ -1,11 +1,15 @@
 package jobsrv
 
 import (
+	"context"
+	"fmt"
+	"time"
+
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
 	"valet/internal/repository/workerpool/task"
 	"valet/pkg/apperrors"
-	"valet/pkg/time"
+	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
 )
 
@@ -15,14 +19,14 @@ type jobservice struct {
 	jobRepository port.JobRepository
 	jobQueue      port.JobQueue
 	uuidGen       uuidgen.UUIDGenerator
-	time          time.Time
+	time          rtime.Time
 }
 
 // New creates a new job service.
 func New(jobRepository port.JobRepository,
 	jobQueue port.JobQueue,
 	uuidGen uuidgen.UUIDGenerator,
-	time time.Time) *jobservice {
+	time rtime.Time) *jobservice {
 	return &jobservice{
 		jobRepository: jobRepository,
 		jobQueue:      jobQueue,
@@ -116,4 +120,37 @@ func (srv *jobservice) Exec(item domain.JobItem, callback task.TaskFunc) error {
 		return err
 	}
 	return nil
+}
+
+// ExecWithTimeout executes a job and stops execution
+//  if a specified timeout is exceeded.
+func (srv *jobservice) ExecWithTimeout(
+	timeout time.Duration,
+	ctx context.Context,
+	item domain.JobItem,
+	callback task.TaskFunc) error {
+
+	ctx, cancel := context.WithTimeout(ctx, timeout*time.Second)
+	defer cancel()
+
+	done := make(chan error, 1)
+	panicChan := make(chan interface{}, 1)
+	go func() {
+		defer func() {
+			if p := recover(); p != nil {
+				panicChan <- p
+			}
+		}()
+
+		done <- srv.Exec(item, callback)
+	}()
+
+	select {
+	case err := <-done:
+		return err
+	case p := <-panicChan:
+		return fmt.Errorf("%v", p)
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }

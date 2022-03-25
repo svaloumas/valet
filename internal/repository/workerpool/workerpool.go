@@ -1,10 +1,12 @@
 package workerpool
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
@@ -17,7 +19,8 @@ var _ port.WorkerPool = &WorkerPoolImpl{}
 // WorkerPoolImpl is a concrete implementation of WorkerPool.
 type WorkerPoolImpl struct {
 	// The task that should be run.
-	task task.TaskFunc
+	task        task.TaskFunc
+	taskTimeout time.Duration
 	// The fixed amount of goroutines that will be handling running jobs.
 	concurrency int
 	// The maximum capacity of the worker pool queue. If exceeded, sending new
@@ -36,11 +39,13 @@ func NewWorkerPoolImpl(
 	jobService port.JobService,
 	resultService port.ResultService,
 	concurrency, backlog int,
+	taskTimeout time.Duration,
 	task task.TaskFunc) *WorkerPoolImpl {
 
 	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
 	return &WorkerPoolImpl{
 		task:          task,
+		taskTimeout:   taskTimeout,
 		concurrency:   concurrency,
 		backlog:       backlog,
 		jobService:    jobService,
@@ -92,8 +97,8 @@ func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.JobItem, wg *sync
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
 		wp.logger.Printf("%s executing task...", logPrefix)
-		if err := wp.jobService.Exec(item, wp.task); err != nil {
-			wp.logger.Printf("could not update job status: %s", err)
+		if err := wp.jobService.ExecWithTimeout(wp.taskTimeout, context.Background(), item, wp.task); err != nil {
+			wp.logger.Printf("task execution error: %s", err)
 		}
 		wp.logger.Printf("%s task finished!", logPrefix)
 	}
