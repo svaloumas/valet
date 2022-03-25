@@ -3,7 +3,7 @@
 // Documentation of valet service API.
 //
 //     Schemes: http
-//     BasePath: /
+//     BasePath: /api
 //     Version: 1.0.0
 //     Host: localhost:8080
 //
