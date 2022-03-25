@@ -23,12 +23,12 @@ func NewRouter(jobService port.JobService, resultService port.ResultService) *gi
 		}
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}))
-	r.POST("/jobs", jobHandhler.Create)
-	r.GET("/jobs/:id", jobHandhler.Get)
-	r.PATCH("/jobs/:id", jobHandhler.Update)
-	r.DELETE("/jobs/:id", jobHandhler.Delete)
+	r.POST("/api/jobs", jobHandhler.Create)
+	r.GET("/api/jobs/:id", jobHandhler.Get)
+	r.PATCH("/api/jobs/:id", jobHandhler.Update)
+	r.DELETE("/api/jobs/:id", jobHandhler.Delete)
 
-	r.GET("/jobs/:id/results", resultHandhler.Get)
-	r.DELETE("/jobs/:id/results", resultHandhler.Delete)
+	r.GET("/api/jobs/:id/results", resultHandhler.Get)
+	r.DELETE("/api/jobs/:id/results", resultHandhler.Delete)
 	return r
 }
