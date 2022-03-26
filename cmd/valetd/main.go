@@ -30,7 +30,6 @@ var (
 	wpBacklog        = wpConcurrency * 2
 	tickInterval     = 500 * time.Millisecond
 	taskType         = "dummytask"
-	taskTimeout      = 2
 )
 
 func main() {
@@ -44,7 +43,7 @@ func main() {
 	resultService := resultsrv.New(resultRepository)
 
 	wp := workerpool.NewWorkerPoolImpl(
-		jobService, resultService, wpConcurrency, wpBacklog, time.Duration(taskTimeout), taskFunc)
+		jobService, resultService, wpConcurrency, wpBacklog, taskFunc)
 	wp.Start()
 
 	jobTransmitter := NewTransmitter(jobQueue, wp, int(tickInterval))
