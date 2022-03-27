@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 	"valet/internal/core/domain/task"
-	"valet/pkg/apperrors"
 )
 
 // Job represents an async task.
@@ -75,9 +74,7 @@ func (job *Job) Validate() error {
 	}
 
 	if len(required) > 0 {
-		return &apperrors.ResourceValidationErr{
-			Message: strings.Join(required, ", ") + " required",
-		}
+		return fmt.Errorf(strings.Join(required, ", ") + " required")
 	}
 
 	_, ok := task.TaskTypes[job.TaskType]
@@ -86,9 +83,7 @@ func (job *Job) Validate() error {
 		for taskType := range task.TaskTypes {
 			validTypes = append(validTypes, taskType)
 		}
-		return &apperrors.ResourceValidationErr{
-			Message: fmt.Sprintf("task_type is not valid - valid task types: %v", validTypes),
-		}
+		return fmt.Errorf("%s is not a valid task type - valid task types: %v", job.TaskType, validTypes)
 	}
 
 	if job.Status != Undefined {

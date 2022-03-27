@@ -80,6 +80,10 @@ func TestJobValidate(t *testing.T) {
 			&Job{Name: "a name", TaskType: "dummytask", Description: "some_description", Status: 7},
 			"7 is not a valid job status, valid statuses: map[PENDING:1 IN_PROGRESS:2 COMPLETED:3 FAILED:4]",
 		},
+		{
+			&Job{Name: "a name", TaskType: "wrongtask", Description: "some_description", Status: 2},
+			"wrongtask is not a valid task type - valid task types: [dummytask]",
+		},
 	}
 
 	for _, tt := range tests {

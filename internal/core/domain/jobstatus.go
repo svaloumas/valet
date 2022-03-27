@@ -3,7 +3,6 @@ package domain
 import (
 	"fmt"
 	"strconv"
-	"valet/pkg/apperrors"
 )
 
 // JobStatus holds a value for job status ranging from 1 to 5.
@@ -71,9 +70,7 @@ func (js JobStatus) Validate() error {
 		Failed:     Failed.Index(),
 	}
 	if _, ok := validJobStatuses[js]; !ok {
-		err = &apperrors.ResourceValidationErr{
-			Message: fmt.Sprintf("%d is not a valid job status, valid statuses: %v", js, validJobStatuses),
-		}
+		err = fmt.Errorf("%d is not a valid job status, valid statuses: %v", js, validJobStatuses)
 	}
 	return err
 }

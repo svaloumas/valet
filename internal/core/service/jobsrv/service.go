@@ -48,7 +48,7 @@ func (srv *jobservice) Create(name, taskType, description string, metadata inter
 		CreatedAt:   &createdAt,
 	}
 	if err := j.Validate(); err != nil {
-		return nil, err
+		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}
 	}
 
 	if ok := srv.jobQueue.Push(j); !ok {

@@ -38,7 +38,7 @@ func TestCreateErrorCases(t *testing.T) {
 	jobValidateErr := errors.New("name required")
 	jobRepositoryErr := errors.New("some job repository error")
 	jobQueueErr := &apperrors.FullQueueErr{}
-	jobTaskTypeErr := &apperrors.ResourceValidationErr{Message: "task_type is not valid - valid task types: [dummytask]"}
+	jobTaskTypeErr := &apperrors.ResourceValidationErr{Message: "wrongtask is not a valid task type - valid task types: [dummytask]"}
 
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 	uuidGen.
