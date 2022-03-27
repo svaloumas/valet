@@ -23,6 +23,7 @@ var testTime = "1985-05-04T04:32:53.651387234Z"
 func TestPostJobs(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	gin.SetMode(gin.ReleaseMode)
 
 	freezed := mock.NewMockTime(ctrl)
 	freezed.
