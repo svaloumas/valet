@@ -1,9 +1,11 @@
 package domain
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 	"time"
+	"valet/internal/core/domain/task"
+	"valet/pkg/apperrors"
 )
 
 // Job represents an async task.
@@ -13,6 +15,9 @@ type Job struct {
 
 	// Name is the name of the job.
 	Name string `json:"name"`
+
+	// TaskType is the type of the task to be executed.
+	TaskType string `json:"task_type"`
 
 	// Description gives some information about the job.
 	Description string `json:"description,omitempty"`
@@ -65,8 +70,25 @@ func (job *Job) Validate() error {
 		required = append(required, "name")
 	}
 
+	if job.TaskType == "" {
+		required = append(required, "task_type")
+	}
+
 	if len(required) > 0 {
-		return errors.New(strings.Join(required, ", ") + " required")
+		return &apperrors.ResourceValidationErr{
+			Message: strings.Join(required, ", ") + " required",
+		}
+	}
+
+	_, ok := task.TaskTypes[job.TaskType]
+	if !ok {
+		validTypes := []string{}
+		for taskType := range task.TaskTypes {
+			validTypes = append(validTypes, taskType)
+		}
+		return &apperrors.ResourceValidationErr{
+			Message: fmt.Sprintf("task_type is not valid - valid task types: %v", validTypes),
+		}
 	}
 
 	if job.Status != Undefined {

@@ -16,7 +16,6 @@ import (
 	"valet/internal/repository/jobrepo"
 	"valet/internal/repository/resultrepo"
 	"valet/internal/repository/workerpool"
-	"valet/internal/repository/workerpool/task"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
 
@@ -29,11 +28,9 @@ var (
 	wpConcurrency    = runtime.NumCPU() / 2
 	wpBacklog        = wpConcurrency * 2
 	tickInterval     = 500 * time.Millisecond
-	taskType         = "dummytask"
 )
 
 func main() {
-	taskFunc := task.TaskTypes[taskType]
 	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
 
 	jobRepository := jobrepo.NewJobDB()
@@ -42,8 +39,7 @@ func main() {
 	resultRepository := resultrepo.NewResultDB()
 	resultService := resultsrv.New(resultRepository)
 
-	wp := workerpool.NewWorkerPoolImpl(
-		jobService, resultService, wpConcurrency, wpBacklog, taskFunc)
+	wp := workerpool.NewWorkerPoolImpl(jobService, resultService, wpConcurrency, wpBacklog)
 	wp.Start()
 
 	jobTransmitter := NewTransmitter(jobQueue, wp, int(tickInterval))

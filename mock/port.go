@@ -7,7 +7,7 @@ package mock
 import (
 	reflect "reflect"
 	domain "valet/internal/core/domain"
-	task "valet/internal/repository/workerpool/task"
+	task "valet/internal/core/domain/task"
 
 	gomock "github.com/golang/mock/gomock"
 )

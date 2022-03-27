@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"valet/internal/core/domain"
+	"valet/internal/core/domain/task"
 	"valet/internal/core/port"
-	"valet/internal/repository/workerpool/task"
 	"valet/pkg/apperrors"
 )
 
@@ -16,8 +16,6 @@ var _ port.WorkerPool = &WorkerPoolImpl{}
 
 // WorkerPoolImpl is a concrete implementation of WorkerPool.
 type WorkerPoolImpl struct {
-	// The task that should be run.
-	task task.TaskFunc
 	// The fixed amount of goroutines that will be handling running jobs.
 	concurrency int
 	// The maximum capacity of the worker pool queue. If exceeded, sending new
@@ -35,12 +33,10 @@ type WorkerPoolImpl struct {
 func NewWorkerPoolImpl(
 	jobService port.JobService,
 	resultService port.ResultService,
-	concurrency, backlog int,
-	task task.TaskFunc) *WorkerPoolImpl {
+	concurrency, backlog int) *WorkerPoolImpl {
 
 	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
 	return &WorkerPoolImpl{
-		task:          task,
 		concurrency:   concurrency,
 		backlog:       backlog,
 		jobService:    jobService,
@@ -62,15 +58,16 @@ func (wp *WorkerPoolImpl) Start() {
 // Send schedules the job. An error is returned if the job backlog is full.
 func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
 	result := make(chan domain.JobResult, 1)
-	wi := domain.JobItem{
-		Job:    j,
-		Result: result,
+	jobItem := domain.JobItem{
+		Job:      j,
+		Result:   result,
+		TaskFunc: task.TaskTypes[j.TaskType],
 	}
 
 	select {
-	case wp.queue <- wi:
+	case wp.queue <- jobItem:
 		go func() {
-			if err := wp.resultService.Create(domain.FutureJobResult{Result: wi.Result}); err != nil {
+			if err := wp.resultService.Create(domain.FutureJobResult{Result: jobItem.Result}); err != nil {
 				wp.logger.Printf("could not create job result to the repository")
 			}
 		}()
@@ -92,7 +89,7 @@ func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.JobItem, wg *sync
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
 		wp.logger.Printf("%s executing task...", logPrefix)
-		if err := wp.jobService.Exec(item, wp.task); err != nil {
+		if err := wp.jobService.Exec(item); err != nil {
 			wp.logger.Printf("could not update job status: %s", err)
 		}
 		wp.logger.Printf("%s task finished!", logPrefix)

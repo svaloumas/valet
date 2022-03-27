@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
-	"valet/internal/repository/workerpool/task"
 	"valet/pkg/apperrors"
 	"valet/pkg/time"
 	"valet/pkg/uuidgen"
@@ -33,7 +32,7 @@ func New(jobRepository port.JobRepository,
 }
 
 // Create creates a new job.
-func (srv *jobservice) Create(name, description string, metadata interface{}) (*domain.Job, error) {
+func (srv *jobservice) Create(name, taskType, description string, metadata interface{}) (*domain.Job, error) {
 	uuid, err := srv.uuidGen.GenerateRandomUUIDString()
 	if err != nil {
 		return nil, err
@@ -42,6 +41,7 @@ func (srv *jobservice) Create(name, description string, metadata interface{}) (*
 	j := &domain.Job{
 		ID:          uuid,
 		Name:        name,
+		TaskType:    taskType,
 		Description: description,
 		Metadata:    metadata,
 		Status:      domain.Pending,
@@ -50,6 +50,7 @@ func (srv *jobservice) Create(name, description string, metadata interface{}) (*
 	if err := j.Validate(); err != nil {
 		return nil, err
 	}
+
 	if ok := srv.jobQueue.Push(j); !ok {
 		return nil, &apperrors.FullQueueErr{}
 	}
@@ -81,7 +82,7 @@ func (srv *jobservice) Delete(id string) error {
 }
 
 // Exec executes the job.
-func (srv *jobservice) Exec(item domain.JobItem, callback task.TaskFunc) error {
+func (srv *jobservice) Exec(item domain.JobItem) error {
 	startedAt := srv.time.Now()
 	item.Job.MarkStarted(&startedAt)
 	if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
@@ -103,7 +104,7 @@ func (srv *jobservice) Exec(item domain.JobItem, callback task.TaskFunc) error {
 		var errMsg string
 
 		// Perform the actual work.
-		resultMetadata, jobErr := callback(item.Job.Metadata)
+		resultMetadata, jobErr := item.TaskFunc(item.Job.Metadata)
 		if jobErr != nil {
 			errMsg = jobErr.Error()
 		}

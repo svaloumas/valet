@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 	"valet/internal/core/domain"
-	"valet/internal/repository/workerpool/task"
+	"valet/internal/core/domain/task"
 	"valet/mock"
 	"valet/pkg/apperrors"
 
@@ -22,12 +22,13 @@ func TestCreateErrorCases(t *testing.T) {
 		EXPECT().
 		Now().
 		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
-		Times(4)
+		Times(5)
 
 	createdAt := freezed.Now()
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
+		TaskType:    "dummytask",
 		Description: "some description",
 		Metadata:    &task.DummyMetadata{},
 		Status:      domain.Pending,
@@ -37,13 +38,14 @@ func TestCreateErrorCases(t *testing.T) {
 	jobValidateErr := errors.New("name required")
 	jobRepositoryErr := errors.New("some job repository error")
 	jobQueueErr := &apperrors.FullQueueErr{}
+	jobTaskTypeErr := &apperrors.ResourceValidationErr{Message: "task_type is not valid - valid task types: [dummytask]"}
 
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
 		Return(expectedJob.ID, nil).
-		Times(3)
+		Times(4)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
@@ -72,29 +74,39 @@ func TestCreateErrorCases(t *testing.T) {
 	service := New(jobRepository, jobQueue, uuidGen, freezed)
 
 	tests := []struct {
-		name string
-		err  error
+		name     string
+		taskType string
+		err      error
 	}{
 		{
 			"",
+			"dummytask",
 			jobValidateErr,
 		},
 		{
 			"job_name",
+			"dummytask",
 			jobRepositoryErr,
 		},
 		{
 			"job_name",
+			"dummytask",
 			jobQueueErr,
 		},
 		{
 			"job_name",
+			"wrongtask",
+			jobTaskTypeErr,
+		},
+		{
+			"job_name",
+			"dummytask",
 			uuidGenErr,
 		},
 	}
 
 	for _, tt := range tests {
-		_, err := service.Create(tt.name, expectedJob.Description, expectedJob.Metadata)
+		_, err := service.Create(tt.name, tt.taskType, expectedJob.Description, expectedJob.Metadata)
 		if err == nil {
 			t.Error("service created expected error, returned nil instead")
 		}
@@ -119,6 +131,7 @@ func TestCreate(t *testing.T) {
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
+		TaskType:    "dummytask",
 		Description: "some description",
 		Metadata:    &task.DummyMetadata{},
 		Status:      domain.Pending,
@@ -147,7 +160,7 @@ func TestCreate(t *testing.T) {
 		Times(1)
 
 	service := New(jobRepository, jobQueue, uuidGen, freezed)
-	j, err := service.Create(expectedJob.Name, expectedJob.Description, expectedJob.Metadata)
+	j, err := service.Create(expectedJob.Name, expectedJob.TaskType, expectedJob.Description, expectedJob.Metadata)
 	if err != nil {
 		t.Errorf("service create returned unexpected error: %#v", err)
 	}
@@ -171,6 +184,7 @@ func TestGet(t *testing.T) {
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
+		TaskType:    "dummytask",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -239,6 +253,7 @@ func TestUpdate(t *testing.T) {
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
+		TaskType:    "dummytask",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -324,6 +339,7 @@ func TestDelete(t *testing.T) {
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
+		TaskType:    "dummytask",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,

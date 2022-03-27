@@ -73,9 +73,11 @@ func TestJobValidate(t *testing.T) {
 		job  *Job
 		desc string
 	}{
-		{&Job{}, "name required"},
+		{&Job{}, "name, task_type required"},
+		{&Job{Name: "a name"}, "task_type required"},
+		{&Job{TaskType: "dummytask"}, "name required"},
 		{
-			&Job{Name: "a_job", Description: "some_description", Status: 7},
+			&Job{Name: "a name", TaskType: "dummytask", Description: "some_description", Status: 7},
 			"7 is not a valid job status, valid statuses: map[PENDING:1 IN_PROGRESS:2 COMPLETED:3 FAILED:4]",
 		},
 	}

@@ -29,3 +29,11 @@ type FullWorkerPoolBacklog struct{}
 func (e *FullWorkerPoolBacklog) Error() string {
 	return "worker pool backlog is full"
 }
+
+type ResourceValidationErr struct {
+	Message string
+}
+
+func (e *ResourceValidationErr) Error() string {
+	return e.Message
+}
