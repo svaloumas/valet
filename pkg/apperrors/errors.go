@@ -4,6 +4,11 @@ import (
 	"fmt"
 )
 
+var _ error = &FullQueueErr{}
+var _ error = &NotFoundErr{}
+var _ error = &FullWorkerPoolBacklog{}
+var _ error = &ResourceValidationErr{}
+
 // FullQueueErr is an error to indicate that a queue is full.
 type FullQueueErr struct{}
 
@@ -30,6 +35,8 @@ func (e *FullWorkerPoolBacklog) Error() string {
 	return "worker pool backlog is full"
 }
 
+// ResourceValidationErr is an error indicating an error during
+// a resource validation check.
 type ResourceValidationErr struct {
 	Message string
 }
