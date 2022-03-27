@@ -17,7 +17,7 @@ func TestCreate(t *testing.T) {
 	result := domain.JobResult{
 		JobID:    "job_id",
 		Metadata: "some metadata",
-		Error:    nil,
+		Error:    "",
 	}
 	resultQueue1 := make(chan domain.JobResult, 1)
 	resultQueue2 := make(chan domain.JobResult, 1)
@@ -75,7 +75,7 @@ func TestGet(t *testing.T) {
 	expectedResult := &domain.JobResult{
 		JobID:    "auuid4",
 		Metadata: "some metadata",
-		Error:    errors.New("some task error"),
+		Error:    "some task error",
 	}
 
 	invalidJobID := "invalid_job_id"
@@ -130,7 +130,7 @@ func TestDelete(t *testing.T) {
 	expectedResult := &domain.JobResult{
 		JobID:    "auuid4",
 		Metadata: "some metadata",
-		Error:    errors.New("some task error"),
+		Error:    "some task error",
 	}
 
 	invalidJobID := "invalid_job_id"

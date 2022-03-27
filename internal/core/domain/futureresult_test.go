@@ -9,7 +9,7 @@ func TestFutureResultWait(t *testing.T) {
 	expected := JobResult{
 		JobID:    "job_id",
 		Metadata: "some metadata",
-		Error:    nil,
+		Error:    "",
 	}
 	resultQueue := make(chan JobResult, 1)
 	futureResult := FutureJobResult{Result: resultQueue}

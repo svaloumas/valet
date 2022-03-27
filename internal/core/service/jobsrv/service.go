@@ -1,6 +1,7 @@
 package jobsrv
 
 import (
+	"fmt"
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
 	"valet/internal/repository/workerpool/task"
@@ -87,33 +88,47 @@ func (srv *jobservice) Exec(item domain.JobItem, callback task.TaskFunc) error {
 		return err
 	}
 
-	// Perform the actual work.
-	resultMetadata, jobErr := callback(item.Job.Metadata)
+	jobResultChan := make(chan domain.JobResult, 1)
+	go func() {
+		defer func() {
+			if p := recover(); p != nil {
+				result := domain.JobResult{
+					JobID:    item.Job.ID,
+					Metadata: nil,
+					Error:    fmt.Errorf("%v", p).Error(),
+				}
+				jobResultChan <- result
+			}
+		}()
+		var errMsg string
 
-	select {
-	case item.Result <- domain.JobResult{
-		JobID:    item.Job.ID,
-		Metadata: resultMetadata,
-		Error:    jobErr}:
-	default:
-		// This should never happen as the result queue chan should be unique for this worker.
-		panic("failed to write result to the result queue channel")
-	}
-	close(item.Result)
-
-	if jobErr != nil {
-		failedAt := srv.time.Now()
-		item.Job.MarkFailed(&failedAt, jobErr.Error())
-		if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
-			return err
+		// Perform the actual work.
+		resultMetadata, jobErr := callback(item.Job.Metadata)
+		if jobErr != nil {
+			errMsg = jobErr.Error()
 		}
-		return nil
-	}
 
-	completedAt := srv.time.Now()
-	item.Job.MarkCompleted(&completedAt)
+		result := domain.JobResult{
+			JobID:    item.Job.ID,
+			Metadata: resultMetadata,
+			Error:    errMsg,
+		}
+		jobResultChan <- result
+	}()
+
+	jobResult := <-jobResultChan
+	if jobResult.Error != "" {
+		failedAt := srv.time.Now()
+		item.Job.MarkFailed(&failedAt, jobResult.Error)
+	} else {
+		completedAt := srv.time.Now()
+		item.Job.MarkCompleted(&completedAt)
+	}
 	if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
 		return err
 	}
+	item.Result <- jobResult
+	close(item.Result)
+
 	return nil
 }
