@@ -6,7 +6,6 @@ import (
 	"valet/pkg/apperrors"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/xerrors"
 )
 
 // ResultHTTPHandler is an HTTP handler that exposes result endpoints.
@@ -24,13 +23,15 @@ func NewResultHTTPHandler(resultService port.ResultService) *ResultHTTPHandler {
 // Get fetches a job result.
 func (hdl *ResultHTTPHandler) Get(c *gin.Context) {
 	result, err := hdl.resultService.Get(c.Param("id"))
-	if err != nil && xerrors.Is(err, &apperrors.NotFoundErr{}) {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
-		return
-	}
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
+		switch err.(type) {
+		case *apperrors.NotFoundErr:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			return
+		default:
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
 	}
 	c.JSON(http.StatusOK, BuildResponseBodyDTO(result))
 }
@@ -39,12 +40,14 @@ func (hdl *ResultHTTPHandler) Get(c *gin.Context) {
 func (hdl *ResultHTTPHandler) Delete(c *gin.Context) {
 	err := hdl.resultService.Delete(c.Param("id"))
 	if err != nil {
-		if xerrors.Is(err, &apperrors.NotFoundErr{}) {
+		switch err.(type) {
+		case *apperrors.NotFoundErr:
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
+		default:
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
 		}
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
 	}
 	c.Writer.WriteHeader(http.StatusNoContent)
 }

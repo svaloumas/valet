@@ -95,8 +95,7 @@ func TestPostJobs(t *testing.T) {
 				"metadata": "some metadata", 
 				"task_type": "test_task"
 			}`,
-			// TODO: Check what's wrong here. (StatusBadRequest should return)
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			"some job validation error",
 		},
 	}
@@ -194,8 +193,7 @@ func TestGetJob(t *testing.T) {
 		message string
 	}{
 		{expectedJob.ID, http.StatusOK, ""},
-		// TODO: Change errors to be caught.
-		{"invalid_id", http.StatusInternalServerError, "job with ID: auuid4 not found"},
+		{"invalid_id", http.StatusNotFound, "job with ID: auuid4 not found"},
 		{expectedJob.ID, http.StatusInternalServerError, "some job service error"},
 	}
 

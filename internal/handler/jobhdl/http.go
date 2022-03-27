@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/xerrors"
 
 	"valet/internal/core/port"
 	"valet/pkg/apperrors"
@@ -28,29 +27,31 @@ func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 	c.BindJSON(&body)
 
 	j, err := hdl.jobService.Create(body.Name, body.TaskType, body.Description, body.Metadata)
-	// TODO: Check what's wrong here!
-	if err != nil && xerrors.Is(err, &apperrors.ResourceValidationErr{}) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
+		switch err.(type) {
+		case *apperrors.ResourceValidationErr:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		default:
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
 	}
-
 	c.JSON(http.StatusAccepted, BuildResponseBodyDTO(j))
 }
 
 // Get fetches a job.
 func (hdl *JobHTTPHandler) Get(c *gin.Context) {
 	j, err := hdl.jobService.Get(c.Param("id"))
-	if err != nil && xerrors.Is(err, &apperrors.NotFoundErr{}) {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
-		return
-	}
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
+		switch err.(type) {
+		case *apperrors.NotFoundErr:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			return
+		default:
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
 	}
 	c.JSON(http.StatusOK, BuildResponseBodyDTO(j))
 }
@@ -61,13 +62,15 @@ func (hdl *JobHTTPHandler) Update(c *gin.Context) {
 	c.BindJSON(&body)
 
 	err := hdl.jobService.Update(c.Param("id"), body.Name, body.Description)
-	if err != nil && xerrors.Is(err, &apperrors.NotFoundErr{}) {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
-		return
-	}
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
+		switch err.(type) {
+		case *apperrors.NotFoundErr:
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			return
+		default:
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
 	}
 	c.Writer.WriteHeader(http.StatusNoContent)
 }
@@ -76,12 +79,14 @@ func (hdl *JobHTTPHandler) Update(c *gin.Context) {
 func (hdl *JobHTTPHandler) Delete(c *gin.Context) {
 	err := hdl.jobService.Delete(c.Param("id"))
 	if err != nil {
-		if xerrors.Is(err, &apperrors.NotFoundErr{}) {
+		switch err.(type) {
+		case *apperrors.NotFoundErr:
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
+		default:
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
 		}
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
 	}
 	c.Writer.WriteHeader(http.StatusNoContent)
 }
