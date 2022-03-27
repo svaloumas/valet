@@ -133,7 +133,7 @@ func TestCreate(t *testing.T) {
 		Name:        "job_name",
 		TaskType:    "dummytask",
 		Description: "some description",
-		Metadata:    &task.DummyMetadata{},
+		Metadata:    "some metadata",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
