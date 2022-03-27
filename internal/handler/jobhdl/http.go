@@ -28,6 +28,7 @@ func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 	c.BindJSON(&body)
 
 	j, err := hdl.jobService.Create(body.Name, body.TaskType, body.Description, body.Metadata)
+	// TODO: Check what's wrong here!
 	if err != nil && xerrors.Is(err, &apperrors.ResourceValidationErr{}) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return

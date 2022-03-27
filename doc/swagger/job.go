@@ -9,6 +9,7 @@ import (
 // Creates a new job.
 // responses:
 //   202: postJobsResponse
+//   400: errorResponse
 //   500: errorResponse
 
 // Returns the newly created job metadata.
@@ -42,8 +43,9 @@ type getJobResponse struct {
 // swagger:parameters getJobRequestParams getJob
 type getJobRequestParams struct {
 	// The ID of the specified job.
+	//
 	// in:path
-	id string `json:"id"`
+	ID string `json:"id"`
 }
 
 // swagger:route PATCH /jobs/:id jobs patchJob
@@ -56,8 +58,9 @@ type getJobRequestParams struct {
 // swagger:parameters patchJobRequestParams patchJob
 type patchJobRequestParams struct {
 	// The ID of the specified job.
+	//
 	// in:path
-	id string `json:"id"`
+	ID string `json:"id"`
 }
 
 // swagger:route DELETE /jobs/:id jobs deleteJob
@@ -70,6 +73,7 @@ type patchJobRequestParams struct {
 // swagger:parameters deleteJobRequestParams deleteJob
 type deleteJobRequestParams struct {
 	// The ID of the specified job.
+	//
 	// in:path
-	id string `json:"id"`
+	ID string `json:"id"`
 }

@@ -15,7 +15,7 @@
     "version": "1.0.0"
   },
   "host": "localhost:8080",
-  "basePath": "/",
+  "basePath": "/api",
   "paths": {
     "/jobs": {
       "post": {
@@ -38,6 +38,9 @@
           "202": {
             "$ref": "#/responses/postJobsResponse"
           },
+          "400": {
+            "$ref": "#/responses/errorResponse"
+          },
           "500": {
             "$ref": "#/responses/errorResponse"
           }
@@ -51,6 +54,16 @@
         ],
         "summary": "Returns a specified job.",
         "operationId": "getJob",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the specified job.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/responses/getJobResponse"
@@ -69,6 +82,16 @@
         ],
         "summary": "Deletes a specified job.",
         "operationId": "deleteJob",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the specified job.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
         "responses": {
           "204": {
             "description": ""
@@ -87,6 +110,16 @@
         ],
         "summary": "Updates a job's name of description.",
         "operationId": "patchJob",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the specified job.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
         "responses": {
           "204": {
             "description": ""
@@ -107,6 +140,16 @@
         ],
         "summary": "Returns a specified job's results.",
         "operationId": "getJobResults",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the specified job.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/responses/getJobResultsResponse"
@@ -125,6 +168,16 @@
         ],
         "summary": "Deletes a job's results.",
         "operationId": "deleteJobResults",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the specified job.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
         "responses": {
           "204": {
             "description": ""
@@ -189,6 +242,11 @@
         },
         "status": {
           "$ref": "#/definitions/JobStatus"
+        },
+        "task_type": {
+          "description": "TaskType is the type of the task to be executed.",
+          "type": "string",
+          "x-go-name": "TaskType"
         }
       },
       "x-go-package": "valet/internal/core/domain"
@@ -233,6 +291,10 @@
         "name": {
           "type": "string",
           "x-go-name": "Name"
+        },
+        "task_type": {
+          "type": "string",
+          "x-go-name": "TaskType"
         }
       },
       "x-go-package": "valet/internal/handler/jobhdl"

@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"valet/internal/core/port"
@@ -23,6 +24,9 @@ func NewRouter(jobService port.JobService, resultService port.ResultService) *gi
 		}
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}))
+	// CORS: Allow all origins - Revisit in production
+	r.Use(cors.Default())
+
 	r.POST("/api/jobs", jobHandhler.Create)
 	r.GET("/api/jobs/:id", jobHandhler.Get)
 	r.PATCH("/api/jobs/:id", jobHandhler.Update)

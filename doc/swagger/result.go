@@ -21,8 +21,9 @@ type getJobResultsResponse struct {
 // swagger:parameters getJobResultsRequestParams getJobResults
 type getJobResultsRequestParams struct {
 	// The ID of the specified job.
+	//
 	// in:path
-	id string `json:"id"`
+	ID string `json:"id"`
 }
 
 // swagger:route DELETE /jobs/:id/results jobs deleteJobResults
@@ -35,6 +36,7 @@ type getJobResultsRequestParams struct {
 // swagger:parameters deleteJobResultsRequestsParams deleteJobResults
 type deleteJobResultsRequestsParams struct {
 	// The ID of the specified job.
+	//
 	// in:path
-	id string `json:"id"`
+	ID string `json:"id"`
 }

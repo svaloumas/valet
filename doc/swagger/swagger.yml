@@ -1,4 +1,4 @@
-basePath: /
+basePath: /api
 consumes:
 - application/json
 definitions:
@@ -42,6 +42,10 @@ definitions:
         x-go-name: StartedAt
       status:
         $ref: '#/definitions/JobStatus'
+      task_type:
+        description: TaskType is the type of the task to be executed.
+        type: string
+        x-go-name: TaskType
     title: Job represents an async task.
     type: object
     x-go-package: valet/internal/core/domain
@@ -75,6 +79,9 @@ definitions:
       name:
         type: string
         x-go-name: Name
+      task_type:
+        type: string
+        x-go-name: TaskType
     title: RequestBodyDTO is the data transfer object used for a job creation or update.
     type: object
     x-go-package: valet/internal/handler/jobhdl
@@ -103,6 +110,8 @@ paths:
       responses:
         "202":
           $ref: '#/responses/postJobsResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
         "500":
           $ref: '#/responses/errorResponse'
       summary: Creates a new job.
@@ -111,6 +120,13 @@ paths:
   /jobs/:id:
     delete:
       operationId: deleteJob
+      parameters:
+      - description: The ID of the specified job.
+        in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
       responses:
         "204":
           description: ""
@@ -123,6 +139,13 @@ paths:
       - jobs
     get:
       operationId: getJob
+      parameters:
+      - description: The ID of the specified job.
+        in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
       responses:
         "200":
           $ref: '#/responses/getJobResponse'
@@ -135,6 +158,13 @@ paths:
       - jobs
     patch:
       operationId: patchJob
+      parameters:
+      - description: The ID of the specified job.
+        in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
       responses:
         "204":
           description: ""
@@ -148,6 +178,13 @@ paths:
   /jobs/:id/results:
     delete:
       operationId: deleteJobResults
+      parameters:
+      - description: The ID of the specified job.
+        in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
       responses:
         "204":
           description: ""
@@ -160,6 +197,13 @@ paths:
       - jobs
     get:
       operationId: getJobResults
+      parameters:
+      - description: The ID of the specified job.
+        in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
       responses:
         "200":
           $ref: '#/responses/getJobResultsResponse'
