@@ -143,3 +143,99 @@ func TestPostJobs(t *testing.T) {
 		}
 	}
 }
+
+func TestGetJob(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	createdAt := freezed.Now()
+	expectedJob := &domain.Job{
+		ID:          "auuid4",
+		Name:        "job_name",
+		TaskType:    "test_task",
+		Description: "some description",
+		Metadata:    "some metadata",
+		Status:      domain.Pending,
+		CreatedAt:   &createdAt,
+	}
+
+	jobNotFoundErr := &apperrors.NotFoundErr{ID: expectedJob.ID, ResourceName: "job"}
+	jobServiceErr := errors.New("some job service error")
+
+	jobService := mock.NewMockJobService(ctrl)
+	jobService.
+		EXPECT().
+		Get(expectedJob.ID).
+		Return(expectedJob, nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		Get("invalid_id").
+		Return(nil, jobNotFoundErr).
+		Times(1)
+	jobService.
+		EXPECT().
+		Get(expectedJob.ID).
+		Return(nil, jobServiceErr).
+		Times(1)
+
+	hdl := NewJobHTTPHandler(jobService)
+
+	tests := []struct {
+		id      string
+		status  int
+		message string
+	}{
+		{expectedJob.ID, http.StatusOK, ""},
+		// TODO: Change errors to be caught.
+		{"invalid_id", http.StatusInternalServerError, "job with ID: auuid4 not found"},
+		{expectedJob.ID, http.StatusInternalServerError, "some job service error"},
+	}
+
+	for _, tt := range tests {
+		rr := httptest.NewRecorder()
+		c, r := gin.CreateTestContext(rr)
+
+		r.GET("/api/jobs/:id", hdl.Get)
+		c.Request, _ = http.NewRequest(http.MethodGet, "/api/jobs/"+tt.id, nil)
+
+		r.ServeHTTP(rr, c.Request)
+
+		b, _ := ioutil.ReadAll(rr.Body)
+
+		var res map[string]interface{}
+		json.Unmarshal(b, &res)
+
+		if rr.Code != tt.status {
+			t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
+		}
+
+		var expected map[string]interface{}
+		if rr.Code == http.StatusOK {
+			expected = map[string]interface{}{
+				"id":          expectedJob.ID,
+				"name":        expectedJob.Name,
+				"description": expectedJob.Description,
+				"task_type":   expectedJob.TaskType,
+				"metadata":    expectedJob.Metadata,
+				"status":      expectedJob.Status.String(),
+				"created_at":  testTime,
+			}
+		} else {
+			expected = map[string]interface{}{
+				"message": tt.message,
+			}
+
+			if eq := reflect.DeepEqual(res, expected); !eq {
+				t.Errorf("jobhdl get returned wrong body: got %v want %v", res, expected)
+			}
+		}
+	}
+}
