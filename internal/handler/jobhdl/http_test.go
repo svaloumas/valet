@@ -15,11 +15,18 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"valet/internal/core/domain"
+	"valet/internal/core/domain/task"
 	"valet/mock"
 	"valet/pkg/apperrors"
 )
 
 var testTime = "1985-05-04T04:32:53.651387234Z"
+
+var validTasks = map[string]task.TaskFunc{
+	"test_task": func(i interface{}) (interface{}, error) {
+		return "some metadata", errors.New("some task error")
+	},
+}
 
 func TestPostJobs(t *testing.T) {
 	ctrl := gomock.NewController(t)

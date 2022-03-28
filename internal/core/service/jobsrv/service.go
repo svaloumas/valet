@@ -3,6 +3,7 @@ package jobsrv
 import (
 	"fmt"
 	"valet/internal/core/domain"
+	"valet/internal/core/domain/task"
 	"valet/internal/core/port"
 	"valet/pkg/apperrors"
 	"valet/pkg/time"
@@ -14,6 +15,7 @@ var _ port.JobService = &jobservice{}
 type jobservice struct {
 	jobRepository port.JobRepository
 	jobQueue      port.JobQueue
+	validTasks    map[string]task.TaskFunc
 	uuidGen       uuidgen.UUIDGenerator
 	time          time.Time
 }
@@ -21,11 +23,13 @@ type jobservice struct {
 // New creates a new job service.
 func New(jobRepository port.JobRepository,
 	jobQueue port.JobQueue,
+	validTasks map[string]task.TaskFunc,
 	uuidGen uuidgen.UUIDGenerator,
 	time time.Time) *jobservice {
 	return &jobservice{
 		jobRepository: jobRepository,
 		jobQueue:      jobQueue,
+		validTasks:    validTasks,
 		uuidGen:       uuidGen,
 		time:          time,
 	}
@@ -47,7 +51,7 @@ func (srv *jobservice) Create(name, taskType, description string, metadata inter
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
-	if err := j.Validate(); err != nil {
+	if err := j.Validate(srv.validTasks); err != nil {
 		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}
 	}
 

@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"valet/internal/core/domain/task"
 	"valet/internal/core/service/jobsrv"
 	"valet/internal/core/service/resultsrv"
 	"valet/internal/repository/jobqueue"
@@ -34,7 +35,7 @@ func main() {
 	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
 
 	jobRepository := jobrepo.NewJobDB()
-	jobService := jobsrv.New(jobRepository, jobQueue, uuidgen.New(), rtime.New())
+	jobService := jobsrv.New(jobRepository, jobQueue, task.TaskTypes, uuidgen.New(), rtime.New())
 
 	resultRepository := resultrepo.NewResultDB()
 	resultService := resultsrv.New(resultRepository)

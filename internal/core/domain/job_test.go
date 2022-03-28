@@ -1,9 +1,18 @@
 package domain
 
 import (
+	"errors"
 	"testing"
 	"time"
+
+	"valet/internal/core/domain/task"
 )
+
+var validTasks = map[string]task.TaskFunc{
+	"test_task": func(i interface{}) (interface{}, error) {
+		return "some metadata", errors.New("some task error")
+	},
+}
 
 func TestJobMarkStarted(t *testing.T) {
 	j := new(Job)
@@ -75,19 +84,19 @@ func TestJobValidate(t *testing.T) {
 	}{
 		{&Job{}, "name, task_type required"},
 		{&Job{Name: "a name"}, "task_type required"},
-		{&Job{TaskType: "dummytask"}, "name required"},
+		{&Job{TaskType: "test_task"}, "name required"},
 		{
-			&Job{Name: "a name", TaskType: "dummytask", Description: "some_description", Status: 7},
+			&Job{Name: "a name", TaskType: "test_task", Description: "some_description", Status: 7},
 			"7 is not a valid job status, valid statuses: map[PENDING:1 IN_PROGRESS:2 COMPLETED:3 FAILED:4]",
 		},
 		{
 			&Job{Name: "a name", TaskType: "wrongtask", Description: "some_description", Status: 2},
-			"wrongtask is not a valid task type - valid task types: [dummytask]",
+			"wrongtask is not a valid task type - valid task types: [test_task]",
 		},
 	}
 
 	for _, tt := range tests {
-		err := tt.job.Validate()
+		err := tt.job.Validate(validTasks)
 		if err != nil && err.Error() != tt.desc {
 			t.Errorf("validator returned wrong error: got %v want %v", err.Error(), tt.desc)
 		}

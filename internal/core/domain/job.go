@@ -62,7 +62,7 @@ func (j *Job) MarkFailed(failedAt *time.Time, reason string) {
 }
 
 // Validate perfoms basic sanity checks on the job request payload.
-func (job *Job) Validate() error {
+func (job *Job) Validate(validTasks map[string]task.TaskFunc) error {
 	var required []string
 
 	if job.Name == "" {
@@ -77,10 +77,10 @@ func (job *Job) Validate() error {
 		return fmt.Errorf(strings.Join(required, ", ") + " required")
 	}
 
-	_, ok := task.TaskTypes[job.TaskType]
+	_, ok := validTasks[job.TaskType]
 	if !ok {
 		validTypes := []string{}
-		for taskType := range task.TaskTypes {
+		for taskType := range validTasks {
 			validTypes = append(validTypes, taskType)
 		}
 		return fmt.Errorf("%s is not a valid task type - valid task types: %v", job.TaskType, validTypes)

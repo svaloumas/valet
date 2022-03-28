@@ -5,13 +5,20 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/golang/mock/gomock"
+
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/task"
 	"valet/mock"
 	"valet/pkg/apperrors"
-
-	"github.com/golang/mock/gomock"
 )
+
+var validTasks = map[string]task.TaskFunc{
+	"test_task": func(i interface{}) (interface{}, error) {
+		return "some metadata", errors.New("some task error")
+	},
+}
 
 func TestCreateErrorCases(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -25,12 +32,12 @@ func TestCreateErrorCases(t *testing.T) {
 		Times(5)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "dummytask",
+		TaskType:    "test_task",
 		Description: "some description",
-		Metadata:    &task.DummyMetadata{},
+		Metadata:    "some metadata",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
@@ -38,13 +45,13 @@ func TestCreateErrorCases(t *testing.T) {
 	jobValidateErr := errors.New("name required")
 	jobRepositoryErr := errors.New("some job repository error")
 	jobQueueErr := &apperrors.FullQueueErr{}
-	jobTaskTypeErr := &apperrors.ResourceValidationErr{Message: "wrongtask is not a valid task type - valid task types: [dummytask]"}
+	jobTaskTypeErr := &apperrors.ResourceValidationErr{Message: "wrongtask is not a valid task type - valid task types: [test_task]"}
 
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
-		Return(expectedJob.ID, nil).
+		Return(job.ID, nil).
 		Times(4)
 	uuidGen.
 		EXPECT().
@@ -55,23 +62,23 @@ func TestCreateErrorCases(t *testing.T) {
 	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
-		Create(expectedJob).
+		Create(job).
 		Return(jobRepositoryErr).
 		Times(1)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 	jobQueue.
 		EXPECT().
-		Push(expectedJob).
+		Push(job).
 		Return(true).
 		Times(1)
 	jobQueue.
 		EXPECT().
-		Push(expectedJob).
+		Push(job).
 		Return(false).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	tests := []struct {
 		name     string
@@ -80,17 +87,17 @@ func TestCreateErrorCases(t *testing.T) {
 	}{
 		{
 			"",
-			"dummytask",
+			"test_task",
 			jobValidateErr,
 		},
 		{
 			"job_name",
-			"dummytask",
+			"test_task",
 			jobRepositoryErr,
 		},
 		{
 			"job_name",
-			"dummytask",
+			"test_task",
 			jobQueueErr,
 		},
 		{
@@ -100,13 +107,13 @@ func TestCreateErrorCases(t *testing.T) {
 		},
 		{
 			"job_name",
-			"dummytask",
+			"test_task",
 			uuidGenErr,
 		},
 	}
 
 	for _, tt := range tests {
-		_, err := service.Create(tt.name, tt.taskType, expectedJob.Description, expectedJob.Metadata)
+		_, err := service.Create(tt.name, tt.taskType, job.Description, job.Metadata)
 		if err == nil {
 			t.Error("service created expected error, returned nil instead")
 		}
@@ -128,10 +135,10 @@ func TestCreate(t *testing.T) {
 		Times(2)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	expected := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "dummytask",
+		TaskType:    "test_task",
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,
@@ -142,30 +149,30 @@ func TestCreate(t *testing.T) {
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
-		Return(expectedJob.ID, nil).
+		Return(expected.ID, nil).
 		Times(1)
 
 	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
-		Create(expectedJob).
+		Create(expected).
 		Return(nil).
 		Times(1)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 	jobQueue.
 		EXPECT().
-		Push(expectedJob).
+		Push(expected).
 		Return(true).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
-	j, err := service.Create(expectedJob.Name, expectedJob.TaskType, expectedJob.Description, expectedJob.Metadata)
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	j, err := service.Create(expected.Name, expected.TaskType, expected.Description, expected.Metadata)
 	if err != nil {
 		t.Errorf("service create returned unexpected error: %#v", err)
 	}
-	if eq := reflect.DeepEqual(j, expectedJob); !eq {
-		t.Errorf("service create returned wrong job, got %#v want %#v", j, expectedJob)
+	if eq := reflect.DeepEqual(j, expected); !eq {
+		t.Errorf("service create returned wrong job, got %#v want %#v", j, expected)
 	}
 }
 
@@ -181,10 +188,11 @@ func TestGet(t *testing.T) {
 		Times(1)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	expected := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "dummytask",
+		TaskType:    "test_task",
+		Metadata:    "some metadata",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -197,8 +205,8 @@ func TestGet(t *testing.T) {
 	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
-		Get(expectedJob.ID).
-		Return(expectedJob, nil).
+		Get(expected.ID).
+		Return(expected, nil).
 		Times(1)
 	jobRepository.
 		EXPECT().
@@ -208,14 +216,14 @@ func TestGet(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	tests := []struct {
 		id  string
 		err error
 	}{
 		{
-			expectedJob.ID,
+			expected.ID,
 			nil,
 		},
 		{
@@ -231,8 +239,8 @@ func TestGet(t *testing.T) {
 				t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
 			}
 		} else {
-			if eq := reflect.DeepEqual(j, expectedJob); !eq {
-				t.Errorf("service get returned wrong job: got %#v want %#v", j, expectedJob)
+			if eq := reflect.DeepEqual(j, expected); !eq {
+				t.Errorf("service get returned wrong job: got %#v want %#v", j, expected)
 			}
 		}
 	}
@@ -253,7 +261,8 @@ func TestUpdate(t *testing.T) {
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "dummytask",
+		TaskType:    "test_task",
+		Metadata:    "some metadata",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -294,7 +303,7 @@ func TestUpdate(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	tests := []struct {
 		id  string
@@ -339,7 +348,8 @@ func TestDelete(t *testing.T) {
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "dummytask",
+		TaskType:    "test_task",
+		Metadata:    "some metadata",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -363,7 +373,7 @@ func TestDelete(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	tests := []struct {
 		id  string
@@ -404,7 +414,8 @@ func TestExecCompletedJob(t *testing.T) {
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_func",
+		TaskType:    "test_task",
+		Metadata:    "some metadata",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -439,7 +450,7 @@ func TestExecCompletedJob(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	var testTaskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
@@ -525,7 +536,7 @@ func TestExecFailedJob(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	var testTaskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		return nil, errors.New(failureReason)
@@ -609,7 +620,7 @@ func TestExecPanicJob(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	var testTaskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		panic(panicMessage)
@@ -698,7 +709,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 		Return(jobRepositoryErr).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, uuidGen, freezed)
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	var testTaskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
