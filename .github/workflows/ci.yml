@@ -43,9 +43,10 @@ jobs:
         run: go generate ./... && go test ./... -race -coverprofile=coverage.out -covermode=atomic
 
       - name: Upload reports to codecov
-      env:
-        CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
-      run: | 
-       curl -Os https://uploader.codecov.io/latest/linux/codecov
-       chmod +x codecov 
-       ./codecov -t ${CODECOV_TOKEN}
+        env:
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+        run: | 
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        find . -iregex "codecov.*"
+        chmod +x codecov 
+        ./codecov -t ${CODECOV_TOKEN}
