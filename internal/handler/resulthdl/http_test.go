@@ -51,50 +51,53 @@ func TestGetJobResult(t *testing.T) {
 	hdl := NewResultHTTPHandler(resultService)
 
 	tests := []struct {
+		name    string
 		id      string
 		status  int
 		message string
 	}{
-		{result.JobID, http.StatusOK, ""},
-		{"invalid_id", http.StatusNotFound, "job result with ID: auuid4 not found"},
-		{result.JobID, http.StatusInternalServerError, "some result service error"},
+		{"ok", result.JobID, http.StatusOK, ""},
+		{"not found", "invalid_id", http.StatusNotFound, "job result with ID: auuid4 not found"},
+		{"internal server error", result.JobID, http.StatusInternalServerError, "some result service error"},
 	}
 
 	for _, tt := range tests {
-		rr := httptest.NewRecorder()
-		c, r := gin.CreateTestContext(rr)
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			c, r := gin.CreateTestContext(rr)
 
-		r.GET("/api/jobs/:id/results", hdl.Get)
-		c.Request, _ = http.NewRequest(http.MethodGet, "/api/jobs/"+tt.id+"/results", nil)
+			r.GET("/api/jobs/:id/results", hdl.Get)
+			c.Request, _ = http.NewRequest(http.MethodGet, "/api/jobs/"+tt.id+"/results", nil)
 
-		r.ServeHTTP(rr, c.Request)
+			r.ServeHTTP(rr, c.Request)
 
-		b, _ := ioutil.ReadAll(rr.Body)
+			b, _ := ioutil.ReadAll(rr.Body)
 
-		var res map[string]interface{}
-		json.Unmarshal(b, &res)
+			var res map[string]interface{}
+			json.Unmarshal(b, &res)
 
-		if rr.Code != tt.status {
-			t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
-		}
-
-		var expected map[string]interface{}
-		if rr.Code == http.StatusOK {
-			expected = map[string]interface{}{
-				"job_id":   result.JobID,
-				"metadata": result.Metadata,
-				"error":    result.Error,
+			if rr.Code != tt.status {
+				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
 			}
-		} else {
-			expected = map[string]interface{}{
-				"error":   true,
-				"code":    float64(tt.status),
-				"message": tt.message,
+
+			var expected map[string]interface{}
+			if rr.Code == http.StatusOK {
+				expected = map[string]interface{}{
+					"job_id":   result.JobID,
+					"metadata": result.Metadata,
+					"error":    result.Error,
+				}
+			} else {
+				expected = map[string]interface{}{
+					"error":   true,
+					"code":    float64(tt.status),
+					"message": tt.message,
+				}
 			}
-		}
-		if eq := reflect.DeepEqual(res, expected); !eq {
-			t.Errorf("resulthdl get returned wrong body: got %v want %v", res, expected)
-		}
+			if eq := reflect.DeepEqual(res, expected); !eq {
+				t.Errorf("resulthdl get returned wrong body: got %v want %v", res, expected)
+			}
+		})
 	}
 }
 
@@ -127,44 +130,47 @@ func TestDeleteJobResult(t *testing.T) {
 	hdl := NewResultHTTPHandler(resultService)
 
 	tests := []struct {
+		name    string
 		id      string
 		status  int
 		message string
 	}{
-		{jobID, http.StatusNoContent, ""},
-		{"invalid_id", http.StatusNotFound, "job result with ID: auuid4 not found"},
-		{jobID, http.StatusInternalServerError, "some result service error"},
+		{"ok", jobID, http.StatusNoContent, ""},
+		{"not found", "invalid_id", http.StatusNotFound, "job result with ID: auuid4 not found"},
+		{"internal server error", jobID, http.StatusInternalServerError, "some result service error"},
 	}
 
 	for _, tt := range tests {
-		rr := httptest.NewRecorder()
-		c, r := gin.CreateTestContext(rr)
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			c, r := gin.CreateTestContext(rr)
 
-		r.DELETE("/api/jobs/:id/results", hdl.Delete)
-		c.Request, _ = http.NewRequest(http.MethodDelete, "/api/jobs/"+tt.id+"/results", nil)
+			r.DELETE("/api/jobs/:id/results", hdl.Delete)
+			c.Request, _ = http.NewRequest(http.MethodDelete, "/api/jobs/"+tt.id+"/results", nil)
 
-		r.ServeHTTP(rr, c.Request)
+			r.ServeHTTP(rr, c.Request)
 
-		b, _ := ioutil.ReadAll(rr.Body)
+			b, _ := ioutil.ReadAll(rr.Body)
 
-		var res map[string]interface{}
-		json.Unmarshal(b, &res)
+			var res map[string]interface{}
+			json.Unmarshal(b, &res)
 
-		if rr.Code != tt.status {
-			t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
-		}
-
-		var expected map[string]interface{}
-		if rr.Code != http.StatusNoContent {
-			expected = map[string]interface{}{
-				"error":   true,
-				"code":    float64(tt.status),
-				"message": tt.message,
+			if rr.Code != tt.status {
+				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
 			}
 
-			if eq := reflect.DeepEqual(res, expected); !eq {
-				t.Errorf("resulthdl get returned wrong body: got %v want %v", res, expected)
+			var expected map[string]interface{}
+			if rr.Code != http.StatusNoContent {
+				expected = map[string]interface{}{
+					"error":   true,
+					"code":    float64(tt.status),
+					"message": tt.message,
+				}
+
+				if eq := reflect.DeepEqual(res, expected); !eq {
+					t.Errorf("resulthdl get returned wrong body: got %v want %v", res, expected)
+				}
 			}
-		}
+		})
 	}
 }

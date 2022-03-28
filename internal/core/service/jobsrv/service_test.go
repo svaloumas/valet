@@ -82,30 +82,36 @@ func TestCreateErrorCases(t *testing.T) {
 
 	tests := []struct {
 		name     string
+		jobname  string
 		taskType string
 		err      error
 	}{
 		{
+			"job validation error",
 			"",
 			"test_task",
 			jobValidateErr,
 		},
 		{
+			"job repository error",
 			"job_name",
 			"test_task",
 			jobRepositoryErr,
 		},
 		{
+			"job queue error",
 			"job_name",
 			"test_task",
 			jobQueueErr,
 		},
 		{
+			"job task type error",
 			"job_name",
 			"wrongtask",
 			jobTaskTypeErr,
 		},
 		{
+			"uuid generator error",
 			"job_name",
 			"test_task",
 			uuidGenErr,
@@ -113,13 +119,15 @@ func TestCreateErrorCases(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		_, err := service.Create(tt.name, tt.taskType, job.Description, job.Metadata)
-		if err == nil {
-			t.Error("service created expected error, returned nil instead")
-		}
-		if err.Error() != tt.err.Error() {
-			t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := service.Create(tt.jobname, tt.taskType, job.Description, job.Metadata)
+			if err == nil {
+				t.Error("service created expected error, returned nil instead")
+			}
+			if err.Error() != tt.err.Error() {
+				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+			}
+		})
 	}
 }
 
@@ -219,30 +227,35 @@ func TestGet(t *testing.T) {
 	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	tests := []struct {
-		id  string
-		err error
+		name string
+		id   string
+		err  error
 	}{
 		{
+			"ok",
 			expected.ID,
 			nil,
 		},
 		{
+			"job repository error",
 			invalidID,
 			jobRepositoryErr,
 		},
 	}
 
 	for _, tt := range tests {
-		j, err := service.Get(tt.id)
-		if err != nil {
-			if err.Error() != tt.err.Error() {
-				t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+		t.Run(tt.name, func(t *testing.T) {
+			j, err := service.Get(tt.id)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
+			} else {
+				if eq := reflect.DeepEqual(j, expected); !eq {
+					t.Errorf("service get returned wrong job: got %#v want %#v", j, expected)
+				}
 			}
-		} else {
-			if eq := reflect.DeepEqual(j, expected); !eq {
-				t.Errorf("service get returned wrong job: got %#v want %#v", j, expected)
-			}
-		}
+		})
 	}
 }
 
@@ -276,6 +289,7 @@ func TestUpdate(t *testing.T) {
 	invalidID := "invalid_id"
 
 	jobRepositoryErr := errors.New("some job repository error")
+	jobNotFoundErr := errors.New("job not found")
 
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 
@@ -298,7 +312,7 @@ func TestUpdate(t *testing.T) {
 	jobRepository.
 		EXPECT().
 		Get(invalidID).
-		Return(nil, jobRepositoryErr).
+		Return(nil, jobNotFoundErr).
 		Times(1)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
@@ -306,30 +320,36 @@ func TestUpdate(t *testing.T) {
 	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	tests := []struct {
-		id  string
-		err error
+		name string
+		id   string
+		err  error
 	}{
 		{
+			"job repository error",
 			expectedJob.ID,
 			jobRepositoryErr,
 		},
 		{
+			"ok",
 			expectedJob.ID,
 			nil,
 		},
 		{
+			"not found",
 			invalidID,
-			jobRepositoryErr,
+			jobNotFoundErr,
 		},
 	}
 
 	for _, tt := range tests {
-		err := service.Update(tt.id, updatedJob.Name, updatedJob.Description)
-		if err != nil {
-			if err.Error() != tt.err.Error() {
-				t.Errorf("service update returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+		t.Run(tt.name, func(t *testing.T) {
+			err := service.Update(tt.id, updatedJob.Name, updatedJob.Description)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service update returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
 			}
-		}
+		})
 	}
 }
 
@@ -376,26 +396,31 @@ func TestDelete(t *testing.T) {
 	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
 
 	tests := []struct {
-		id  string
-		err error
+		name string
+		id   string
+		err  error
 	}{
 		{
+			"ok",
 			expectedJob.ID,
 			nil,
 		},
 		{
+			"job repository error",
 			invalidID,
 			jobRepositoryErr,
 		},
 	}
 
 	for _, tt := range tests {
-		err := service.Delete(tt.id)
-		if err != nil {
-			if err.Error() != tt.err.Error() {
-				t.Errorf("service delete returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+		t.Run(tt.name, func(t *testing.T) {
+			err := service.Delete(tt.id)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service delete returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
 			}
-		}
+		})
 	}
 }
 
@@ -722,34 +747,38 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	}
 
 	tests := []struct {
+		name string
 		item domain.JobItem
 		err  error
 	}{
 		{
+			"job repository error",
 			jobItem,
 			jobRepositoryErr,
 		},
 		{
+			"job repository error",
 			jobItem,
 			jobRepositoryErr,
 		},
 	}
 
 	for _, tt := range tests {
-
-		actualResultChan := make(chan domain.JobResult, 1)
-		go func() {
-			select {
-			case result := <-jobItem.Result:
-				actualResultChan <- result
-			default:
+		t.Run(tt.name, func(t *testing.T) {
+			actualResultChan := make(chan domain.JobResult, 1)
+			go func() {
+				select {
+				case result := <-jobItem.Result:
+					actualResultChan <- result
+				default:
+				}
+			}()
+			err := service.Exec(tt.item)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service exec returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
 			}
-		}()
-		err := service.Exec(tt.item)
-		if err != nil {
-			if err.Error() != tt.err.Error() {
-				t.Errorf("service exec returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
-			}
-		}
+		})
 	}
 }

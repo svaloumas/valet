@@ -79,26 +79,31 @@ func TestJobMarkFailed(t *testing.T) {
 
 func TestJobValidate(t *testing.T) {
 	tests := []struct {
+		name string
 		job  *Job
 		desc string
 	}{
-		{&Job{}, "name, task_type required"},
-		{&Job{Name: "a name"}, "task_type required"},
-		{&Job{TaskType: "test_task"}, "name required"},
+		{"empty payload", &Job{}, "name, task_type required"},
+		{"only name given", &Job{Name: "a name"}, "task_type required"},
+		{"only task_type given", &Job{TaskType: "test_task"}, "name required"},
 		{
+			"wrong stauts",
 			&Job{Name: "a name", TaskType: "test_task", Description: "some_description", Status: 7},
 			"7 is not a valid job status, valid statuses: map[PENDING:1 IN_PROGRESS:2 COMPLETED:3 FAILED:4]",
 		},
 		{
+			"wrong task type",
 			&Job{Name: "a name", TaskType: "wrongtask", Description: "some_description", Status: 2},
 			"wrongtask is not a valid task type - valid task types: [test_task]",
 		},
 	}
 
 	for _, tt := range tests {
-		err := tt.job.Validate(validTasks)
-		if err != nil && err.Error() != tt.desc {
-			t.Errorf("validator returned wrong error: got %v want %v", err.Error(), tt.desc)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.job.Validate(validTasks)
+			if err != nil && err.Error() != tt.desc {
+				t.Errorf("validator returned wrong error: got %v want %v", err.Error(), tt.desc)
+			}
+		})
 	}
 }

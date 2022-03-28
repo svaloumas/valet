@@ -45,26 +45,31 @@ func TestCreate(t *testing.T) {
 	service := New(resultRepository)
 
 	tests := []struct {
+		name         string
 		futureResult domain.FutureJobResult
 		err          error
 	}{
 		{
+			"ok",
 			futureResult1,
 			nil,
 		},
 		{
+			"repository error",
 			futureResult2,
 			resultRepositoryErr,
 		},
 	}
 
 	for _, tt := range tests {
-		err := service.Create(tt.futureResult)
-		if err != nil {
-			if err.Error() != tt.err.Error() {
-				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+		t.Run(tt.name, func(t *testing.T) {
+			err := service.Create(tt.futureResult)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
 			}
-		}
+		})
 	}
 }
 
@@ -96,30 +101,35 @@ func TestGet(t *testing.T) {
 	service := New(resultRepository)
 
 	tests := []struct {
-		id  string
-		err error
+		name string
+		id   string
+		err  error
 	}{
 		{
+			"ok",
 			expectedResult.JobID,
 			nil,
 		},
 		{
+			"repository error",
 			invalidJobID,
 			resultRepositoryErr,
 		},
 	}
 
 	for _, tt := range tests {
-		result, err := service.Get(tt.id)
-		if err != nil {
-			if err.Error() != tt.err.Error() {
-				t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := service.Get(tt.id)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
+			} else {
+				if eq := reflect.DeepEqual(result, expectedResult); !eq {
+					t.Errorf("service get returned wrong job: got %#v want %#v", result, expectedResult)
+				}
 			}
-		} else {
-			if eq := reflect.DeepEqual(result, expectedResult); !eq {
-				t.Errorf("service get returned wrong job: got %#v want %#v", result, expectedResult)
-			}
-		}
+		})
 	}
 }
 
@@ -151,25 +161,30 @@ func TestDelete(t *testing.T) {
 	service := New(resultRepository)
 
 	tests := []struct {
-		id  string
-		err error
+		name string
+		id   string
+		err  error
 	}{
 		{
+			"ok",
 			expectedResult.JobID,
 			nil,
 		},
 		{
+			"repository error",
 			invalidJobID,
 			resultRepositoryErr,
 		},
 	}
 
 	for _, tt := range tests {
-		err := service.Delete(tt.id)
-		if err != nil {
-			if err.Error() != tt.err.Error() {
-				t.Errorf("service delete returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+		t.Run(tt.name, func(t *testing.T) {
+			err := service.Delete(tt.id)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service delete returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
 			}
-		}
+		})
 	}
 }

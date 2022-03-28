@@ -50,31 +50,36 @@ func TestResultDBGet(t *testing.T) {
 	resultdb.db[expected.JobID] = serializedResult
 
 	tests := []struct {
-		id  string
-		err error
+		name string
+		id   string
+		err  error
 	}{
 		{
+			"ok",
 			expected.JobID,
 			nil,
 		},
 		{
+			"not found",
 			invalidID,
 			&apperrors.NotFoundErr{ID: invalidID, ResourceName: "job result"},
 		},
 	}
 
 	for _, tt := range tests {
-		job, err := resultdb.Get(tt.id)
-		if err != nil {
-			errValue, ok := err.(*apperrors.NotFoundErr)
-			if !ok {
-				t.Errorf("resultdb get returned wrong error: got %#v want %#v", errValue, tt.err)
+		t.Run(tt.name, func(t *testing.T) {
+			job, err := resultdb.Get(tt.id)
+			if err != nil {
+				errValue, ok := err.(*apperrors.NotFoundErr)
+				if !ok {
+					t.Errorf("resultdb get returned wrong error: got %#v want %#v", errValue, tt.err)
+				}
+			} else {
+				if eq := reflect.DeepEqual(job, expected); !eq {
+					t.Errorf("resultdb get returned wrong job: got %#v want %#v", job, expected)
+				}
 			}
-		} else {
-			if eq := reflect.DeepEqual(job, expected); !eq {
-				t.Errorf("resultdb get returned wrong job: got %#v want %#v", job, expected)
-			}
-		}
+		})
 	}
 }
 
@@ -126,30 +131,35 @@ func TestResultDBDelete(t *testing.T) {
 	resultdb.db[result.JobID] = serializedJob
 
 	tests := []struct {
-		id  string
-		err error
+		name string
+		id   string
+		err  error
 	}{
 		{
+			"ok",
 			result.JobID,
 			nil,
 		},
 		{
+			"not found",
 			invalidID,
 			&apperrors.NotFoundErr{ID: invalidID, ResourceName: "job"},
 		},
 	}
 
 	for _, tt := range tests {
-		err := resultdb.Delete(tt.id)
-		if err != nil {
-			errValue, ok := err.(*apperrors.NotFoundErr)
-			if !ok {
-				t.Errorf("resultdb delete returned wrong error: got %#v want %#v", errValue, tt.err)
+		t.Run(tt.name, func(t *testing.T) {
+			err := resultdb.Delete(tt.id)
+			if err != nil {
+				errValue, ok := err.(*apperrors.NotFoundErr)
+				if !ok {
+					t.Errorf("resultdb delete returned wrong error: got %#v want %#v", errValue, tt.err)
+				}
+			} else {
+				if job := resultdb.db[result.JobID]; job != nil {
+					t.Errorf("resultdb delete did not delete job: got %#v want nil", job)
+				}
 			}
-		} else {
-			if job := resultdb.db[result.JobID]; job != nil {
-				t.Errorf("resultdb delete did not delete job: got %#v want nil", job)
-			}
-		}
+		})
 	}
 }
