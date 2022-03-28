@@ -1,4 +1,5 @@
 # Valet service
+![Coverage](https://img.shields.io/badge/Coverage-96.2%25-brightgreen)
 
 Simple stateless Go server responsible for executing tasks, referred as jobs.
 
