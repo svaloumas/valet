@@ -30,10 +30,10 @@ func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.ResourceValidationErr:
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusBadRequest, err)
 			return
 		default:
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -46,10 +46,10 @@ func (hdl *JobHTTPHandler) Get(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusNotFound, err)
 			return
 		default:
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -65,10 +65,10 @@ func (hdl *JobHTTPHandler) Update(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusNotFound, err)
 			return
 		default:
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -81,12 +81,17 @@ func (hdl *JobHTTPHandler) Delete(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusNotFound, err)
 			return
 		default:
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
 	c.Writer.WriteHeader(http.StatusNoContent)
+}
+
+func (hdl *JobHTTPHandler) handleError(c *gin.Context, code int, err error) {
+	c.Error(err)
+	c.AbortWithStatusJSON(code, gin.H{"error": true, "code": code, "message": err.Error()})
 }

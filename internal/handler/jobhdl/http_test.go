@@ -134,6 +134,8 @@ func TestPostJobs(t *testing.T) {
 			}
 		} else {
 			expected = map[string]interface{}{
+				"error":   true,
+				"code":    float64(tt.status),
 				"message": tt.message,
 			}
 		}
@@ -229,6 +231,174 @@ func TestGetJob(t *testing.T) {
 			}
 		} else {
 			expected = map[string]interface{}{
+				"error":   true,
+				"code":    float64(tt.status),
+				"message": tt.message,
+			}
+		}
+		if eq := reflect.DeepEqual(res, expected); !eq {
+			t.Errorf("jobhdl get returned wrong body: got %v want %v", res, expected)
+		}
+	}
+}
+
+func TestPatchJob(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	jobID := "auuid4"
+	jobNotFoundErr := &apperrors.NotFoundErr{ID: jobID, ResourceName: "job"}
+	jobServiceErr := errors.New("some job service error")
+
+	jobService := mock.NewMockJobService(ctrl)
+	jobService.
+		EXPECT().
+		Update(jobID, "updated_name", "updated description").
+		Return(nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		Update("invalid_id", "updated_name", "updated description").
+		Return(jobNotFoundErr).
+		Times(1)
+	jobService.
+		EXPECT().
+		Update(jobID, "updated_name", "updated description").
+		Return(jobServiceErr).
+		Times(1)
+
+	hdl := NewJobHTTPHandler(jobService)
+
+	tests := []struct {
+		id      string
+		payload string
+		status  int
+		message string
+	}{
+		{
+			jobID,
+			`{
+				"name": "updated_name", 
+				"description": "updated description" 
+			}`,
+			http.StatusNoContent, "",
+		},
+		{
+			"invalid_id",
+			`{
+				"name": "updated_name",
+				"description": "updated description"
+			}`,
+			http.StatusNotFound,
+			"job with ID: auuid4 not found",
+		},
+		{
+			jobID,
+			`{
+				"name": "updated_name",
+				"description": "updated description"
+			}`,
+			http.StatusInternalServerError,
+			"some job service error",
+		},
+	}
+
+	for _, tt := range tests {
+		rr := httptest.NewRecorder()
+		c, r := gin.CreateTestContext(rr)
+
+		body := strings.NewReader(tt.payload)
+
+		r.PATCH("/api/jobs/:id", hdl.Update)
+		c.Request, _ = http.NewRequest(http.MethodPatch, "/api/jobs/"+tt.id, body)
+
+		r.ServeHTTP(rr, c.Request)
+
+		b, _ := ioutil.ReadAll(rr.Body)
+
+		var res map[string]interface{}
+		json.Unmarshal(b, &res)
+
+		if rr.Code != tt.status {
+			t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
+		}
+
+		var expected map[string]interface{}
+		if rr.Code != http.StatusNoContent {
+			expected = map[string]interface{}{
+				"error":   true,
+				"code":    float64(tt.status),
+				"message": tt.message,
+			}
+
+			if eq := reflect.DeepEqual(res, expected); !eq {
+				t.Errorf("jobhdl get returned wrong body: got %v want %v", res, expected)
+			}
+		}
+	}
+}
+
+func TestDeleteJob(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	jobID := "auuid4"
+
+	jobNotFoundErr := &apperrors.NotFoundErr{ID: jobID, ResourceName: "job"}
+	jobServiceErr := errors.New("some job service error")
+
+	jobService := mock.NewMockJobService(ctrl)
+	jobService.
+		EXPECT().
+		Delete(jobID).
+		Return(nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		Delete("invalid_id").
+		Return(jobNotFoundErr).
+		Times(1)
+	jobService.
+		EXPECT().
+		Delete(jobID).
+		Return(jobServiceErr).
+		Times(1)
+
+	hdl := NewJobHTTPHandler(jobService)
+
+	tests := []struct {
+		id      string
+		status  int
+		message string
+	}{
+		{jobID, http.StatusNoContent, ""},
+		{"invalid_id", http.StatusNotFound, "job with ID: auuid4 not found"},
+		{jobID, http.StatusInternalServerError, "some job service error"},
+	}
+
+	for _, tt := range tests {
+		rr := httptest.NewRecorder()
+		c, r := gin.CreateTestContext(rr)
+
+		r.DELETE("/api/jobs/:id", hdl.Delete)
+		c.Request, _ = http.NewRequest(http.MethodDelete, "/api/jobs/"+tt.id, nil)
+
+		r.ServeHTTP(rr, c.Request)
+
+		b, _ := ioutil.ReadAll(rr.Body)
+
+		var res map[string]interface{}
+		json.Unmarshal(b, &res)
+
+		if rr.Code != tt.status {
+			t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
+		}
+
+		var expected map[string]interface{}
+		if rr.Code != http.StatusNoContent {
+			expected = map[string]interface{}{
+				"error":   true,
+				"code":    float64(tt.status),
 				"message": tt.message,
 			}
 

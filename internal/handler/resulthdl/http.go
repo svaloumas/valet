@@ -26,10 +26,10 @@ func (hdl *ResultHTTPHandler) Get(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusNotFound, err)
 			return
 		default:
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -42,12 +42,17 @@ func (hdl *ResultHTTPHandler) Delete(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusNotFound, err)
 			return
 		default:
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			hdl.handleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
 	c.Writer.WriteHeader(http.StatusNoContent)
+}
+
+func (hdl *ResultHTTPHandler) handleError(c *gin.Context, code int, err error) {
+	c.Error(err)
+	c.AbortWithStatusJSON(code, gin.H{"error": true, "code": code, "message": err.Error()})
 }
