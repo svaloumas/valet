@@ -42,5 +42,10 @@ jobs:
       - name: Run coverage
         run: go generate ./... && go test ./... -race -coverprofile=coverage.out -covermode=atomic
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+      - name: Upload reports to codecov
+      env:
+        CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+      run: | 
+       curl -Os https://uploader.codecov.io/latest/linux/codecov
+       chmod +x codecov 
+       ./codecov -t ${CODECOV_TOKEN}
