@@ -1,4 +1,4 @@
-name: Valet service CI
+name: CI
 
 on:
   push:
