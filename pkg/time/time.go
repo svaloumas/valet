@@ -19,6 +19,5 @@ func New() Time {
 
 // Now returns a timestamp of the current datetime in UTC.
 func (rt *RealTime) Now() time.Time {
-	loc, _ := time.LoadLocation("UTC")
-	return time.Now().In(loc)
+	return time.Now().UTC()
 }
