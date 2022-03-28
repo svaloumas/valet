@@ -10,12 +10,13 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"valet/internal/core/domain"
-	"valet/mock"
-	"valet/pkg/apperrors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+
+	"valet/internal/core/domain"
+	"valet/mock"
+	"valet/pkg/apperrors"
 )
 
 var testTime = "1985-05-04T04:32:53.651387234Z"
@@ -33,7 +34,7 @@ func TestPostJobs(t *testing.T) {
 		Times(1)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskType:    "test_task",
@@ -49,17 +50,17 @@ func TestPostJobs(t *testing.T) {
 	jobService := mock.NewMockJobService(ctrl)
 	jobService.
 		EXPECT().
-		Create(expectedJob.Name, expectedJob.TaskType, expectedJob.Description, expectedJob.Metadata).
-		Return(expectedJob, nil).
+		Create(job.Name, job.TaskType, job.Description, job.Metadata).
+		Return(job, nil).
 		Times(1)
 	jobService.
 		EXPECT().
-		Create(expectedJob.Name, expectedJob.TaskType, expectedJob.Description, expectedJob.Metadata).
+		Create(job.Name, job.TaskType, job.Description, job.Metadata).
 		Return(nil, jobServiceErr).
 		Times(1)
 	jobService.
 		EXPECT().
-		Create("", expectedJob.TaskType, expectedJob.Description, expectedJob.Metadata).
+		Create("", job.TaskType, job.Description, job.Metadata).
 		Return(nil, jobValidationErr).
 		Times(1)
 
@@ -124,12 +125,12 @@ func TestPostJobs(t *testing.T) {
 		var expected map[string]interface{}
 		if rr.Code == http.StatusAccepted {
 			expected = map[string]interface{}{
-				"id":          expectedJob.ID,
-				"name":        expectedJob.Name,
-				"description": expectedJob.Description,
-				"task_type":   expectedJob.TaskType,
-				"metadata":    expectedJob.Metadata,
-				"status":      expectedJob.Status.String(),
+				"id":          job.ID,
+				"name":        job.Name,
+				"description": job.Description,
+				"task_type":   job.TaskType,
+				"metadata":    job.Metadata,
+				"status":      job.Status.String(),
 				"created_at":  testTime,
 			}
 		} else {
@@ -158,7 +159,7 @@ func TestGetJob(t *testing.T) {
 		Times(1)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskType:    "test_task",
@@ -168,14 +169,14 @@ func TestGetJob(t *testing.T) {
 		CreatedAt:   &createdAt,
 	}
 
-	jobNotFoundErr := &apperrors.NotFoundErr{ID: expectedJob.ID, ResourceName: "job"}
+	jobNotFoundErr := &apperrors.NotFoundErr{ID: job.ID, ResourceName: "job"}
 	jobServiceErr := errors.New("some job service error")
 
 	jobService := mock.NewMockJobService(ctrl)
 	jobService.
 		EXPECT().
-		Get(expectedJob.ID).
-		Return(expectedJob, nil).
+		Get(job.ID).
+		Return(job, nil).
 		Times(1)
 	jobService.
 		EXPECT().
@@ -184,7 +185,7 @@ func TestGetJob(t *testing.T) {
 		Times(1)
 	jobService.
 		EXPECT().
-		Get(expectedJob.ID).
+		Get(job.ID).
 		Return(nil, jobServiceErr).
 		Times(1)
 
@@ -195,9 +196,9 @@ func TestGetJob(t *testing.T) {
 		status  int
 		message string
 	}{
-		{expectedJob.ID, http.StatusOK, ""},
+		{job.ID, http.StatusOK, ""},
 		{"invalid_id", http.StatusNotFound, "job with ID: auuid4 not found"},
-		{expectedJob.ID, http.StatusInternalServerError, "some job service error"},
+		{job.ID, http.StatusInternalServerError, "some job service error"},
 	}
 
 	for _, tt := range tests {
@@ -221,12 +222,12 @@ func TestGetJob(t *testing.T) {
 		var expected map[string]interface{}
 		if rr.Code == http.StatusOK {
 			expected = map[string]interface{}{
-				"id":          expectedJob.ID,
-				"name":        expectedJob.Name,
-				"description": expectedJob.Description,
-				"task_type":   expectedJob.TaskType,
-				"metadata":    expectedJob.Metadata,
-				"status":      expectedJob.Status.String(),
+				"id":          job.ID,
+				"name":        job.Name,
+				"description": job.Description,
+				"task_type":   job.TaskType,
+				"metadata":    job.Metadata,
+				"status":      job.Status.String(),
 				"created_at":  testTime,
 			}
 		} else {
