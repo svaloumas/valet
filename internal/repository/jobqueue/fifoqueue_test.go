@@ -84,9 +84,6 @@ func TestFIFOQueuePop(t *testing.T) {
 }
 
 func TestFIFOQueueClose(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
 	defer func() {
 		if p := recover(); p == nil {
 			t.Error("fifoqueue send on closed channel did not panic")
@@ -99,14 +96,6 @@ func TestFIFOQueueClose(t *testing.T) {
 		}
 	}()
 
-	freezed := mock.NewMockTime(ctrl)
-	freezed.
-		EXPECT().
-		Now().
-		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
-		Times(1)
-
-	createdAt := freezed.Now()
 	expected := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
@@ -114,13 +103,11 @@ func TestFIFOQueueClose(t *testing.T) {
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
 	}
 
 	jobqueue := NewFIFOQueue(1)
 	jobqueue.logger = log.New(ioutil.Discard, "", 0)
 
 	jobqueue.Close()
-
 	jobqueue.Push(expected)
 }
