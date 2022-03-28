@@ -1,6 +1,6 @@
 # Valet service
 
-Simple stateless Go server responsible for executing tasks hereinafter referred to as jobs.
+Simple stateless Go server responsible for executing tasks, referred as jobs.
 
 ## Overview
 
