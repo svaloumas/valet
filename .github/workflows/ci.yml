@@ -62,10 +62,12 @@ jobs:
       - name: Upload reports to codecov
         env:
           CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
-        run: curl -Os https://uploader.codecov.io/latest/linux/codecov && chmod +x codecov && ./codecov -t ${CODECOV_TOKEN}
+        run: |
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov -t ${CODECOV_TOKEN}
 
-
-      - name: Go Coverage Badge  # Pass the `coverage.out` output to this action
+      - name: Go Coverage Badge
         uses: tj-actions/coverage-badge-go@v1.1
         with:
           filename: coverage.out
