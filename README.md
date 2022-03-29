@@ -1,6 +1,6 @@
 # Valet service
 [![CI](https://github.com/svaloumas/valet/actions/workflows/ci.yml/badge.svg)](https://github.com/svaloumas/valet/actions/workflows/ci.yml)
-![Coverage](https://img.shields.io/badge/Coverage-96.2%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-95.9%25-brightgreen)
 
 Simple stateless Go server responsible for executing tasks, referred as jobs.
 
