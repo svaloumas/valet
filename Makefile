@@ -14,8 +14,8 @@ test: generate
 	go test `go list ./...` -v -cover -count=1
 
 report: generate
-	go test `go list ./...` -coverprofile=cover.out
-	go tool cover -func=cover.out
+	go test -v ./... -covermode=count -coverprofile=coverage.out
+	go tool cover -func=coverage.out -o=coverage.out
 
 fmt:
 	! go fmt ./... 2>&1 | tee /dev/tty | read
