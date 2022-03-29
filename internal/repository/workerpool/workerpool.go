@@ -1,10 +1,12 @@
 package workerpool
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/task"
@@ -62,6 +64,8 @@ func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
 		Job:      j,
 		Result:   result,
 		TaskFunc: task.TaskTypes[j.TaskType],
+		// TODO: Consider making this configurable.
+		TimeoutType: time.Second,
 	}
 
 	select {
@@ -89,7 +93,7 @@ func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.JobItem, wg *sync
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
 		wp.logger.Printf("%s executing task...", logPrefix)
-		if err := wp.jobService.Exec(item); err != nil {
+		if err := wp.jobService.Exec(context.Background(), item); err != nil {
 			wp.logger.Printf("could not update job status: %s", err)
 		}
 		wp.logger.Printf("%s task finished!", logPrefix)

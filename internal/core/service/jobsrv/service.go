@@ -1,23 +1,27 @@
 package jobsrv
 
 import (
+	"context"
 	"fmt"
+	"time"
+
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/task"
 	"valet/internal/core/port"
 	"valet/pkg/apperrors"
-	"valet/pkg/time"
+	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
 )
 
 var _ port.JobService = &jobservice{}
+var defaultJobTimeout time.Duration = 84600
 
 type jobservice struct {
 	jobRepository port.JobRepository
 	jobQueue      port.JobQueue
 	validTasks    map[string]task.TaskFunc
 	uuidGen       uuidgen.UUIDGenerator
-	time          time.Time
+	time          rtime.Time
 }
 
 // New creates a new job service.
@@ -25,7 +29,7 @@ func New(jobRepository port.JobRepository,
 	jobQueue port.JobQueue,
 	validTasks map[string]task.TaskFunc,
 	uuidGen uuidgen.UUIDGenerator,
-	time time.Time) *jobservice {
+	time rtime.Time) *jobservice {
 	return &jobservice{
 		jobRepository: jobRepository,
 		jobQueue:      jobQueue,
@@ -36,25 +40,20 @@ func New(jobRepository port.JobRepository,
 }
 
 // Create creates a new job.
-func (srv *jobservice) Create(name, taskType, description string, metadata interface{}) (*domain.Job, error) {
+func (srv *jobservice) Create(
+	name, taskType, description string,
+	timeout int, metadata interface{}) (*domain.Job, error) {
+
 	uuid, err := srv.uuidGen.GenerateRandomUUIDString()
 	if err != nil {
 		return nil, err
 	}
 	createdAt := srv.time.Now()
-	j := &domain.Job{
-		ID:          uuid,
-		Name:        name,
-		TaskType:    taskType,
-		Description: description,
-		Metadata:    metadata,
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
-	}
+	j := domain.NewJob(uuid, name, taskType, description, timeout, &createdAt, metadata)
+
 	if err := j.Validate(srv.validTasks); err != nil {
 		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}
 	}
-
 	if ok := srv.jobQueue.Push(j); !ok {
 		return nil, &apperrors.FullQueueErr{}
 	}
@@ -86,12 +85,18 @@ func (srv *jobservice) Delete(id string) error {
 }
 
 // Exec executes the job.
-func (srv *jobservice) Exec(item domain.JobItem) error {
+func (srv *jobservice) Exec(ctx context.Context, item domain.JobItem) error {
 	startedAt := srv.time.Now()
 	item.Job.MarkStarted(&startedAt)
 	if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
 		return err
 	}
+	timeout := defaultJobTimeout
+	if item.Job.Timeout > 0 && item.Job.Timeout <= 84600 {
+		timeout = time.Duration(item.Job.Timeout)
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout*item.TimeoutType)
+	defer cancel()
 
 	jobResultChan := make(chan domain.JobResult, 1)
 	go func() {
@@ -119,15 +124,28 @@ func (srv *jobservice) Exec(item domain.JobItem) error {
 			Error:    errMsg,
 		}
 		jobResultChan <- result
+		close(jobResultChan)
 	}()
 
-	jobResult := <-jobResultChan
-	if jobResult.Error != "" {
+	var jobResult domain.JobResult
+	select {
+	case <-ctx.Done():
 		failedAt := srv.time.Now()
-		item.Job.MarkFailed(&failedAt, jobResult.Error)
-	} else {
-		completedAt := srv.time.Now()
-		item.Job.MarkCompleted(&completedAt)
+		item.Job.MarkFailed(&failedAt, ctx.Err().Error())
+
+		jobResult = domain.JobResult{
+			JobID:    item.Job.ID,
+			Metadata: nil,
+			Error:    ctx.Err().Error(),
+		}
+	case jobResult = <-jobResultChan:
+		if jobResult.Error != "" {
+			failedAt := srv.time.Now()
+			item.Job.MarkFailed(&failedAt, jobResult.Error)
+		} else {
+			completedAt := srv.time.Now()
+			item.Job.MarkCompleted(&completedAt)
+		}
 	}
 	if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
 		return err

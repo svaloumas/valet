@@ -9,6 +9,7 @@ type RequestBodyDTO struct {
 	Name        string      `json:"name"`
 	Description string      `json:"description"`
 	TaskType    string      `json:"task_type"`
+	Timeout     int         `json:"timeout"`
 	Metadata    interface{} `json:"metadata"`
 }
 

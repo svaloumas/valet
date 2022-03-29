@@ -18,6 +18,9 @@ type Job struct {
 	// TaskType is the type of the task to be executed.
 	TaskType string `json:"task_type"`
 
+	// Timeout is the time in seconds after which the job task will be interrupted.
+	Timeout int `json:"timeout,omitempty"`
+
 	// Description gives some information about the job.
 	Description string `json:"description,omitempty"`
 
@@ -38,6 +41,23 @@ type Job struct {
 
 	// Metadata is the payload provided for the specific job.
 	Metadata interface{} `json:"metadata"`
+}
+
+// NewJob initializes and returns a new Job instance.
+func NewJob(
+	uuid, name, taskType, description string, timeout int,
+	createdAt *time.Time, metadata interface{}) *Job {
+
+	return &Job{
+		ID:          uuid,
+		Name:        name,
+		TaskType:    taskType,
+		Timeout:     timeout,
+		Description: description,
+		Metadata:    metadata,
+		Status:      Pending,
+		CreatedAt:   createdAt,
+	}
 }
 
 // MarkStarted updates the status and timestamp at the moment the job started.

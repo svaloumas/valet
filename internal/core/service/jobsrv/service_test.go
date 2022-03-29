@@ -1,6 +1,7 @@
 package jobsrv
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"testing"
@@ -36,6 +37,7 @@ func TestCreateErrorCases(t *testing.T) {
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskType:    "test_task",
+		Timeout:     10,
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,
@@ -120,7 +122,7 @@ func TestCreateErrorCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := service.Create(tt.jobname, tt.taskType, job.Description, job.Metadata)
+			_, err := service.Create(tt.jobname, tt.taskType, job.Description, job.Timeout, job.Metadata)
 			if err == nil {
 				t.Error("service created expected error, returned nil instead")
 			}
@@ -147,6 +149,7 @@ func TestCreate(t *testing.T) {
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskType:    "test_task",
+		Timeout:     10,
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,
@@ -175,7 +178,7 @@ func TestCreate(t *testing.T) {
 		Times(1)
 
 	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
-	j, err := service.Create(expected.Name, expected.TaskType, expected.Description, expected.Metadata)
+	j, err := service.Create(expected.Name, expected.TaskType, expected.Description, expected.Timeout, expected.Metadata)
 	if err != nil {
 		t.Errorf("service create returned unexpected error: %#v", err)
 	}
@@ -271,7 +274,7 @@ func TestUpdate(t *testing.T) {
 		Times(1)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskType:    "test_task",
@@ -282,7 +285,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	updatedJob := &domain.Job{}
-	*updatedJob = *expectedJob
+	*updatedJob = *job
 	updatedJob.Name = "updated job_name"
 	updatedJob.Description = "updated description"
 
@@ -296,17 +299,17 @@ func TestUpdate(t *testing.T) {
 	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
-		Get(expectedJob.ID).
-		Return(expectedJob, nil).
+		Get(job.ID).
+		Return(job, nil).
 		Times(2)
 	jobRepository.
 		EXPECT().
-		Update(expectedJob.ID, updatedJob).
+		Update(job.ID, updatedJob).
 		Return(jobRepositoryErr).
 		Times(1)
 	jobRepository.
 		EXPECT().
-		Update(expectedJob.ID, updatedJob).
+		Update(job.ID, updatedJob).
 		Return(nil).
 		Times(1)
 	jobRepository.
@@ -326,12 +329,12 @@ func TestUpdate(t *testing.T) {
 	}{
 		{
 			"job repository error",
-			expectedJob.ID,
+			job.ID,
 			jobRepositoryErr,
 		},
 		{
 			"ok",
-			expectedJob.ID,
+			job.ID,
 			nil,
 		},
 		{
@@ -436,7 +439,7 @@ func TestExecCompletedJob(t *testing.T) {
 		Times(5)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskType:    "test_task",
@@ -452,7 +455,7 @@ func TestExecCompletedJob(t *testing.T) {
 	startedAt := freezed.Now()
 
 	startedJob := &domain.Job{}
-	*startedJob = *expectedJob
+	*startedJob = *job
 	startedJob.Status = domain.InProgress
 	startedJob.StartedAt = &startedAt
 
@@ -482,13 +485,14 @@ func TestExecCompletedJob(t *testing.T) {
 	}
 
 	jobItemWithNoError := domain.JobItem{
-		Job:      expectedJob,
-		Result:   make(chan domain.JobResult, 1),
-		TaskFunc: testTaskFunc,
+		Job:         job,
+		Result:      make(chan domain.JobResult, 1),
+		TaskFunc:    testTaskFunc,
+		TimeoutType: time.Millisecond,
 	}
 
 	expectedResultWithNoError := domain.JobResult{
-		JobID:    expectedJob.ID,
+		JobID:    job.ID,
 		Metadata: "test_metadata",
 		Error:    "",
 	}
@@ -498,7 +502,7 @@ func TestExecCompletedJob(t *testing.T) {
 		result := <-jobItemWithNoError.Result
 		actualResultChan <- result
 	}()
-	err := service.Exec(jobItemWithNoError)
+	err := service.Exec(context.Background(), jobItemWithNoError)
 	if err != nil {
 		t.Errorf("service exec returned error: got %#v want nil", err.Error())
 	}
@@ -568,9 +572,10 @@ func TestExecFailedJob(t *testing.T) {
 	}
 
 	jobItemWithError := domain.JobItem{
-		Job:      expectedJob,
-		Result:   make(chan domain.JobResult, 1),
-		TaskFunc: testTaskFuncReturnsErr,
+		Job:         expectedJob,
+		Result:      make(chan domain.JobResult, 1),
+		TaskFunc:    testTaskFuncReturnsErr,
+		TimeoutType: time.Millisecond,
 	}
 	expectedResultWithError := domain.JobResult{
 		JobID:    expectedJob.ID,
@@ -583,7 +588,7 @@ func TestExecFailedJob(t *testing.T) {
 		result := <-jobItemWithError.Result
 		actualResultChan <- result
 	}()
-	err := service.Exec(jobItemWithError)
+	err := service.Exec(context.Background(), jobItemWithError)
 	if err != nil {
 		t.Errorf("service exec returned error: got %#v want nil", err.Error())
 	}
@@ -605,7 +610,7 @@ func TestExecPanicJob(t *testing.T) {
 		Times(5)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskType:    "test_func",
@@ -620,7 +625,7 @@ func TestExecPanicJob(t *testing.T) {
 	startedAt := freezed.Now()
 
 	startedJob := &domain.Job{}
-	*startedJob = *expectedJob
+	*startedJob = *job
 	startedJob.Status = domain.InProgress
 	startedJob.StartedAt = &startedAt
 
@@ -652,12 +657,13 @@ func TestExecPanicJob(t *testing.T) {
 	}
 
 	jobItemWithError := domain.JobItem{
-		Job:      expectedJob,
-		Result:   make(chan domain.JobResult, 1),
-		TaskFunc: testTaskFuncReturnsErr,
+		Job:         job,
+		Result:      make(chan domain.JobResult, 1),
+		TaskFunc:    testTaskFuncReturnsErr,
+		TimeoutType: time.Millisecond,
 	}
 	expectedResultWithError := domain.JobResult{
-		JobID:    expectedJob.ID,
+		JobID:    job.ID,
 		Metadata: nil,
 		Error:    panicMessage,
 	}
@@ -667,7 +673,7 @@ func TestExecPanicJob(t *testing.T) {
 		result := <-jobItemWithError.Result
 		actualResultChan <- result
 	}()
-	err := service.Exec(jobItemWithError)
+	err := service.Exec(context.Background(), jobItemWithError)
 	if err != nil {
 		t.Errorf("service exec returned error: got %#v want nil", err.Error())
 	}
@@ -689,7 +695,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 		Times(6)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskType:    "dummytask",
@@ -701,7 +707,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	startedAt := freezed.Now()
 
 	startedJob := &domain.Job{}
-	*startedJob = *expectedJob
+	*startedJob = *job
 	startedJob.Status = domain.InProgress
 	startedJob.StartedAt = &startedAt
 
@@ -741,9 +747,10 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	}
 
 	jobItem := domain.JobItem{
-		Job:      expectedJob,
-		Result:   make(chan domain.JobResult, 1),
-		TaskFunc: testTaskFunc,
+		Job:         job,
+		Result:      make(chan domain.JobResult, 1),
+		TaskFunc:    testTaskFunc,
+		TimeoutType: time.Millisecond,
 	}
 
 	tests := []struct {
@@ -773,12 +780,99 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 				default:
 				}
 			}()
-			err := service.Exec(tt.item)
+			err := service.Exec(context.Background(), tt.item)
 			if err != nil {
 				if err.Error() != tt.err.Error() {
 					t.Errorf("service exec returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
 				}
 			}
 		})
+	}
+}
+
+func TestExecJobTimeoutExceeded(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(5)
+
+	createdAt := freezed.Now()
+	job := &domain.Job{
+		ID:          "auuid4",
+		Name:        "job_name",
+		TaskType:    "test_func",
+		Timeout:     20,
+		Description: "some description",
+		Status:      domain.Pending,
+		CreatedAt:   &createdAt,
+	}
+
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
+
+	startedAt := freezed.Now()
+
+	startedJob := &domain.Job{}
+	*startedJob = *job
+	startedJob.Status = domain.InProgress
+	startedJob.StartedAt = &startedAt
+
+	failedAt := freezed.Now()
+	timeoutErrorMessage := "context deadline exceeded"
+
+	failedJob := &domain.Job{}
+	*failedJob = *startedJob
+	failedJob.Status = domain.Failed
+	failedJob.FailureReason = timeoutErrorMessage
+	failedJob.CompletedAt = &failedAt
+
+	jobRepository := mock.NewMockJobRepository(ctrl)
+	jobRepository.
+		EXPECT().
+		Update(startedJob.ID, startedJob).
+		Return(nil).
+		Times(1)
+	jobRepository.
+		EXPECT().
+		Update(failedJob.ID, failedJob).
+		Return(nil).
+		Times(1)
+
+	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+
+	var testTaskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
+		time.Sleep(time.Millisecond * 50)
+		return "some_metadata", nil
+	}
+
+	jobItemWithError := domain.JobItem{
+		Job:         job,
+		Result:      make(chan domain.JobResult, 1),
+		TaskFunc:    testTaskFuncReturnsErr,
+		TimeoutType: time.Millisecond,
+	}
+	expectedResultWithError := domain.JobResult{
+		JobID:    job.ID,
+		Metadata: nil,
+		Error:    timeoutErrorMessage,
+	}
+
+	actualResultChan := make(chan domain.JobResult, 1)
+	go func() {
+		result := <-jobItemWithError.Result
+		actualResultChan <- result
+	}()
+	err := service.Exec(context.Background(), jobItemWithError)
+	if err != nil {
+		t.Errorf("service exec returned error: got %#v want nil", err.Error())
+	}
+	actualResult := <-actualResultChan
+	if eq := reflect.DeepEqual(actualResult, expectedResultWithError); !eq {
+		t.Errorf("service exec produced wrong job result: go %#v want %#v", actualResult, expectedResultWithError)
 	}
 }

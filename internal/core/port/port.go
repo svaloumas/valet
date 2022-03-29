@@ -1,6 +1,7 @@
 package port
 
 import (
+	"context"
 	"valet/internal/core/domain"
 )
 
@@ -55,7 +56,7 @@ type WorkerPool interface {
 // JobService represents a driver actor service interface.
 type JobService interface {
 	// Create creates a new job.
-	Create(name, taskType, description string, metadata interface{}) (*domain.Job, error)
+	Create(name, taskType, description string, timeout int, metadata interface{}) (*domain.Job, error)
 
 	// Get fetches a job.
 	Get(id string) (*domain.Job, error)
@@ -67,7 +68,7 @@ type JobService interface {
 	Delete(id string) error
 
 	// Exec executes a job.
-	Exec(item domain.JobItem) error
+	Exec(ctx context.Context, item domain.JobItem) error
 }
 
 // ResultService represents a driver actor service interface.

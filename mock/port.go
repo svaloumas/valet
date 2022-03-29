@@ -5,6 +5,7 @@
 package mock
 
 import (
+	context "context"
 	reflect "reflect"
 	domain "valet/internal/core/domain"
 
@@ -293,18 +294,18 @@ func (m *MockJobService) EXPECT() *MockJobServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockJobService) Create(name, taskType, description string, metadata interface{}) (*domain.Job, error) {
+func (m *MockJobService) Create(name, taskType, description string, timeout int, metadata interface{}) (*domain.Job, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", name, taskType, description, metadata)
+	ret := m.ctrl.Call(m, "Create", name, taskType, description, timeout, metadata)
 	ret0, _ := ret[0].(*domain.Job)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockJobServiceMockRecorder) Create(name, taskType, description, metadata interface{}) *gomock.Call {
+func (mr *MockJobServiceMockRecorder) Create(name, taskType, description, timeout, metadata interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockJobService)(nil).Create), name, taskType, description, metadata)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockJobService)(nil).Create), name, taskType, description, timeout, metadata)
 }
 
 // Delete mocks base method.
@@ -322,17 +323,17 @@ func (mr *MockJobServiceMockRecorder) Delete(id interface{}) *gomock.Call {
 }
 
 // Exec mocks base method.
-func (m *MockJobService) Exec(item domain.JobItem) error {
+func (m *MockJobService) Exec(ctx context.Context, item domain.JobItem) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Exec", item)
+	ret := m.ctrl.Call(m, "Exec", ctx, item)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Exec indicates an expected call of Exec.
-func (mr *MockJobServiceMockRecorder) Exec(item interface{}) *gomock.Call {
+func (mr *MockJobServiceMockRecorder) Exec(ctx, item interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockJobService)(nil).Exec), item)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockJobService)(nil).Exec), ctx, item)
 }
 
 // Get mocks base method.
