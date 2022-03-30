@@ -13,7 +13,7 @@ callback, a JSON payload with the data required for the callback to be executed,
 The service exposes a JSON RestAPI providing CRUD endpoints for the job management. Configuration uses a single `yaml` file living under the root
 directory of the project.
 
-## Development
+## Installation
 
 1. Clone the repo.
 
@@ -21,15 +21,10 @@ directory of the project.
 git clone https://github.com/svaloumas/valet.git
 ```
 
-2. Build the `valet` executable.
+2. Build and run the `valet` executable.
 
 ```bash
 make build
-```
-
-3. Run `Valet` service.
-
-```bash
 ./valet
 ```
 
