@@ -19,7 +19,7 @@ var defaultJobTimeout time.Duration = 84600
 type jobservice struct {
 	jobRepository port.JobRepository
 	jobQueue      port.JobQueue
-	validTasks    map[string]task.TaskFunc
+	taskrepo      *task.TaskRepository
 	uuidGen       uuidgen.UUIDGenerator
 	time          rtime.Time
 }
@@ -27,13 +27,13 @@ type jobservice struct {
 // New creates a new job service.
 func New(jobRepository port.JobRepository,
 	jobQueue port.JobQueue,
-	validTasks map[string]task.TaskFunc,
+	taskrepo *task.TaskRepository,
 	uuidGen uuidgen.UUIDGenerator,
 	time rtime.Time) *jobservice {
 	return &jobservice{
 		jobRepository: jobRepository,
 		jobQueue:      jobQueue,
-		validTasks:    validTasks,
+		taskrepo:      taskrepo,
 		uuidGen:       uuidGen,
 		time:          time,
 	}
@@ -51,7 +51,7 @@ func (srv *jobservice) Create(
 	createdAt := srv.time.Now()
 	j := domain.NewJob(uuid, name, taskType, description, timeout, &createdAt, metadata)
 
-	if err := j.Validate(srv.validTasks); err != nil {
+	if err := j.Validate(srv.taskrepo); err != nil {
 		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}
 	}
 	if ok := srv.jobQueue.Push(j); !ok {

@@ -15,12 +15,6 @@ import (
 	"valet/pkg/apperrors"
 )
 
-var validTasks = map[string]task.TaskFunc{
-	"test_task": func(i interface{}) (interface{}, error) {
-		return "some metadata", errors.New("some task error")
-	},
-}
-
 func TestCreateErrorCases(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -80,7 +74,12 @@ func TestCreateErrorCases(t *testing.T) {
 		Return(false).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskFunc := func(i interface{}) (interface{}, error) {
+		return "some metadata", errors.New("some task error")
+	}
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("test_task", taskFunc)
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name     string
@@ -177,7 +176,14 @@ func TestCreate(t *testing.T) {
 		Return(true).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskFunc := func(i interface{}) (interface{}, error) {
+		return "some metadata", errors.New("some task error")
+	}
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("test_task", taskFunc)
+
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
+
 	j, err := service.Create(expected.Name, expected.TaskType, expected.Description, expected.Timeout, expected.Metadata)
 	if err != nil {
 		t.Errorf("service create returned unexpected error: %#v", err)
@@ -227,7 +233,8 @@ func TestGet(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskrepo := task.NewTaskRepository()
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name string
@@ -320,7 +327,8 @@ func TestUpdate(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskrepo := task.NewTaskRepository()
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name string
@@ -396,7 +404,8 @@ func TestDelete(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskrepo := task.NewTaskRepository()
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name string
@@ -478,7 +487,8 @@ func TestExecCompletedJob(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskrepo := task.NewTaskRepository()
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	var testTaskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
@@ -565,7 +575,8 @@ func TestExecFailedJob(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskrepo := task.NewTaskRepository()
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	var testTaskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		return nil, errors.New(failureReason)
@@ -650,7 +661,8 @@ func TestExecPanicJob(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskrepo := task.NewTaskRepository()
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	var testTaskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		panic(panicMessage)
@@ -740,7 +752,8 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 		Return(jobRepositoryErr).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskrepo := task.NewTaskRepository()
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	var testTaskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
@@ -843,7 +856,8 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	service := New(jobRepository, jobQueue, validTasks, uuidGen, freezed)
+	taskrepo := task.NewTaskRepository()
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	var testTaskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		time.Sleep(time.Millisecond * 50)

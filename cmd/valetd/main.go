@@ -32,10 +32,13 @@ var (
 )
 
 func main() {
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("dummytask", task.DummyTask)
+
 	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
 
 	jobRepository := jobrepo.NewJobDB()
-	jobService := jobsrv.New(jobRepository, jobQueue, task.TaskTypes, uuidgen.New(), rtime.New())
+	jobService := jobsrv.New(jobRepository, jobQueue, taskrepo, uuidgen.New(), rtime.New())
 
 	resultRepository := resultrepo.NewResultDB()
 	resultService := resultsrv.New(resultRepository)

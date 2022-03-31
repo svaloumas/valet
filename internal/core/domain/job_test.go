@@ -78,6 +78,12 @@ func TestJobMarkFailed(t *testing.T) {
 }
 
 func TestJobValidate(t *testing.T) {
+	taskFunc := func(i interface{}) (interface{}, error) {
+		return "some metadata", errors.New("some task error")
+	}
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("test_task", taskFunc)
+
 	tests := []struct {
 		name string
 		job  *Job
@@ -100,7 +106,7 @@ func TestJobValidate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.job.Validate(validTasks)
+			err := tt.job.Validate(taskrepo)
 			if err != nil && err.Error() != tt.desc {
 				t.Errorf("validator returned wrong error: got %v want %v", err.Error(), tt.desc)
 			}
