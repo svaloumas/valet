@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  valet:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+      target: build
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "go mod download && make build && /valet/valetd"
+    volumes:
+      - ./:/valet
+    ports:
+      - ${PORT:-8080}:8080
