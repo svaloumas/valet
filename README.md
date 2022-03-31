@@ -65,7 +65,7 @@ func DummyTask(metadata interface{}) (interface{}, error) {
 
         // Do something with the metadata you injected through the API
         // ...
-	taskMetadata.URL = "http://www.test-url.com"
+	DownloadContent(taskMetadata.URL)
 	return taskMetadata, nil
 }
 
