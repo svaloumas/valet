@@ -2,13 +2,13 @@
 [![CI](https://github.com/svaloumas/valet/actions/workflows/ci.yml/badge.svg)](https://github.com/svaloumas/valet/actions/workflows/ci.yml)
 ![Coverage](https://img.shields.io/badge/Coverage-92.9%25-brightgreen)
 
+Simple stateless Go server responsible for executing tasks, referred as jobs.
+
 * [Overview](#overview)
 * [Installation](#installation)
 * [Configuration](#configuration)
 * [Usage](#usage)
 * [Tests](#tests)
-
-Simple stateless Go server responsible for executing tasks, referred as jobs.
 
 <a name="overview"/>
 
