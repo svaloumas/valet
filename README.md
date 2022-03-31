@@ -32,7 +32,7 @@ directory of the project.
 git clone https://github.com/svaloumas/valet.git
 ```
 
-2. Install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
+2. Download and install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
 
 3. Build and run the `valet` container.
 
