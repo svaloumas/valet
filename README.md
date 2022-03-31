@@ -67,7 +67,7 @@ by including them in the request body.
 ```json
 {
     "name": "a job",
-    "description": "what's all this about, but briefly",
+    "description": "what all this jbo is about, but briefly",
     "task_name": "dummytask",
     "metadata": {
         "url": "www.some-url.com"
