@@ -47,8 +47,8 @@ func DummyTask(metadata interface{}) (interface{}, error) {
 	taskMetadata := &DummyMetadata{}
 	mapstructure.Decode(metadata, taskMetadata)
 
-    // Do something with the metadata you injected through the API
-    // ...
+        // Do something with the metadata you injected through the API
+        // ...
 	taskMetadata.URL = "http://www.test-url.com"
 	return taskMetadata, nil
 }
