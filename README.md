@@ -28,6 +28,53 @@ make build
 ./valet
 ```
 
+## Configuration
+
+All configuration is provided through `config.yaml`, which lives in the project's root directory.
+
+## Usage
+
+Define your own tasks under `task/` directory. The tasks should implement the `task.TaskFunc` type.
+
+```go
+// DummyMetadata is an example of a task metadata structure.
+type DummyMetadata struct {
+	URL string `json:"url,omitempty"`
+}
+
+// DummyTask is a dummy task callback.
+func DummyTask(metadata interface{}) (interface{}, error) {
+	taskMetadata := &DummyMetadata{}
+	mapstructure.Decode(metadata, taskMetadata)
+
+    // Do something with the metadata you injected through the API
+    // ...
+	taskMetadata.URL = "http://www.test-url.com"
+	return taskMetadata, nil
+}
+
+```
+
+Register your new task callback in `main` function living in `cmd/valetd/main.go` and provide a name for it.
+
+```go
+taskrepo.Register("dummytask", task.DummyTask)
+```
+
+Create a new job by making an POST HTTP call to `/jobs`. You can inject the any arbitrary metadata for your task to run
+by including them in the request body.
+
+```json
+{
+    "name": "a job",
+    "description": "what's all this about, but briefly",
+    "task_name": "dummytask",
+    "metadata": {
+        "url": "www.some-url.com"
+    }
+}
+```
+
 ## Tests
 
 Run the complete test suite.
