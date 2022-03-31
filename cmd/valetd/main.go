@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"valet/cmd/valetd/transmitter"
 	"valet/internal/core/domain/task"
 	"valet/internal/core/service/jobsrv"
 	"valet/internal/core/service/resultsrv"
@@ -46,7 +47,7 @@ func main() {
 	wp.Start()
 
 	logger := log.New(os.Stderr, "[transmitter] ", log.LstdFlags)
-	jobTransmitter := NewTransmitter(jobQueue, wp, logger)
+	jobTransmitter := transmitter.NewTransmitter(jobQueue, wp, logger)
 	go jobTransmitter.Transmit()
 
 	srv := http.Server{
