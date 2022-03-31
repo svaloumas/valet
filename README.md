@@ -14,7 +14,8 @@ Simple stateless Go server responsible for executing tasks, referred as jobs.
 
 ## Overview
 
-At its core, `valet` is an asynchronous task executor.<br>
+At its core, `valet` is an asynchronous task executor.
+
 The user can define callbacks to be executed by the service and assign them to jobs. Every job can be assigned with a different user defined
 callback, a JSON payload with the data required for the callback to be executed, and an optional timeout interval.
 
