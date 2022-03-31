@@ -43,7 +43,7 @@ func main() {
 	resultRepository := resultrepo.NewResultDB()
 	resultService := resultsrv.New(resultRepository)
 
-	wp := workerpool.NewWorkerPoolImpl(jobService, resultService, taskrepo, wpConcurrency, wpBacklog)
+	wp := workerpool.NewWorkerPoolImpl(jobService, resultService, wpConcurrency, wpBacklog)
 	wp.Start()
 
 	jobTransmitter := NewTransmitter(jobQueue, wp, int(tickInterval))

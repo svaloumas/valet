@@ -86,6 +86,8 @@ func (srv *jobservice) Delete(id string) error {
 
 // Exec executes the job.
 func (srv *jobservice) Exec(ctx context.Context, item domain.JobItem) error {
+	// Should be already validated.
+	taskFunc, _ := srv.taskrepo.GetTaskFunc(item.Job.TaskName)
 	startedAt := srv.time.Now()
 	item.Job.MarkStarted(&startedAt)
 	if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
@@ -113,7 +115,7 @@ func (srv *jobservice) Exec(ctx context.Context, item domain.JobItem) error {
 		var errMsg string
 
 		// Perform the actual work.
-		resultMetadata, jobErr := item.TaskFunc(item.Job.Metadata)
+		resultMetadata, jobErr := taskFunc(item.Job.Metadata)
 		if jobErr != nil {
 			errMsg = jobErr.Error()
 		}

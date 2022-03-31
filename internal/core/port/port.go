@@ -50,7 +50,7 @@ type WorkerPool interface {
 	Stop()
 
 	// Send schedules the job. An error is returned if the job backlog is full.
-	Send(j *domain.Job) error
+	Send(jobItem domain.JobItem) error
 }
 
 // JobService represents a driver actor service interface.

@@ -1,121 +1,145 @@
 package workerpool
 
-// func TestBacklogLimit(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	defer ctrl.Finish()
+import (
+	"context"
+	"io/ioutil"
+	"log"
+	"reflect"
+	"sync"
+	"testing"
+	"time"
+	"valet/internal/core/domain"
+	"valet/mock"
 
-// 	jobService := mock.NewMockJobService(ctrl)
-// 	resultService := mock.NewMockResultService(ctrl)
-// 	taskFunc := func(i interface{}) (interface{}, error) {
-// 		defer func() {
-// 			if p := recover(); p != nil {
-// 				fmt.Println(p)
-// 			}
-// 		}()
-// 		return "some metadata", nil
-// 	}
-// 	taskrepo := task.NewTaskRepository()
-// 	taskrepo.Register("test_task", taskFunc)
+	"github.com/golang/mock/gomock"
+)
 
-// 	wp := NewWorkerPoolImpl(jobService, resultService, taskrepo, 0, 1)
-// 	wp.logger = log.New(ioutil.Discard, "", 0)
-// 	wp.Start()
-// 	defer wp.Stop()
+func TestBacklogLimit(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-// 	j := new(domain.Job)
-// 	err := wp.Send(j)
-// 	if err != nil {
-// 		t.Errorf("Error sending job to workerpool: %v", err)
-// 	}
+	var wg sync.WaitGroup
+	defer wg.Wait()
 
-// 	jDeemedToFail := new(domain.Job)
-// 	err = wp.Send(jDeemedToFail)
-// 	if err == nil {
-// 		t.Fatal("Expected error, due to backlog being full")
-// 	}
-// }
+	j := new(domain.Job)
+	j.TaskName = "test_task"
 
-// func TestConcurrency(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	defer ctrl.Finish()
+	resultChan1 := make(chan domain.JobResult, 1)
+	jobItem1 := domain.NewJobItem(j, resultChan1, time.Millisecond)
 
-// 	freezed := mock.NewMockTime(ctrl)
-// 	freezed.
-// 		EXPECT().
-// 		Now().
-// 		Return(time.Date(1985, 11, 04, 20, 34, 58, 651387237, time.UTC)).
-// 		Times(2)
+	jDeemedToFail := new(domain.Job)
+	jDeemedToFail.TaskName = "test_task"
 
-// 	jobService := mock.NewMockJobService(ctrl)
-// 	resultService := mock.NewMockResultService(ctrl)
+	resultChan2 := make(chan domain.JobResult, 1)
+	jobItemDeemedToFail := domain.NewJobItem(jDeemedToFail, resultChan2, time.Millisecond)
+	futureResult1 := domain.FutureJobResult{Result: jobItem1.Result}
 
-// 	wp := NewWorkerPoolImpl(jobService, resultService, 1, 5)
-// 	wp.logger = log.New(ioutil.Discard, "", 0)
-// 	wp.Start()
-// 	defer wp.Stop()
+	jobService := mock.NewMockJobService(ctrl)
+	resultService := mock.NewMockResultService(ctrl)
 
-// 	j1 := new(domain.Job)
-// 	// TODO: Watch out here!
-// 	j1.taskName = "test_task"
-// 	createdAt1 := time.Now()
-// 	j1.CreatedAt = &createdAt1
-// 	j1.ID = "job_1"
+	wp := NewWorkerPoolImpl(jobService, resultService, 0, 1)
+	wp.logger = log.New(ioutil.Discard, "", 0)
+	wp.Start()
+	defer wp.Stop()
 
-// 	result := make(chan domain.JobResult, 1)
-// 	callback := func(metadata interface{}) (interface{}, error) {
-// 		return "some metadata", nil
-// 	}
-// 	jobItem := domain.JobItem{
-// 		Job:         j1,
-// 		Result:      result,
-// 		TaskFunc:    callback,
-// 		TimeoutType: time.Millisecond,
-// 	}
-// 	futureResult := domain.FutureJobResult{Result: jobItem.Result}
-// 	resultService.
-// 		EXPECT().
-// 		Create(futureResult).
-// 		Return(nil).
-// 		Times(2)
-// 	jobService.
-// 		EXPECT().
-// 		Exec(context.Background(), jobItem).
-// 		Return(nil).
-// 		Times(1)
+	wg.Add(1)
+	resultService.
+		EXPECT().
+		Create(futureResult1).
+		DoAndReturn(func(futureResult domain.FutureJobResult) error {
+			wg.Done()
+			return nil
+		})
 
-// 	j2 := new(domain.Job)
-// 	createdAt2 := time.Now()
-// 	j2.CreatedAt = &createdAt2
-// 	j2.ID = "job_2"
+	err := wp.Send(jobItem1)
+	if err != nil {
+		t.Errorf("Error sending job to workerpool: %v", err)
+	}
 
-// 	err := wp.Send(j1)
-// 	if err != nil {
-// 		t.Errorf("Error sending job to worker: %v", err)
-// 	}
+	err = wp.Send(jobItemDeemedToFail)
+	if err == nil {
+		t.Fatal("Expected error, due to backlog being full")
+	}
+}
 
-// 	// sleep enough for the workerpool to start, but not as much to finish its first
-// 	// job which takes at least 1 second
-// 	time.Sleep(50 * time.Millisecond)
+func TestConcurrency(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-// 	err = wp.Send(j2)
-// 	if err != nil {
-// 		t.Errorf("Error sending job to worker: %v", err)
-// 	}
+	var wg sync.WaitGroup
+	defer wg.Wait()
 
-// 	// the queue should contain only 1 item, the job item for the 2nd job
-// 	queueLength := len(wp.queue)
-// 	if queueLength != 1 {
-// 		t.Errorf("Expected queue with 1 item, actual length was %#v", queueLength)
-// 	}
-// 	select {
-// 	case i, ok := <-wp.queue:
-// 		if !ok {
-// 			t.Errorf("Unexpectedly closed workerpool queue")
-// 		}
-// 		if eq := reflect.DeepEqual(i.Job, j2); !eq {
-// 			t.Errorf("Expected %#v to be %#v", i.Job, j2)
-// 		}
-// 	default:
-// 		t.Errorf("Expected to find a job item in the queue")
-// 	}
-// }
+	jobService := mock.NewMockJobService(ctrl)
+	resultService := mock.NewMockResultService(ctrl)
+
+	wp := NewWorkerPoolImpl(jobService, resultService, 1, 5)
+	wp.logger = log.New(ioutil.Discard, "", 0)
+	wp.Start()
+	defer wp.Stop()
+
+	j1 := new(domain.Job)
+	j1.ID = "job_1"
+	j1.TaskName = "test_task"
+
+	resultChan1 := make(chan domain.JobResult, 1)
+	jobItem1 := domain.NewJobItem(j1, resultChan1, time.Millisecond)
+
+	j2 := new(domain.Job)
+	j2.ID = "job_2"
+	j2.TaskName = "test_task"
+
+	resultChan2 := make(chan domain.JobResult, 1)
+	jobItem2 := domain.NewJobItem(j2, resultChan2, time.Millisecond)
+
+	futureResult1 := domain.FutureJobResult{Result: jobItem1.Result}
+	futureResult2 := domain.FutureJobResult{Result: jobItem2.Result}
+	resultService.
+		EXPECT().
+		Create(futureResult1).
+		Return(nil).
+		Times(1)
+	resultService.
+		EXPECT().
+		Create(futureResult2).
+		Return(nil).
+		Times(1)
+	wg.Add(1)
+	jobService.
+		EXPECT().
+		Exec(context.Background(), jobItem1).
+		DoAndReturn(func(ctx context.Context, jobItem1 domain.JobItem) error {
+			time.Sleep(50 * time.Millisecond)
+			wg.Done()
+			return nil
+		})
+
+	err := wp.Send(jobItem1)
+	if err != nil {
+		t.Errorf("Error sending job to worker: %v", err)
+	}
+
+	// sleep enough for the workerpool to start, but not as much to finish its first job
+	time.Sleep(20 * time.Millisecond)
+
+	err = wp.Send(jobItem2)
+	if err != nil {
+		t.Errorf("Error sending job to worker: %v", err)
+	}
+
+	// the queue should contain only 1 item, the job item for the 2nd job
+	queueLength := len(wp.queue)
+	if queueLength != 1 {
+		t.Errorf("Expected queue with 1 item, actual length was %#v", queueLength)
+	}
+	select {
+	case i, ok := <-wp.queue:
+		if !ok {
+			t.Errorf("Unexpectedly closed workerpool queue")
+		}
+		if eq := reflect.DeepEqual(i.Job, j2); !eq {
+			t.Errorf("Expected %#v to be %#v", i.Job, j2)
+		}
+	default:
+		t.Errorf("Expected to find a job item in the queue")
+	}
+}

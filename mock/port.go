@@ -233,17 +233,17 @@ func (m *MockWorkerPool) EXPECT() *MockWorkerPoolMockRecorder {
 }
 
 // Send mocks base method.
-func (m *MockWorkerPool) Send(j *domain.Job) error {
+func (m *MockWorkerPool) Send(jobItem domain.JobItem) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Send", j)
+	ret := m.ctrl.Call(m, "Send", jobItem)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockWorkerPoolMockRecorder) Send(j interface{}) *gomock.Call {
+func (mr *MockWorkerPoolMockRecorder) Send(jobItem interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockWorkerPool)(nil).Send), j)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockWorkerPool)(nil).Send), jobItem)
 }
 
 // Start mocks base method.

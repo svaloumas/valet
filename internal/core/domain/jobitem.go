@@ -2,13 +2,23 @@ package domain
 
 import (
 	"time"
-
-	"valet/internal/core/domain/task"
 )
 
 type JobItem struct {
 	Job         *Job
 	Result      chan JobResult
-	TaskFunc    task.TaskFunc
 	TimeoutUnit time.Duration
+}
+
+// NewJobItem initializes and returns a new JobItem instance.
+func NewJobItem(
+	j *Job,
+	resultChan chan JobResult,
+	timeoutUnit time.Duration) JobItem {
+
+	return JobItem{
+		Job:         j,
+		Result:      resultChan,
+		TimeoutUnit: timeoutUnit,
+	}
 }

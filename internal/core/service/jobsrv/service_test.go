@@ -487,17 +487,16 @@ func TestExecCompletedJob(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	taskrepo := task.NewTaskRepository()
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
-
-	var testTaskFunc = func(metadata interface{}) (interface{}, error) {
+	var taskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
 	}
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("test_task", taskFunc)
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	jobItemWithNoError := domain.JobItem{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
-		TaskFunc:    testTaskFunc,
 		TimeoutUnit: time.Millisecond,
 	}
 
@@ -575,17 +574,16 @@ func TestExecFailedJob(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	taskrepo := task.NewTaskRepository()
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
-
-	var testTaskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
+	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		return nil, errors.New(failureReason)
 	}
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("test_task", taskFuncReturnsErr)
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	jobItemWithError := domain.JobItem{
 		Job:         expectedJob,
 		Result:      make(chan domain.JobResult, 1),
-		TaskFunc:    testTaskFuncReturnsErr,
 		TimeoutUnit: time.Millisecond,
 	}
 	expectedResultWithError := domain.JobResult{
@@ -661,17 +659,16 @@ func TestExecPanicJob(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	taskrepo := task.NewTaskRepository()
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
-
-	var testTaskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
+	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		panic(panicMessage)
 	}
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("test_task", taskFuncReturnsErr)
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	jobItemWithError := domain.JobItem{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
-		TaskFunc:    testTaskFuncReturnsErr,
 		TimeoutUnit: time.Millisecond,
 	}
 	expectedResultWithError := domain.JobResult{
@@ -752,17 +749,16 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 		Return(jobRepositoryErr).
 		Times(1)
 
-	taskrepo := task.NewTaskRepository()
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
-
-	var testTaskFunc = func(metadata interface{}) (interface{}, error) {
+	var taskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
 	}
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("test_task", taskFunc)
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	jobItem := domain.JobItem{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
-		TaskFunc:    testTaskFunc,
 		TimeoutUnit: time.Millisecond,
 	}
 
@@ -856,18 +852,17 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	taskrepo := task.NewTaskRepository()
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
-
-	var testTaskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
+	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		time.Sleep(time.Millisecond * 50)
 		return "some_metadata", nil
 	}
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("test_task", taskFuncReturnsErr)
+	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	jobItemWithError := domain.JobItem{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
-		TaskFunc:    testTaskFuncReturnsErr,
 		TimeoutUnit: time.Millisecond,
 	}
 	expectedResultWithError := domain.JobResult{

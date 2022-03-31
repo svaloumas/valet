@@ -6,10 +6,8 @@ import (
 	"log"
 	"os"
 	"sync"
-	"time"
 
 	"valet/internal/core/domain"
-	"valet/internal/core/domain/task"
 	"valet/internal/core/port"
 	"valet/pkg/apperrors"
 )
@@ -26,7 +24,6 @@ type WorkerPoolImpl struct {
 
 	jobService    port.JobService
 	resultService port.ResultService
-	taskrepo      *task.TaskRepository
 	queue         chan domain.JobItem
 	wg            sync.WaitGroup
 	logger        *log.Logger
@@ -36,7 +33,6 @@ type WorkerPoolImpl struct {
 func NewWorkerPoolImpl(
 	jobService port.JobService,
 	resultService port.ResultService,
-	taskrepo *task.TaskRepository,
 	concurrency, backlog int) *WorkerPoolImpl {
 
 	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
@@ -45,7 +41,6 @@ func NewWorkerPoolImpl(
 		backlog:       backlog,
 		jobService:    jobService,
 		resultService: resultService,
-		taskrepo:      taskrepo,
 		queue:         make(chan domain.JobItem, backlog),
 		logger:        logger,
 	}
@@ -61,18 +56,7 @@ func (wp *WorkerPoolImpl) Start() {
 }
 
 // Send schedules the job. An error is returned if the job backlog is full.
-func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
-	result := make(chan domain.JobResult, 1)
-	// Should be already validated.
-	taskFunc, _ := wp.taskrepo.GetTaskFunc(j.TaskName)
-	jobItem := domain.JobItem{
-		Job:      j,
-		Result:   result,
-		TaskFunc: taskFunc,
-		// TODO: Consider making this configurable.
-		TimeoutUnit: time.Second,
-	}
-
+func (wp *WorkerPoolImpl) Send(jobItem domain.JobItem) error {
 	select {
 	case wp.queue <- jobItem:
 		go func() {

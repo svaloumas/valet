@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"valet/internal/core/domain"
 	"valet/internal/core/port"
 )
 
@@ -16,7 +17,11 @@ type jobtransmitter struct {
 }
 
 // NewTransmitter initializes and returns a new transmitter concrete implementation.
-func NewTransmitter(jobQueue port.JobQueue, wp port.WorkerPool, tickInterval int) *jobtransmitter {
+func NewTransmitter(
+	jobQueue port.JobQueue,
+	wp port.WorkerPool,
+	tickInterval int) *jobtransmitter {
+
 	return &jobtransmitter{
 		jobQueue:     jobQueue,
 		wp:           wp,
@@ -37,7 +42,14 @@ func (t *jobtransmitter) Transmit() {
 		case j := <-t.jobQueue.Pop():
 			// TODO: Implement a proper re-try mechanism.
 			logger.Printf("sending job with ID: %s to worker pool", j.ID)
-			err := t.wp.Send(j)
+			resultChan := make(chan domain.JobResult, 1)
+			// TODO: Consider making timeout unit configurable.
+			jobItem := domain.JobItem{
+				Job:         j,
+				Result:      resultChan,
+				TimeoutUnit: time.Second,
+			}
+			err := t.wp.Send(jobItem)
 			if err != nil {
 				logger.Print("worker pool backlog is full, pushing job back to queue")
 				if ok := t.jobQueue.Push(j); !ok {
