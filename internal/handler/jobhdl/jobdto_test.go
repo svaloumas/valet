@@ -26,7 +26,7 @@ func TestBuildResponseBodyDTO(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Completed,

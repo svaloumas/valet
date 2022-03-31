@@ -30,7 +30,7 @@ func TestCreateErrorCases(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Timeout:     10,
 		Description: "some description",
 		Metadata:    "some metadata",
@@ -41,7 +41,7 @@ func TestCreateErrorCases(t *testing.T) {
 	jobValidateErr := errors.New("name required")
 	jobRepositoryErr := errors.New("some job repository error")
 	jobQueueErr := &apperrors.FullQueueErr{}
-	jobTaskTypeErr := &apperrors.ResourceValidationErr{Message: "wrongtask is not a valid task type - valid task types: [test_task]"}
+	jobTaskNameErr := &apperrors.ResourceValidationErr{Message: "wrongtask is not a valid task name - valid tasks: [test_task]"}
 
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 	uuidGen.
@@ -84,7 +84,7 @@ func TestCreateErrorCases(t *testing.T) {
 	tests := []struct {
 		name     string
 		jobname  string
-		taskType string
+		taskName string
 		err      error
 	}{
 		{
@@ -109,7 +109,7 @@ func TestCreateErrorCases(t *testing.T) {
 			"job task type error",
 			"job_name",
 			"wrongtask",
-			jobTaskTypeErr,
+			jobTaskNameErr,
 		},
 		{
 			"uuid generator error",
@@ -121,7 +121,7 @@ func TestCreateErrorCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := service.Create(tt.jobname, tt.taskType, job.Description, job.Timeout, job.Metadata)
+			_, err := service.Create(tt.jobname, tt.taskName, job.Description, job.Timeout, job.Metadata)
 			if err == nil {
 				t.Error("service created expected error, returned nil instead")
 			}
@@ -147,7 +147,7 @@ func TestCreate(t *testing.T) {
 	expected := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Timeout:     10,
 		Description: "some description",
 		Metadata:    "some metadata",
@@ -184,7 +184,7 @@ func TestCreate(t *testing.T) {
 
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
-	j, err := service.Create(expected.Name, expected.TaskType, expected.Description, expected.Timeout, expected.Metadata)
+	j, err := service.Create(expected.Name, expected.TaskName, expected.Description, expected.Timeout, expected.Metadata)
 	if err != nil {
 		t.Errorf("service create returned unexpected error: %#v", err)
 	}
@@ -208,7 +208,7 @@ func TestGet(t *testing.T) {
 	expected := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Metadata:    "some metadata",
 		Description: "some description",
 		Status:      domain.Pending,
@@ -284,7 +284,7 @@ func TestUpdate(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Metadata:    "some metadata",
 		Description: "some description",
 		Status:      domain.Pending,
@@ -379,7 +379,7 @@ func TestDelete(t *testing.T) {
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Metadata:    "some metadata",
 		Description: "some description",
 		Status:      domain.Pending,
@@ -451,7 +451,7 @@ func TestExecCompletedJob(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Metadata:    "some metadata",
 		Description: "some description",
 		Status:      domain.Pending,
@@ -538,7 +538,7 @@ func TestExecFailedJob(t *testing.T) {
 	expectedJob := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_func",
+		TaskName:    "test_task",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -624,7 +624,7 @@ func TestExecPanicJob(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_func",
+		TaskName:    "test_task",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -710,7 +710,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "dummytask",
+		TaskName:    "test_task",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -818,7 +818,7 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_func",
+		TaskName:    "test_task",
 		Timeout:     20,
 		Description: "some description",
 		Status:      domain.Pending,

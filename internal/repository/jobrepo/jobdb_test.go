@@ -28,7 +28,7 @@ func TestJobDBCreate(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,
@@ -68,7 +68,7 @@ func TestJobDBGet(t *testing.T) {
 	expected := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,
@@ -132,7 +132,7 @@ func TestJobDBUpdate(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,
@@ -168,7 +168,7 @@ func TestJobDBDelete(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,

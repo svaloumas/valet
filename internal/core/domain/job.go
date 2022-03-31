@@ -15,8 +15,8 @@ type Job struct {
 	// Name is the name of the job.
 	Name string `json:"name"`
 
-	// TaskType is the type of the task to be executed.
-	TaskType string `json:"task_type"`
+	// TaskName is the name of the task to be executed.
+	TaskName string `json:"task_name"`
 
 	// Timeout is the time in seconds after which the job task will be interrupted.
 	Timeout int `json:"timeout,omitempty"`
@@ -45,13 +45,13 @@ type Job struct {
 
 // NewJob initializes and returns a new Job instance.
 func NewJob(
-	uuid, name, taskType, description string, timeout int,
+	uuid, name, taskName, description string, timeout int,
 	createdAt *time.Time, metadata interface{}) *Job {
 
 	return &Job{
 		ID:          uuid,
 		Name:        name,
-		TaskType:    taskType,
+		TaskName:    taskName,
 		Timeout:     timeout,
 		Description: description,
 		Metadata:    metadata,
@@ -89,18 +89,18 @@ func (job *Job) Validate(taskrepo *task.TaskRepository) error {
 		required = append(required, "name")
 	}
 
-	if job.TaskType == "" {
-		required = append(required, "task_type")
+	if job.TaskName == "" {
+		required = append(required, "task_name")
 	}
 
 	if len(required) > 0 {
 		return fmt.Errorf(strings.Join(required, ", ") + " required")
 	}
 
-	_, err := taskrepo.GetTaskFunc(job.TaskType)
+	_, err := taskrepo.GetTaskFunc(job.TaskName)
 	if err != nil {
 		taskNames := taskrepo.GetNames()
-		return fmt.Errorf("%s is not a valid task type - valid task types: %v", job.TaskType, taskNames)
+		return fmt.Errorf("%s is not a valid task name - valid tasks: %v", job.TaskName, taskNames)
 	}
 
 	if job.Status != Undefined {

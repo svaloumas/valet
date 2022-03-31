@@ -29,7 +29,7 @@ func TestFIFOQueuePush(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,
@@ -61,7 +61,7 @@ func TestFIFOQueuePop(t *testing.T) {
 	expected := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,
@@ -99,7 +99,7 @@ func TestFIFOQueueClose(t *testing.T) {
 	expected := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Description: "some description",
 		Metadata:    "some metadata",
 		Status:      domain.Pending,

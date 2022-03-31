@@ -2,29 +2,27 @@ package task
 
 import "fmt"
 
-var (
-	TaskTypes = map[string]TaskFunc{
-		"dummytask": DummyTask,
-	}
-)
-
 // TaskFunc is the type of the task callback.
 type TaskFunc func(interface{}) (interface{}, error)
 
+// TaskRepository is the in memory storage of tasks.
 type TaskRepository struct {
 	tasks map[string]TaskFunc
 }
 
+// NewTaskRepository creates and returns a new TaskRepository instance.
 func NewTaskRepository() *TaskRepository {
 	return &TaskRepository{
 		tasks: make(map[string]TaskFunc),
 	}
 }
 
+// Register registers a new task in the repository.
 func (repo *TaskRepository) Register(name string, taskFunc TaskFunc) {
 	repo.tasks[name] = taskFunc
 }
 
+// GetTaskFunc returns the TaskFunc for a specified name if that exists in the repository.
 func (repo *TaskRepository) GetTaskFunc(name string) (TaskFunc, error) {
 	task, ok := repo.tasks[name]
 	if !ok {
@@ -33,6 +31,7 @@ func (repo *TaskRepository) GetTaskFunc(name string) (TaskFunc, error) {
 	return task, nil
 }
 
+// GetNames returns all the names of the tasks currently in the repository.
 func (repo *TaskRepository) GetNames() []string {
 	names := []string{}
 	for name := range repo.tasks {

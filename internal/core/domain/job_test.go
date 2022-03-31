@@ -89,18 +89,18 @@ func TestJobValidate(t *testing.T) {
 		job  *Job
 		desc string
 	}{
-		{"empty payload", &Job{}, "name, task_type required"},
-		{"only name given", &Job{Name: "a name"}, "task_type required"},
-		{"only task_type given", &Job{TaskType: "test_task"}, "name required"},
+		{"empty payload", &Job{}, "name, task_name required"},
+		{"only name given", &Job{Name: "a name"}, "task_name required"},
+		{"only task_name given", &Job{TaskName: "test_task"}, "name required"},
 		{
 			"wrong stauts",
-			&Job{Name: "a name", TaskType: "test_task", Description: "some_description", Status: 7},
+			&Job{Name: "a name", TaskName: "test_task", Description: "some_description", Status: 7},
 			"7 is not a valid job status, valid statuses: map[PENDING:1 IN_PROGRESS:2 COMPLETED:3 FAILED:4]",
 		},
 		{
 			"wrong task type",
-			&Job{Name: "a name", TaskType: "wrongtask", Description: "some_description", Status: 2},
-			"wrongtask is not a valid task type - valid task types: [test_task]",
+			&Job{Name: "a name", TaskName: "wrongtask", Description: "some_description", Status: 2},
+			"wrongtask is not a valid task name - valid tasks: [test_task]",
 		},
 	}
 

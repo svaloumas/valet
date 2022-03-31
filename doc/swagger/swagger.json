@@ -243,10 +243,16 @@
         "status": {
           "$ref": "#/definitions/JobStatus"
         },
-        "task_type": {
-          "description": "TaskType is the type of the task to be executed.",
+        "task_name": {
+          "description": "TaskName is the name of the task to be executed.",
           "type": "string",
-          "x-go-name": "TaskType"
+          "x-go-name": "TaskName"
+        },
+        "timeout": {
+          "description": "Timeout is the time in seconds after which the job task will be interrupted.",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Timeout"
         }
       },
       "x-go-package": "valet/internal/core/domain"
@@ -292,9 +298,14 @@
           "type": "string",
           "x-go-name": "Name"
         },
-        "task_type": {
+        "task_name": {
           "type": "string",
-          "x-go-name": "TaskType"
+          "x-go-name": "TaskName"
+        },
+        "timeout": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Timeout"
         }
       },
       "x-go-package": "valet/internal/handler/jobhdl"

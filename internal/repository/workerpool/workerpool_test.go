@@ -5,6 +5,7 @@ import (
 	"log"
 	"testing"
 	"valet/internal/core/domain"
+	"valet/internal/core/domain/task"
 	"valet/mock"
 
 	"github.com/golang/mock/gomock"
@@ -16,8 +17,13 @@ func TestBacklogLimit(t *testing.T) {
 
 	jobService := mock.NewMockJobService(ctrl)
 	resultService := mock.NewMockResultService(ctrl)
+	taskFunc := func(i interface{}) (interface{}, error) {
+		return "some metadata", nil
+	}
+	taskrepo := task.NewTaskRepository()
+	taskrepo.Register("test_task", taskFunc)
 
-	wp := NewWorkerPoolImpl(jobService, resultService, 0, 1)
+	wp := NewWorkerPoolImpl(jobService, resultService, taskrepo, 0, 1)
 	wp.logger = log.New(ioutil.Discard, "", 0)
 	wp.Start()
 	defer wp.Stop()
@@ -56,7 +62,7 @@ func TestBacklogLimit(t *testing.T) {
 
 // 	j1 := new(domain.Job)
 // 	// TODO: Watch out here!
-// 	j1.TaskType = "test_task"
+// 	j1.taskName = "test_task"
 // 	createdAt1 := time.Now()
 // 	j1.CreatedAt = &createdAt1
 // 	j1.ID = "job_1"

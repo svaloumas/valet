@@ -37,7 +37,7 @@ func TestPostJobs(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Timeout:     10,
 		Description: "some description",
 		Metadata:    "some metadata",
@@ -51,17 +51,17 @@ func TestPostJobs(t *testing.T) {
 	jobService := mock.NewMockJobService(ctrl)
 	jobService.
 		EXPECT().
-		Create(job.Name, job.TaskType, job.Description, job.Timeout, job.Metadata).
+		Create(job.Name, job.TaskName, job.Description, job.Timeout, job.Metadata).
 		Return(job, nil).
 		Times(1)
 	jobService.
 		EXPECT().
-		Create(job.Name, job.TaskType, job.Description, job.Timeout, job.Metadata).
+		Create(job.Name, job.TaskName, job.Description, job.Timeout, job.Metadata).
 		Return(nil, jobServiceErr).
 		Times(1)
 	jobService.
 		EXPECT().
-		Create("", job.TaskType, job.Description, job.Timeout, job.Metadata).
+		Create("", job.TaskName, job.Description, job.Timeout, job.Metadata).
 		Return(nil, jobValidationErr).
 		Times(1)
 
@@ -80,7 +80,7 @@ func TestPostJobs(t *testing.T) {
 				"description": "some description", 
 				"timeout": 10,
 				"metadata": "some metadata", 
-				"task_type": "test_task"
+				"task_name": "test_task"
 			}`,
 			http.StatusAccepted,
 			"",
@@ -92,7 +92,7 @@ func TestPostJobs(t *testing.T) {
 				"description": "some description", 
 				"timeout": 10,
 				"metadata": "some metadata", 
-				"task_type": "test_task"
+				"task_name": "test_task"
 			}`,
 			http.StatusInternalServerError,
 			"some job service error",
@@ -103,7 +103,7 @@ func TestPostJobs(t *testing.T) {
 				"description": "some description", 
 				"timeout": 10,
 				"metadata": "some metadata", 
-				"task_type": "test_task"
+				"task_name": "test_task"
 			}`,
 			http.StatusBadRequest,
 			"some job validation error",
@@ -137,7 +137,7 @@ func TestPostJobs(t *testing.T) {
 					"id":          job.ID,
 					"name":        job.Name,
 					"description": job.Description,
-					"task_type":   job.TaskType,
+					"task_name":   job.TaskName,
 					"timeout":     float64(job.Timeout),
 					"metadata":    job.Metadata,
 					"status":      job.Status.String(),
@@ -173,7 +173,7 @@ func TestGetJob(t *testing.T) {
 	job := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
-		TaskType:    "test_task",
+		TaskName:    "test_task",
 		Description: "some description",
 		Timeout:     10,
 		Metadata:    "some metadata",
@@ -239,7 +239,7 @@ func TestGetJob(t *testing.T) {
 					"id":          job.ID,
 					"name":        job.Name,
 					"description": job.Description,
-					"task_type":   job.TaskType,
+					"task_name":   job.TaskName,
 					"timeout":     float64(job.Timeout),
 					"metadata":    job.Metadata,
 					"status":      job.Status.String(),

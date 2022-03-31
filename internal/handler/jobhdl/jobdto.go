@@ -8,7 +8,7 @@ import (
 type RequestBodyDTO struct {
 	Name        string      `json:"name"`
 	Description string      `json:"description"`
-	TaskType    string      `json:"task_type"`
+	TaskName    string      `json:"task_name"`
 	Timeout     int         `json:"timeout"`
 	Metadata    interface{} `json:"metadata"`
 }
