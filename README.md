@@ -44,7 +44,7 @@ docker-compose up --build -d
 
 ## Configuration
 
-All configuration is provided through `config.yaml`, which lives in the project's root directory.
+All configuration is set through `config.yaml`, which lives in the project's root directory.
 
 <a name="usage"/>
 
@@ -77,7 +77,7 @@ Register your new task callback in `main` function living in `cmd/valetd/main.go
 taskrepo.Register("dummytask", task.DummyTask)
 ```
 
-Create a new job by making an POST HTTP call to `/jobs`. You can inject the any arbitrary metadata for your task to run
+Create a new job by making an POST HTTP call to `/jobs`. You can inject any arbitrary metadata for your task to run
 by including them in the request body.
 
 ```json
