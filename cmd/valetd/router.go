@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -27,6 +28,8 @@ func NewRouter(jobService port.JobService, resultService port.ResultService) *gi
 	// CORS: Allow all origins - Revisit in production
 	r.Use(cors.Default())
 
+	r.GET("/api/status", HandleStatus)
+
 	r.POST("/api/jobs", jobHandhler.Create)
 	r.GET("/api/jobs/:id", jobHandhler.Get)
 	r.PATCH("/api/jobs/:id", jobHandhler.Update)
@@ -35,4 +38,17 @@ func NewRouter(jobService port.JobService, resultService port.ResultService) *gi
 	r.GET("/api/jobs/:id/results", resultHandhler.Get)
 	r.DELETE("/api/jobs/:id/results", resultHandhler.Delete)
 	return r
+}
+
+// HandleStatus is an endpoint providing information and the status of the server,
+// usually pinged for healthchecks by other services.
+func HandleStatus(c *gin.Context) {
+	now := time.Now().UTC()
+	res := map[string]interface{}{
+		"build_time": buildTime,
+		"commit":     commit,
+		"time":       now,
+		"version":    version,
+	}
+	c.JSON(http.StatusOK, res)
 }

@@ -5,6 +5,7 @@ SHELL=/bin/bash -o pipefail
 BUILDCMD=env GOOS=darwin GOARCH=amd64 go build -v
 BUILD_TIME=`TZ=UTC date +%FT%T%z`
 COMMIT=`git rev-parse --short HEAD`
+LDFLAGS=-ldflags "-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.commit=$(COMMIT)"
 VERSION=0.1.0
 
 build: generate

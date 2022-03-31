@@ -24,6 +24,12 @@ import (
 	_ "valet/doc/swagger"
 )
 
+var (
+	buildTime = "undefined"
+	commit    = "undefined"
+	version   = "undefined"
+)
+
 func main() {
 	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
 
