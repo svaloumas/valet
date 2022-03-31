@@ -28,7 +28,6 @@ var (
 	jobQueueCapacity = 100
 	wpConcurrency    = runtime.NumCPU() / 2
 	wpBacklog        = wpConcurrency * 2
-	tickInterval     = 500 * time.Millisecond
 )
 
 func main() {
@@ -46,7 +45,8 @@ func main() {
 	wp := workerpool.NewWorkerPoolImpl(jobService, resultService, wpConcurrency, wpBacklog)
 	wp.Start()
 
-	jobTransmitter := NewTransmitter(jobQueue, wp, int(tickInterval))
+	logger := log.New(os.Stderr, "[transmitter] ", log.LstdFlags)
+	jobTransmitter := NewTransmitter(jobQueue, wp, logger)
 	go jobTransmitter.Transmit()
 
 	srv := http.Server{
@@ -54,7 +54,7 @@ func main() {
 		Handler: NewRouter(jobService, resultService),
 	}
 
-	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
+	logger = log.New(os.Stderr, "[valet] ", log.LstdFlags)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {

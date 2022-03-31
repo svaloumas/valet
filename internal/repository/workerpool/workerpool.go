@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
@@ -67,6 +68,15 @@ func (wp *WorkerPoolImpl) Send(jobItem domain.JobItem) error {
 		return nil
 	default:
 		return &apperrors.FullWorkerPoolBacklog{}
+	}
+}
+
+func (wp *WorkerPoolImpl) CreateJobItem(j *domain.Job) domain.JobItem {
+	// TODO: Consider making timeout unit configurable.
+	return domain.JobItem{
+		Job:         j,
+		Result:      make(chan domain.JobResult, 1),
+		TimeoutUnit: time.Second,
 	}
 }
 

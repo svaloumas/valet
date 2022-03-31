@@ -51,6 +51,9 @@ type WorkerPool interface {
 
 	// Send schedules the job. An error is returned if the job backlog is full.
 	Send(jobItem domain.JobItem) error
+
+	// CreateJobItem creates and return a new JobItem instance.
+	CreateJobItem(j *domain.Job) domain.JobItem
 }
 
 // JobService represents a driver actor service interface.

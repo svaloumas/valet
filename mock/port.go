@@ -232,6 +232,20 @@ func (m *MockWorkerPool) EXPECT() *MockWorkerPoolMockRecorder {
 	return m.recorder
 }
 
+// CreateJobItem mocks base method.
+func (m *MockWorkerPool) CreateJobItem(j *domain.Job) domain.JobItem {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateJobItem", j)
+	ret0, _ := ret[0].(domain.JobItem)
+	return ret0
+}
+
+// CreateJobItem indicates an expected call of CreateJobItem.
+func (mr *MockWorkerPoolMockRecorder) CreateJobItem(j interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJobItem", reflect.TypeOf((*MockWorkerPool)(nil).CreateJobItem), j)
+}
+
 // Send mocks base method.
 func (m *MockWorkerPool) Send(jobItem domain.JobItem) error {
 	m.ctrl.T.Helper()
