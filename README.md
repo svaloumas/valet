@@ -2,15 +2,16 @@
 [![CI](https://github.com/svaloumas/valet/actions/workflows/ci.yml/badge.svg)](https://github.com/svaloumas/valet/actions/workflows/ci.yml)
 ![Coverage](https://img.shields.io/badge/Coverage-92.9%25-brightgreen)
 
-[Overview](#overview)  
-[Installation](#installation)
-[Configuration](#configuration)
-[Usage](#usage)
-[Tests](#tests)
+* [Overview](#overview)
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Usage](#usage)
+* [Tests](#tests)
 
 Simple stateless Go server responsible for executing tasks, referred as jobs.
 
 <a name="overview"/>
+
 ## Overview
 
 At its core, `valet` is an asynchronous task executor.<br>
@@ -21,6 +22,7 @@ The service exposes a JSON RestAPI providing CRUD endpoints for the job manageme
 directory of the project.
 
 <a name="installation"/>
+
 ## Installation
 
 1. Clone the repo.
@@ -37,11 +39,13 @@ make build
 ```
 
 <a name="configuration"/>
+
 ## Configuration
 
 All configuration is provided through `config.yaml`, which lives in the project's root directory.
 
 <a name="usage"/>
+
 ## Usage
 
 Define your own tasks under `task/` directory. The tasks should implement the `task.TaskFunc` type.
@@ -86,6 +90,7 @@ by including them in the request body.
 ```
 
 <a name="tests"/>
+
 ## Tests
 
 Run the complete test suite.
