@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"valet/internal/core/domain/task"
+	"valet/internal/core/domain/taskrepo"
 )
 
-var validTasks = map[string]task.TaskFunc{
+var validTasks = map[string]taskrepo.TaskFunc{
 	"test_task": func(i interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	},
@@ -81,7 +81,7 @@ func TestJobValidate(t *testing.T) {
 	taskFunc := func(i interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
 
 	tests := []struct {

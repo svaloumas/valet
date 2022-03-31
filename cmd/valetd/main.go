@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"valet/cmd/valetd/transmitter"
-	"valet/internal/core/domain/task"
+	"valet/internal/core/domain/taskrepo"
 	"valet/internal/core/service/jobsrv"
 	"valet/internal/core/service/resultsrv"
 	"valet/internal/repository/jobqueue"
@@ -20,6 +20,7 @@ import (
 	"valet/internal/repository/workerpool"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
+	"valet/task"
 
 	_ "valet/doc/swagger"
 )
@@ -32,7 +33,7 @@ var (
 )
 
 func main() {
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("dummytask", task.DummyTask)
 
 	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)

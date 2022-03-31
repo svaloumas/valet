@@ -10,7 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"valet/internal/core/domain"
-	"valet/internal/core/domain/task"
+	"valet/internal/core/domain/taskrepo"
 	"valet/mock"
 	"valet/pkg/apperrors"
 )
@@ -77,7 +77,7 @@ func TestCreateErrorCases(t *testing.T) {
 	taskFunc := func(i interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
@@ -179,7 +179,7 @@ func TestCreate(t *testing.T) {
 	taskFunc := func(i interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
 
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
@@ -233,7 +233,7 @@ func TestGet(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
@@ -327,7 +327,7 @@ func TestUpdate(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
@@ -404,7 +404,7 @@ func TestDelete(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
@@ -490,7 +490,7 @@ func TestExecCompletedJob(t *testing.T) {
 	var taskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
 	}
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
@@ -577,7 +577,7 @@ func TestExecFailedJob(t *testing.T) {
 	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		return nil, errors.New(failureReason)
 	}
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
@@ -662,7 +662,7 @@ func TestExecPanicJob(t *testing.T) {
 	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		panic(panicMessage)
 	}
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
@@ -752,7 +752,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	var taskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
 	}
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
@@ -856,7 +856,7 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 		time.Sleep(time.Millisecond * 50)
 		return "some_metadata", nil
 	}
-	taskrepo := task.NewTaskRepository()
+	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 

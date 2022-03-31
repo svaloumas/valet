@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"valet/internal/core/domain/task"
+	"valet/internal/core/domain/taskrepo"
 )
 
 // Job represents an async task.
@@ -82,7 +82,7 @@ func (j *Job) MarkFailed(failedAt *time.Time, reason string) {
 }
 
 // Validate perfoms basic sanity checks on the job request payload.
-func (job *Job) Validate(taskrepo *task.TaskRepository) error {
+func (job *Job) Validate(taskrepo *taskrepo.TaskRepository) error {
 	var required []string
 
 	if job.Name == "" {

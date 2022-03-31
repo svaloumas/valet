@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"valet/internal/core/domain"
-	"valet/internal/core/domain/task"
+	"valet/internal/core/domain/taskrepo"
 	"valet/internal/core/port"
 	"valet/pkg/apperrors"
 	rtime "valet/pkg/time"
@@ -19,7 +19,7 @@ var defaultJobTimeout time.Duration = 84600
 type jobservice struct {
 	jobRepository port.JobRepository
 	jobQueue      port.JobQueue
-	taskrepo      *task.TaskRepository
+	taskrepo      *taskrepo.TaskRepository
 	uuidGen       uuidgen.UUIDGenerator
 	time          rtime.Time
 }
@@ -27,7 +27,7 @@ type jobservice struct {
 // New creates a new job service.
 func New(jobRepository port.JobRepository,
 	jobQueue port.JobQueue,
-	taskrepo *task.TaskRepository,
+	taskrepo *taskrepo.TaskRepository,
 	uuidGen uuidgen.UUIDGenerator,
 	time rtime.Time) *jobservice {
 	return &jobservice{
