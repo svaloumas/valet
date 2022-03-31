@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
 	"time"
 
@@ -25,18 +24,18 @@ import (
 	_ "valet/doc/swagger"
 )
 
-var (
-	addr             = ":8080"
-	jobQueueCapacity = 100
-	wpConcurrency    = runtime.NumCPU() / 2
-	wpBacklog        = wpConcurrency * 2
-)
-
 func main() {
+	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
+
+	cfg := new(Config)
+	if err := cfg.Load(); err != nil {
+		logger.Fatalf("could not load config: %s", err)
+	}
+
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("dummytask", task.DummyTask)
 
-	jobQueue := jobqueue.NewFIFOQueue(jobQueueCapacity)
+	jobQueue := jobqueue.NewFIFOQueue(cfg.JobQueueCapacity)
 
 	jobRepository := jobrepo.NewJobDB()
 	jobService := jobsrv.New(jobRepository, jobQueue, taskrepo, uuidgen.New(), rtime.New())
@@ -44,19 +43,17 @@ func main() {
 	resultRepository := resultrepo.NewResultDB()
 	resultService := resultsrv.New(resultRepository)
 
-	wp := workerpool.NewWorkerPoolImpl(jobService, resultService, wpConcurrency, wpBacklog)
+	wp := workerpool.NewWorkerPoolImpl(jobService, resultService, cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
 	wp.Start()
 
-	logger := log.New(os.Stderr, "[transmitter] ", log.LstdFlags)
-	jobTransmitter := transmitter.NewTransmitter(jobQueue, wp, logger)
+	transmitterLogger := log.New(os.Stderr, "[transmitter] ", log.LstdFlags)
+	jobTransmitter := transmitter.NewTransmitter(jobQueue, wp, transmitterLogger)
 	go jobTransmitter.Transmit()
 
 	srv := http.Server{
-		Addr:    addr,
+		Addr:    ":" + cfg.Port,
 		Handler: NewRouter(jobService, resultService),
 	}
-
-	logger = log.New(os.Stderr, "[valet] ", log.LstdFlags)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
