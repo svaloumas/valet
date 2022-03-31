@@ -31,8 +31,8 @@ func (repo *TaskRepository) GetTaskFunc(name string) (TaskFunc, error) {
 	return task, nil
 }
 
-// GetNames returns all the names of the tasks currently in the repository.
-func (repo *TaskRepository) GetNames() []string {
+// GetTaskNames returns all the names of the tasks currently in the repository.
+func (repo *TaskRepository) GetTaskNames() []string {
 	names := []string{}
 	for name := range repo.tasks {
 		names = append(names, name)

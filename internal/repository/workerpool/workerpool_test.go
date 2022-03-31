@@ -1,45 +1,39 @@
 package workerpool
 
-import (
-	"io/ioutil"
-	"log"
-	"testing"
-	"valet/internal/core/domain"
-	"valet/internal/core/domain/task"
-	"valet/mock"
+// func TestBacklogLimit(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
 
-	"github.com/golang/mock/gomock"
-)
+// 	jobService := mock.NewMockJobService(ctrl)
+// 	resultService := mock.NewMockResultService(ctrl)
+// 	taskFunc := func(i interface{}) (interface{}, error) {
+// 		defer func() {
+// 			if p := recover(); p != nil {
+// 				fmt.Println(p)
+// 			}
+// 		}()
+// 		return "some metadata", nil
+// 	}
+// 	taskrepo := task.NewTaskRepository()
+// 	taskrepo.Register("test_task", taskFunc)
 
-func TestBacklogLimit(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+// 	wp := NewWorkerPoolImpl(jobService, resultService, taskrepo, 0, 1)
+// 	wp.logger = log.New(ioutil.Discard, "", 0)
+// 	wp.Start()
+// 	defer wp.Stop()
 
-	jobService := mock.NewMockJobService(ctrl)
-	resultService := mock.NewMockResultService(ctrl)
-	taskFunc := func(i interface{}) (interface{}, error) {
-		return "some metadata", nil
-	}
-	taskrepo := task.NewTaskRepository()
-	taskrepo.Register("test_task", taskFunc)
+// 	j := new(domain.Job)
+// 	err := wp.Send(j)
+// 	if err != nil {
+// 		t.Errorf("Error sending job to workerpool: %v", err)
+// 	}
 
-	wp := NewWorkerPoolImpl(jobService, resultService, taskrepo, 0, 1)
-	wp.logger = log.New(ioutil.Discard, "", 0)
-	wp.Start()
-	defer wp.Stop()
-
-	j := new(domain.Job)
-	err := wp.Send(j)
-	if err != nil {
-		t.Errorf("Error sending job to workerpool: %v", err)
-	}
-
-	jDeemedToFail := new(domain.Job)
-	err = wp.Send(jDeemedToFail)
-	if err == nil {
-		t.Fatal("Expected error, due to backlog being full")
-	}
-}
+// 	jDeemedToFail := new(domain.Job)
+// 	err = wp.Send(jDeemedToFail)
+// 	if err == nil {
+// 		t.Fatal("Expected error, due to backlog being full")
+// 	}
+// }
 
 // func TestConcurrency(t *testing.T) {
 // 	ctrl := gomock.NewController(t)

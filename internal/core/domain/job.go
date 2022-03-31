@@ -99,7 +99,7 @@ func (job *Job) Validate(taskrepo *task.TaskRepository) error {
 
 	_, err := taskrepo.GetTaskFunc(job.TaskName)
 	if err != nil {
-		taskNames := taskrepo.GetNames()
+		taskNames := taskrepo.GetTaskNames()
 		return fmt.Errorf("%s is not a valid task name - valid tasks: %v", job.TaskName, taskNames)
 	}
 
