@@ -10,5 +10,5 @@ type JobItem struct {
 	Job         *Job
 	Result      chan JobResult
 	TaskFunc    task.TaskFunc
-	TimeoutType time.Duration
+	TimeoutUnit time.Duration
 }

@@ -95,7 +95,7 @@ func (srv *jobservice) Exec(ctx context.Context, item domain.JobItem) error {
 	if item.Job.Timeout > 0 && item.Job.Timeout <= 84600 {
 		timeout = time.Duration(item.Job.Timeout)
 	}
-	ctx, cancel := context.WithTimeout(ctx, timeout*item.TimeoutType)
+	ctx, cancel := context.WithTimeout(ctx, timeout*item.TimeoutUnit)
 	defer cancel()
 
 	jobResultChan := make(chan domain.JobResult, 1)

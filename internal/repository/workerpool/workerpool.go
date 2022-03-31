@@ -65,7 +65,7 @@ func (wp *WorkerPoolImpl) Send(j *domain.Job) error {
 		Result:   result,
 		TaskFunc: task.TaskTypes[j.TaskType],
 		// TODO: Consider making this configurable.
-		TimeoutType: time.Second,
+		TimeoutUnit: time.Second,
 	}
 
 	select {

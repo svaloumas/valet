@@ -498,7 +498,7 @@ func TestExecCompletedJob(t *testing.T) {
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    testTaskFunc,
-		TimeoutType: time.Millisecond,
+		TimeoutUnit: time.Millisecond,
 	}
 
 	expectedResultWithNoError := domain.JobResult{
@@ -586,7 +586,7 @@ func TestExecFailedJob(t *testing.T) {
 		Job:         expectedJob,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    testTaskFuncReturnsErr,
-		TimeoutType: time.Millisecond,
+		TimeoutUnit: time.Millisecond,
 	}
 	expectedResultWithError := domain.JobResult{
 		JobID:    expectedJob.ID,
@@ -672,7 +672,7 @@ func TestExecPanicJob(t *testing.T) {
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    testTaskFuncReturnsErr,
-		TimeoutType: time.Millisecond,
+		TimeoutUnit: time.Millisecond,
 	}
 	expectedResultWithError := domain.JobResult{
 		JobID:    job.ID,
@@ -763,7 +763,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    testTaskFunc,
-		TimeoutType: time.Millisecond,
+		TimeoutUnit: time.Millisecond,
 	}
 
 	tests := []struct {
@@ -868,7 +868,7 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    testTaskFuncReturnsErr,
-		TimeoutType: time.Millisecond,
+		TimeoutUnit: time.Millisecond,
 	}
 	expectedResultWithError := domain.JobResult{
 		JobID:    job.ID,
