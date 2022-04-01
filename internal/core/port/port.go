@@ -40,21 +40,9 @@ type JobQueue interface {
 
 	// Pop removes and returns the head job from the queue.
 	Pop() <-chan *domain.Job
-}
 
-// WorkerPool represents a driven actor worker pool interface.
-type WorkerPool interface {
-	// Start starts the worker pool.
-	Start()
-
-	// Stop signals the workers to stop working gracefully.
-	Stop()
-
-	// Send schedules the job. An error is returned if the job backlog is full.
-	Send(jobItem domain.JobItem) error
-
-	// CreateJobItem creates and return a new JobItem instance.
-	CreateJobItem(j *domain.Job) domain.JobItem
+	// Close liberates the bound resources of the job queue.
+	Close()
 }
 
 // JobService represents a driver actor service interface.
@@ -86,4 +74,13 @@ type ResultService interface {
 
 	// Delete deletes a job result.
 	Delete(id string) error
+}
+
+type ConsumerService interface {
+	// Consume listens to the job queue for messages, consumes them and
+	// schedules the job items for execution.
+	Consume()
+
+	// Stop terminates the job item service.
+	Stop()
 }

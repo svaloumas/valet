@@ -25,7 +25,8 @@ type jobservice struct {
 }
 
 // New creates a new job service.
-func New(jobRepository port.JobRepository,
+func New(
+	jobRepository port.JobRepository,
 	jobQueue port.JobQueue,
 	taskrepo *taskrepo.TaskRepository,
 	uuidGen uuidgen.UUIDGenerator,

@@ -9,14 +9,14 @@ import (
 	"syscall"
 	"time"
 
-	"valet/cmd/valetd/transmitter"
 	"valet/internal/core/domain/taskrepo"
+	"valet/internal/core/service/consumersrv"
 	"valet/internal/core/service/jobsrv"
 	"valet/internal/core/service/resultsrv"
 	"valet/internal/repository/jobqueue"
 	"valet/internal/repository/jobrepo"
 	"valet/internal/repository/resultrepo"
-	"valet/internal/repository/workerpool"
+	wp "valet/internal/workerpool"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
 	"valet/task"
@@ -44,17 +44,17 @@ func main() {
 	jobQueue := jobqueue.NewFIFOQueue(cfg.JobQueueCapacity)
 
 	jobRepository := jobrepo.NewJobDB()
-	jobService := jobsrv.New(jobRepository, jobQueue, taskrepo, uuidgen.New(), rtime.New())
-
 	resultRepository := resultrepo.NewResultDB()
+
+	jobService := jobsrv.New(jobRepository, jobQueue, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(resultRepository)
 
-	wp := workerpool.NewWorkerPoolImpl(jobService, resultService, cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
-	wp.Start()
+	wp := wp.NewWorkerPoolImpl(
+		jobService, resultService, cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
 
-	transmitterLogger := log.New(os.Stderr, "[transmitter] ", log.LstdFlags)
-	jobTransmitter := transmitter.NewTransmitter(jobQueue, wp, transmitterLogger)
-	go jobTransmitter.Transmit()
+	consumerLogger := log.New(os.Stderr, "[consumer] ", log.LstdFlags)
+	consumerService := consumersrv.New(jobQueue, wp, consumerLogger)
+	go consumerService.Consume()
 
 	srv := http.Server{
 		Addr:    ":" + cfg.Port,
@@ -79,7 +79,5 @@ func main() {
 	}
 	logger.Println("server exiting...")
 
-	jobTransmitter.Stop()
-	jobQueue.Close()
-	wp.Stop()
+	consumerService.Stop()
 }

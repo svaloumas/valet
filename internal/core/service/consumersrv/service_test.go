@@ -1,4 +1,4 @@
-package transmitter
+package consumersrv
 
 import (
 	"io/ioutil"
@@ -12,7 +12,7 @@ import (
 	"valet/mock"
 )
 
-func TestTransmitterTransmit(t *testing.T) {
+func TestConsume(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -24,6 +24,7 @@ func TestTransmitterTransmit(t *testing.T) {
 
 	resultChan := make(chan domain.JobResult, 1)
 	jobItem := domain.NewJobItem(j, resultChan, time.Second)
+	logger := log.New(ioutil.Discard, "", 0)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 	jobQueue.
@@ -31,7 +32,17 @@ func TestTransmitterTransmit(t *testing.T) {
 		Pop().
 		Return(jobChan).
 		Times(2)
+	jobQueue.
+		EXPECT().
+		Close().
+		Return().
+		Times(1)
 	wp := mock.NewMockWorkerPool(ctrl)
+	wp.
+		EXPECT().
+		Start().
+		Return().
+		Times(1)
 	wp.
 		EXPECT().
 		Send(jobItem).
@@ -42,12 +53,16 @@ func TestTransmitterTransmit(t *testing.T) {
 		CreateJobItem(j).
 		Return(jobItem).
 		Times(1)
+	wp.
+		EXPECT().
+		Stop().
+		Return().
+		Times(1)
 
-	logger := log.New(ioutil.Discard, "", 0)
-	transmitter := NewTransmitter(jobQueue, wp, logger)
+	consumerService := New(jobQueue, wp, logger)
 
-	go transmitter.Transmit()
-	defer transmitter.Stop()
+	go consumerService.Consume()
+	defer consumerService.Stop()
 
 	jobChan <- j
 

@@ -1,4 +1,4 @@
-package workerpool
+package wp
 
 import (
 	"context"
@@ -38,7 +38,7 @@ func TestBacklogLimit(t *testing.T) {
 	resultService := mock.NewMockResultService(ctrl)
 
 	wp := NewWorkerPoolImpl(jobService, resultService, 0, 1)
-	wp.logger = log.New(ioutil.Discard, "", 0)
+	wp.Log = log.New(ioutil.Discard, "", 0)
 	wp.Start()
 	defer wp.Stop()
 
@@ -73,7 +73,7 @@ func TestConcurrency(t *testing.T) {
 	resultService := mock.NewMockResultService(ctrl)
 
 	wp := NewWorkerPoolImpl(jobService, resultService, 1, 5)
-	wp.logger = log.New(ioutil.Discard, "", 0)
+	wp.Log = log.New(ioutil.Discard, "", 0)
 	wp.Start()
 	defer wp.Stop()
 

@@ -1,4 +1,4 @@
-package workerpool
+package wp
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"valet/pkg/apperrors"
 )
 
-var _ port.WorkerPool = &WorkerPoolImpl{}
+var _ WorkerPool = &WorkerPoolImpl{}
 
 // WorkerPoolImpl is a concrete implementation of WorkerPool.
 type WorkerPoolImpl struct {
@@ -27,7 +27,7 @@ type WorkerPoolImpl struct {
 	resultService port.ResultService
 	queue         chan domain.JobItem
 	wg            sync.WaitGroup
-	logger        *log.Logger
+	Log           *log.Logger
 }
 
 // NewWorkerPoolImpl initializes and returns a new worker pool.
@@ -43,7 +43,7 @@ func NewWorkerPoolImpl(
 		jobService:    jobService,
 		resultService: resultService,
 		queue:         make(chan domain.JobItem, backlog),
-		logger:        logger,
+		Log:           logger,
 	}
 }
 
@@ -53,7 +53,7 @@ func (wp *WorkerPoolImpl) Start() {
 		wp.wg.Add(1)
 		go wp.schedule(i, wp.queue, &wp.wg)
 	}
-	wp.logger.Printf("set up %d workers with a queue of backlog %d", wp.concurrency, wp.backlog)
+	wp.Log.Printf("set up %d workers with a queue of backlog %d", wp.concurrency, wp.backlog)
 }
 
 // Send schedules the job. An error is returned if the job backlog is full.
@@ -62,7 +62,7 @@ func (wp *WorkerPoolImpl) Send(jobItem domain.JobItem) error {
 	case wp.queue <- jobItem:
 		go func() {
 			if err := wp.resultService.Create(domain.FutureJobResult{Result: jobItem.Result}); err != nil {
-				wp.logger.Printf("could not create job result to the repository")
+				wp.Log.Printf("could not create job result to the repository")
 			}
 		}()
 		return nil
@@ -83,7 +83,7 @@ func (wp *WorkerPoolImpl) CreateJobItem(j *domain.Job) domain.JobItem {
 // Stop signals the workers to stop working gracefully.
 func (wp *WorkerPoolImpl) Stop() {
 	close(wp.queue)
-	wp.logger.Println("waiting for ongoing tasks to finish...")
+	wp.Log.Println("waiting for ongoing tasks to finish...")
 	wp.wg.Wait()
 }
 
@@ -91,11 +91,11 @@ func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.JobItem, wg *sync
 	defer wg.Done()
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {
-		wp.logger.Printf("%s executing task...", logPrefix)
+		wp.Log.Printf("%s executing task...", logPrefix)
 		if err := wp.jobService.Exec(context.Background(), item); err != nil {
-			wp.logger.Printf("could not update job status: %s", err)
+			wp.Log.Printf("could not update job status: %s", err)
 		}
-		wp.logger.Printf("%s task finished!", logPrefix)
+		wp.Log.Printf("%s task finished!", logPrefix)
 	}
-	wp.logger.Printf("%s exiting...", logPrefix)
+	wp.Log.Printf("%s exiting...", logPrefix)
 }
