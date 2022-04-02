@@ -47,6 +47,7 @@ func TestPostJobs(t *testing.T) {
 
 	jobServiceErr := errors.New("some job service error")
 	jobValidationErr := &apperrors.ResourceValidationErr{Message: "some job validation error"}
+	fullQueueErr := &apperrors.FullQueueErr{}
 
 	jobService := mock.NewMockJobService(ctrl)
 	jobService.
@@ -58,6 +59,11 @@ func TestPostJobs(t *testing.T) {
 		EXPECT().
 		Create(job.Name, job.TaskName, job.Description, job.Timeout, job.Metadata).
 		Return(nil, jobServiceErr).
+		Times(1)
+	jobService.
+		EXPECT().
+		Create(job.Name, job.TaskName, job.Description, job.Timeout, job.Metadata).
+		Return(nil, fullQueueErr).
 		Times(1)
 	jobService.
 		EXPECT().
@@ -107,6 +113,18 @@ func TestPostJobs(t *testing.T) {
 			}`,
 			http.StatusBadRequest,
 			"some job validation error",
+		},
+		{
+			"service unavailable error",
+			`{
+				"name":"job_name", 
+				"description": "some description", 
+				"timeout": 10,
+				"metadata": "some metadata", 
+				"task_name": "test_task"
+			}`,
+			http.StatusServiceUnavailable,
+			"job queue is full - try again later",
 		},
 	}
 
