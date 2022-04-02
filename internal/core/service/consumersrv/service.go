@@ -6,7 +6,7 @@ import (
 	wp "valet/internal/workerpool"
 )
 
-type jobitemservice struct {
+type consumerservice struct {
 	jobQueue port.JobQueue
 	wp       wp.WorkerPool
 	done     chan struct{}
@@ -14,8 +14,8 @@ type jobitemservice struct {
 }
 
 // New creates a new job item service.
-func New(jobQueue port.JobQueue, wp wp.WorkerPool, logger *log.Logger) *jobitemservice {
-	return &jobitemservice{
+func New(jobQueue port.JobQueue, wp wp.WorkerPool, logger *log.Logger) *consumerservice {
+	return &consumerservice{
 		jobQueue: jobQueue,
 		wp:       wp,
 		done:     make(chan struct{}),
@@ -25,7 +25,7 @@ func New(jobQueue port.JobQueue, wp wp.WorkerPool, logger *log.Logger) *jobitems
 
 // Consume listens to the job queue for messages, consumes them and
 // schedules the job items for execution.
-func (srv *jobitemservice) Consume() {
+func (srv *consumerservice) Consume() {
 	srv.wp.Start()
 
 	for {
@@ -48,7 +48,7 @@ func (srv *jobitemservice) Consume() {
 }
 
 // Stop terminates the job item service.
-func (srv *jobitemservice) Stop() {
+func (srv *consumerservice) Stop() {
 	srv.done <- struct{}{}
 	srv.jobQueue.Close()
 	srv.wp.Stop()

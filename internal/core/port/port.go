@@ -76,6 +76,7 @@ type ResultService interface {
 	Delete(id string) error
 }
 
+// ConsumerService represents a domain event listener.
 type ConsumerService interface {
 	// Consume listens to the job queue for messages, consumes them and
 	// schedules the job items for execution.
