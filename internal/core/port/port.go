@@ -58,22 +58,33 @@ type JobService interface {
 
 	// Delete deletes a job.
 	Delete(id string) error
-
-	// Exec executes a job.
-	Exec(ctx context.Context, w domain.Work) error
 }
 
 // ResultService represents a driver actor service interface.
 type ResultService interface {
-	// Create waits until the result is available and
-	// creates a new result in the repository.
-	Create(futureResult domain.FutureJobResult) error
-
 	// Get fetches a job result.
 	Get(id string) (*domain.JobResult, error)
 
 	// Delete deletes a job result.
 	Delete(id string) error
+}
+
+// WorkService represents a driver actor service interface.
+type WorkService interface {
+	// Start starts the worker pool.
+	Start()
+
+	// Stop signals the workers to stop working gracefully.
+	Stop()
+
+	// Send schedules the work. An error is returned if the work backlog is full.
+	Send(w domain.Work) error
+
+	// CreateWork creates and return a new Work instance.
+	CreateWork(j *domain.Job) domain.Work
+
+	// Exec executes a work.
+	Exec(ctx context.Context, w domain.Work) error
 }
 
 // ConsumerService represents a domain event listener.

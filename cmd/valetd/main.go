@@ -13,10 +13,10 @@ import (
 	"valet/internal/core/service/consumersrv"
 	"valet/internal/core/service/jobsrv"
 	"valet/internal/core/service/resultsrv"
+	"valet/internal/core/service/worksrv"
 	"valet/internal/repository/jobqueue"
 	"valet/internal/repository/jobrepo"
 	"valet/internal/repository/resultrepo"
-	wp "valet/internal/workerpool"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
 	"valet/task"
@@ -49,11 +49,11 @@ func main() {
 	jobService := jobsrv.New(jobRepository, jobQueue, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(resultRepository)
 
-	wp := wp.NewWorkerPoolImpl(
-		jobService, resultService, cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
+	workService := worksrv.New(
+		jobRepository, resultRepository, taskrepo, rtime.New(), cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
 
 	consumerLogger := log.New(os.Stderr, "[consumer] ", log.LstdFlags)
-	consumerService := consumersrv.New(jobQueue, wp, consumerLogger)
+	consumerService := consumersrv.New(jobQueue, workService, consumerLogger)
 	go consumerService.Consume()
 
 	srv := http.Server{

@@ -2,31 +2,33 @@ package consumersrv
 
 import (
 	"log"
+
 	"valet/internal/core/port"
-	wp "valet/internal/workerpool"
 )
 
+var _ port.ConsumerService = &consumerservice{}
+
 type consumerservice struct {
-	jobQueue port.JobQueue
-	wp       wp.WorkerPool
-	done     chan struct{}
-	logger   *log.Logger
+	jobQueue    port.JobQueue
+	workService port.WorkService
+	done        chan struct{}
+	logger      *log.Logger
 }
 
-// New creates a new job item service.
-func New(jobQueue port.JobQueue, wp wp.WorkerPool, logger *log.Logger) *consumerservice {
+// New creates a new consumer service.
+func New(jobQueue port.JobQueue, workService port.WorkService, logger *log.Logger) *consumerservice {
 	return &consumerservice{
-		jobQueue: jobQueue,
-		wp:       wp,
-		done:     make(chan struct{}),
-		logger:   logger,
+		jobQueue:    jobQueue,
+		workService: workService,
+		done:        make(chan struct{}),
+		logger:      logger,
 	}
 }
 
 // Consume listens to the job queue for messages, consumes them and
 // schedules the job items for execution.
 func (srv *consumerservice) Consume() {
-	srv.wp.Start()
+	srv.workService.Start()
 
 	for {
 		select {
@@ -35,8 +37,8 @@ func (srv *consumerservice) Consume() {
 			return
 		case j := <-srv.jobQueue.Pop():
 			srv.logger.Printf("sending work for job with ID: %s to worker pool", j.ID)
-			w := srv.wp.CreateWork(j)
-			err := srv.wp.Send(w)
+			w := srv.workService.CreateWork(j)
+			err := srv.workService.Send(w)
 			if err != nil {
 				srv.logger.Printf("sending job with ID: %s to dead letter queue", j.ID)
 				if ok := srv.jobQueue.Push(j); !ok {
@@ -51,5 +53,5 @@ func (srv *consumerservice) Consume() {
 func (srv *consumerservice) Stop() {
 	srv.done <- struct{}{}
 	srv.jobQueue.Close()
-	srv.wp.Stop()
+	srv.workService.Stop()
 }

@@ -37,7 +37,7 @@ func TestConsume(t *testing.T) {
 		Close().
 		Return().
 		Times(1)
-	wp := mock.NewMockWorkerPool(ctrl)
+	wp := mock.NewMockWorkService(ctrl)
 	wp.
 		EXPECT().
 		Start().
