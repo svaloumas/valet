@@ -60,7 +60,7 @@ type JobService interface {
 	Delete(id string) error
 
 	// Exec executes a job.
-	Exec(ctx context.Context, item domain.JobItem) error
+	Exec(ctx context.Context, w domain.Work) error
 }
 
 // ResultService represents a driver actor service interface.

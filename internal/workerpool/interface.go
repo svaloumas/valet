@@ -13,8 +13,8 @@ type WorkerPool interface {
 	Stop()
 
 	// Send schedules the job. An error is returned if the job backlog is full.
-	Send(jobItem domain.JobItem) error
+	Send(w domain.Work) error
 
-	// CreateJobItem creates and return a new JobItem instance.
-	CreateJobItem(j *domain.Job) domain.JobItem
+	// CreateWork creates and return a new Work instance.
+	CreateWork(j *domain.Job) domain.Work
 }

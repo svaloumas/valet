@@ -23,7 +23,7 @@ func TestConsume(t *testing.T) {
 	jobChan := make(chan *domain.Job, 1)
 
 	resultChan := make(chan domain.JobResult, 1)
-	jobItem := domain.NewJobItem(j, resultChan, time.Second)
+	w := domain.NewWork(j, resultChan, time.Second)
 	logger := log.New(ioutil.Discard, "", 0)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
@@ -45,13 +45,13 @@ func TestConsume(t *testing.T) {
 		Times(1)
 	wp.
 		EXPECT().
-		Send(jobItem).
+		Send(w).
 		Return(nil).
 		Times(1)
 	wp.
 		EXPECT().
-		CreateJobItem(j).
-		Return(jobItem).
+		CreateWork(j).
+		Return(w).
 		Times(1)
 	wp.
 		EXPECT().

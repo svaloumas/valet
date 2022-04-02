@@ -34,9 +34,9 @@ func (srv *consumerservice) Consume() {
 			srv.logger.Println("exiting...")
 			return
 		case j := <-srv.jobQueue.Pop():
-			srv.logger.Printf("sending job item for job with ID: %s to worker pool", j.ID)
-			jobItem := srv.wp.CreateJobItem(j)
-			err := srv.wp.Send(jobItem)
+			srv.logger.Printf("sending work for job with ID: %s to worker pool", j.ID)
+			w := srv.wp.CreateWork(j)
+			err := srv.wp.Send(w)
 			if err != nil {
 				srv.logger.Printf("sending job with ID: %s to dead letter queue", j.ID)
 				if ok := srv.jobQueue.Push(j); !ok {

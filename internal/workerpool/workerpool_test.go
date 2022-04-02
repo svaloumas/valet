@@ -25,14 +25,14 @@ func TestBacklogLimit(t *testing.T) {
 	j.TaskName = "test_task"
 
 	resultChan1 := make(chan domain.JobResult, 1)
-	jobItem1 := domain.NewJobItem(j, resultChan1, time.Millisecond)
+	work := domain.NewWork(j, resultChan1, time.Millisecond)
 
 	jDeemedToFail := new(domain.Job)
 	jDeemedToFail.TaskName = "test_task"
 
 	resultChan2 := make(chan domain.JobResult, 1)
-	jobItemDeemedToFail := domain.NewJobItem(jDeemedToFail, resultChan2, time.Millisecond)
-	futureResult1 := domain.FutureJobResult{Result: jobItem1.Result}
+	workDeemedToFail := domain.NewWork(jDeemedToFail, resultChan2, time.Millisecond)
+	futureResult1 := domain.FutureJobResult{Result: work.Result}
 
 	jobService := mock.NewMockJobService(ctrl)
 	resultService := mock.NewMockResultService(ctrl)
@@ -51,12 +51,12 @@ func TestBacklogLimit(t *testing.T) {
 			return nil
 		})
 
-	err := wp.Send(jobItem1)
+	err := wp.Send(work)
 	if err != nil {
 		t.Errorf("Error sending job to workerpool: %v", err)
 	}
 
-	err = wp.Send(jobItemDeemedToFail)
+	err = wp.Send(workDeemedToFail)
 	if err == nil {
 		t.Fatal("Expected error, due to backlog being full")
 	}
@@ -82,17 +82,17 @@ func TestConcurrency(t *testing.T) {
 	j1.TaskName = "test_task"
 
 	resultChan1 := make(chan domain.JobResult, 1)
-	jobItem1 := domain.NewJobItem(j1, resultChan1, time.Millisecond)
+	w1 := domain.NewWork(j1, resultChan1, time.Millisecond)
 
 	j2 := new(domain.Job)
 	j2.ID = "job_2"
 	j2.TaskName = "test_task"
 
 	resultChan2 := make(chan domain.JobResult, 1)
-	jobItem2 := domain.NewJobItem(j2, resultChan2, time.Millisecond)
+	w2 := domain.NewWork(j2, resultChan2, time.Millisecond)
 
-	futureResult1 := domain.FutureJobResult{Result: jobItem1.Result}
-	futureResult2 := domain.FutureJobResult{Result: jobItem2.Result}
+	futureResult1 := domain.FutureJobResult{Result: w1.Result}
+	futureResult2 := domain.FutureJobResult{Result: w2.Result}
 	resultService.
 		EXPECT().
 		Create(futureResult1).
@@ -106,14 +106,14 @@ func TestConcurrency(t *testing.T) {
 	wg.Add(1)
 	jobService.
 		EXPECT().
-		Exec(context.Background(), jobItem1).
-		DoAndReturn(func(ctx context.Context, jobItem1 domain.JobItem) error {
+		Exec(context.Background(), w1).
+		DoAndReturn(func(ctx context.Context, w domain.Work) error {
 			time.Sleep(50 * time.Millisecond)
 			wg.Done()
 			return nil
 		})
 
-	err := wp.Send(jobItem1)
+	err := wp.Send(w1)
 	if err != nil {
 		t.Errorf("Error sending job to worker: %v", err)
 	}
@@ -121,7 +121,7 @@ func TestConcurrency(t *testing.T) {
 	// sleep enough for the workerpool to start, but not as much to finish its first job
 	time.Sleep(20 * time.Millisecond)
 
-	err = wp.Send(jobItem2)
+	err = wp.Send(w2)
 	if err != nil {
 		t.Errorf("Error sending job to worker: %v", err)
 	}

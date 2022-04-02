@@ -86,20 +86,20 @@ func (srv *jobservice) Delete(id string) error {
 }
 
 // Exec executes the job.
-func (srv *jobservice) Exec(ctx context.Context, item domain.JobItem) error {
+func (srv *jobservice) Exec(ctx context.Context, w domain.Work) error {
 	// Should be already validated.
-	taskFunc, _ := srv.taskrepo.GetTaskFunc(item.Job.TaskName)
+	taskFunc, _ := srv.taskrepo.GetTaskFunc(w.Job.TaskName)
 
 	startedAt := srv.time.Now()
-	item.Job.MarkStarted(&startedAt)
-	if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
+	w.Job.MarkStarted(&startedAt)
+	if err := srv.jobRepository.Update(w.Job.ID, w.Job); err != nil {
 		return err
 	}
 	timeout := defaultJobTimeout
-	if item.Job.Timeout > 0 && item.Job.Timeout <= 84600 {
-		timeout = time.Duration(item.Job.Timeout)
+	if w.Job.Timeout > 0 && w.Job.Timeout <= 84600 {
+		timeout = time.Duration(w.Job.Timeout)
 	}
-	ctx, cancel := context.WithTimeout(ctx, timeout*item.TimeoutUnit)
+	ctx, cancel := context.WithTimeout(ctx, timeout*w.TimeoutUnit)
 	defer cancel()
 
 	jobResultChan := make(chan domain.JobResult, 1)
@@ -107,7 +107,7 @@ func (srv *jobservice) Exec(ctx context.Context, item domain.JobItem) error {
 		defer func() {
 			if p := recover(); p != nil {
 				result := domain.JobResult{
-					JobID:    item.Job.ID,
+					JobID:    w.Job.ID,
 					Metadata: nil,
 					Error:    fmt.Errorf("%v", p).Error(),
 				}
@@ -117,13 +117,13 @@ func (srv *jobservice) Exec(ctx context.Context, item domain.JobItem) error {
 		var errMsg string
 
 		// Perform the actual work.
-		resultMetadata, jobErr := taskFunc(item.Job.Metadata)
+		resultMetadata, jobErr := taskFunc(w.Job.Metadata)
 		if jobErr != nil {
 			errMsg = jobErr.Error()
 		}
 
 		result := domain.JobResult{
-			JobID:    item.Job.ID,
+			JobID:    w.Job.ID,
 			Metadata: resultMetadata,
 			Error:    errMsg,
 		}
@@ -135,27 +135,27 @@ func (srv *jobservice) Exec(ctx context.Context, item domain.JobItem) error {
 	select {
 	case <-ctx.Done():
 		failedAt := srv.time.Now()
-		item.Job.MarkFailed(&failedAt, ctx.Err().Error())
+		w.Job.MarkFailed(&failedAt, ctx.Err().Error())
 
 		jobResult = domain.JobResult{
-			JobID:    item.Job.ID,
+			JobID:    w.Job.ID,
 			Metadata: nil,
 			Error:    ctx.Err().Error(),
 		}
 	case jobResult = <-jobResultChan:
 		if jobResult.Error != "" {
 			failedAt := srv.time.Now()
-			item.Job.MarkFailed(&failedAt, jobResult.Error)
+			w.Job.MarkFailed(&failedAt, jobResult.Error)
 		} else {
 			completedAt := srv.time.Now()
-			item.Job.MarkCompleted(&completedAt)
+			w.Job.MarkCompleted(&completedAt)
 		}
 	}
-	if err := srv.jobRepository.Update(item.Job.ID, item.Job); err != nil {
+	if err := srv.jobRepository.Update(w.Job.ID, w.Job); err != nil {
 		return err
 	}
-	item.Result <- jobResult
-	close(item.Result)
+	w.Result <- jobResult
+	close(w.Result)
 
 	return nil
 }

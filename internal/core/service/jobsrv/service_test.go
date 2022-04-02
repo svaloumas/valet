@@ -494,7 +494,7 @@ func TestExecCompletedJob(t *testing.T) {
 	taskrepo.Register("test_task", taskFunc)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
-	jobItemWithNoError := domain.JobItem{
+	workItemWithNoError := domain.Work{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TimeoutUnit: time.Millisecond,
@@ -508,10 +508,10 @@ func TestExecCompletedJob(t *testing.T) {
 
 	actualResultChan := make(chan domain.JobResult, 1)
 	go func() {
-		result := <-jobItemWithNoError.Result
+		result := <-workItemWithNoError.Result
 		actualResultChan <- result
 	}()
-	err := service.Exec(context.Background(), jobItemWithNoError)
+	err := service.Exec(context.Background(), workItemWithNoError)
 	if err != nil {
 		t.Errorf("service exec returned error: got %#v want nil", err.Error())
 	}
@@ -581,7 +581,7 @@ func TestExecFailedJob(t *testing.T) {
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
-	jobItemWithError := domain.JobItem{
+	workItemWithError := domain.Work{
 		Job:         expectedJob,
 		Result:      make(chan domain.JobResult, 1),
 		TimeoutUnit: time.Millisecond,
@@ -594,10 +594,10 @@ func TestExecFailedJob(t *testing.T) {
 
 	actualResultChan := make(chan domain.JobResult, 1)
 	go func() {
-		result := <-jobItemWithError.Result
+		result := <-workItemWithError.Result
 		actualResultChan <- result
 	}()
-	err := service.Exec(context.Background(), jobItemWithError)
+	err := service.Exec(context.Background(), workItemWithError)
 	if err != nil {
 		t.Errorf("service exec returned error: got %#v want nil", err.Error())
 	}
@@ -666,7 +666,7 @@ func TestExecPanicJob(t *testing.T) {
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
-	jobItemWithError := domain.JobItem{
+	workItemWithError := domain.Work{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TimeoutUnit: time.Millisecond,
@@ -679,10 +679,10 @@ func TestExecPanicJob(t *testing.T) {
 
 	actualResultChan := make(chan domain.JobResult, 1)
 	go func() {
-		result := <-jobItemWithError.Result
+		result := <-workItemWithError.Result
 		actualResultChan <- result
 	}()
-	err := service.Exec(context.Background(), jobItemWithError)
+	err := service.Exec(context.Background(), workItemWithError)
 	if err != nil {
 		t.Errorf("service exec returned error: got %#v want nil", err.Error())
 	}
@@ -756,7 +756,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	taskrepo.Register("test_task", taskFunc)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
-	jobItem := domain.JobItem{
+	w := domain.Work{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TimeoutUnit: time.Millisecond,
@@ -764,17 +764,17 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 
 	tests := []struct {
 		name string
-		item domain.JobItem
+		work domain.Work
 		err  error
 	}{
 		{
 			"job repository error",
-			jobItem,
+			w,
 			jobRepositoryErr,
 		},
 		{
 			"job repository error",
-			jobItem,
+			w,
 			jobRepositoryErr,
 		},
 	}
@@ -784,12 +784,12 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 			actualResultChan := make(chan domain.JobResult, 1)
 			go func() {
 				select {
-				case result := <-jobItem.Result:
+				case result := <-w.Result:
 					actualResultChan <- result
 				default:
 				}
 			}()
-			err := service.Exec(context.Background(), tt.item)
+			err := service.Exec(context.Background(), tt.work)
 			if err != nil {
 				if err.Error() != tt.err.Error() {
 					t.Errorf("service exec returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
@@ -860,7 +860,7 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
-	jobItemWithError := domain.JobItem{
+	workItemWithError := domain.Work{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TimeoutUnit: time.Millisecond,
@@ -873,10 +873,10 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 
 	actualResultChan := make(chan domain.JobResult, 1)
 	go func() {
-		result := <-jobItemWithError.Result
+		result := <-workItemWithError.Result
 		actualResultChan <- result
 	}()
-	err := service.Exec(context.Background(), jobItemWithError)
+	err := service.Exec(context.Background(), workItemWithError)
 	if err != nil {
 		t.Errorf("service exec returned error: got %#v want nil", err.Error())
 	}

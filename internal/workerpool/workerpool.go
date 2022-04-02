@@ -25,7 +25,7 @@ type WorkerPoolImpl struct {
 
 	jobService    port.JobService
 	resultService port.ResultService
-	queue         chan domain.JobItem
+	queue         chan domain.Work
 	wg            sync.WaitGroup
 	Log           *log.Logger
 }
@@ -42,7 +42,7 @@ func NewWorkerPoolImpl(
 		backlog:       backlog,
 		jobService:    jobService,
 		resultService: resultService,
-		queue:         make(chan domain.JobItem, backlog),
+		queue:         make(chan domain.Work, backlog),
 		Log:           logger,
 	}
 }
@@ -56,12 +56,12 @@ func (wp *WorkerPoolImpl) Start() {
 	wp.Log.Printf("set up %d workers with a queue of backlog %d", wp.concurrency, wp.backlog)
 }
 
-// Send schedules the job. An error is returned if the job backlog is full.
-func (wp *WorkerPoolImpl) Send(jobItem domain.JobItem) error {
+// Send schedules work job. An error is returned if the work backlog is full.
+func (wp *WorkerPoolImpl) Send(w domain.Work) error {
 	select {
-	case wp.queue <- jobItem:
+	case wp.queue <- w:
 		go func() {
-			if err := wp.resultService.Create(domain.FutureJobResult{Result: jobItem.Result}); err != nil {
+			if err := wp.resultService.Create(domain.FutureJobResult{Result: w.Result}); err != nil {
 				wp.Log.Printf("could not create job result to the repository")
 			}
 		}()
@@ -71,9 +71,9 @@ func (wp *WorkerPoolImpl) Send(jobItem domain.JobItem) error {
 	}
 }
 
-func (wp *WorkerPoolImpl) CreateJobItem(j *domain.Job) domain.JobItem {
+func (wp *WorkerPoolImpl) CreateWork(j *domain.Job) domain.Work {
 	// TODO: Consider making timeout unit configurable.
-	return domain.JobItem{
+	return domain.Work{
 		Job:         j,
 		Result:      make(chan domain.JobResult, 1),
 		TimeoutUnit: time.Second,
@@ -87,7 +87,7 @@ func (wp *WorkerPoolImpl) Stop() {
 	wp.wg.Wait()
 }
 
-func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.JobItem, wg *sync.WaitGroup) {
+func (wp *WorkerPoolImpl) schedule(id int, queue <-chan domain.Work, wg *sync.WaitGroup) {
 	defer wg.Done()
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for item := range queue {

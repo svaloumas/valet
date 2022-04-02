@@ -34,32 +34,32 @@ func (m *MockWorkerPool) EXPECT() *MockWorkerPoolMockRecorder {
 	return m.recorder
 }
 
-// CreateJobItem mocks base method.
-func (m *MockWorkerPool) CreateJobItem(j *domain.Job) domain.JobItem {
+// CreateWork mocks base method.
+func (m *MockWorkerPool) CreateWork(j *domain.Job) domain.Work {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateJobItem", j)
-	ret0, _ := ret[0].(domain.JobItem)
+	ret := m.ctrl.Call(m, "CreateWork", j)
+	ret0, _ := ret[0].(domain.Work)
 	return ret0
 }
 
-// CreateJobItem indicates an expected call of CreateJobItem.
-func (mr *MockWorkerPoolMockRecorder) CreateJobItem(j interface{}) *gomock.Call {
+// CreateWork indicates an expected call of CreateWork.
+func (mr *MockWorkerPoolMockRecorder) CreateWork(j interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJobItem", reflect.TypeOf((*MockWorkerPool)(nil).CreateJobItem), j)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWork", reflect.TypeOf((*MockWorkerPool)(nil).CreateWork), j)
 }
 
 // Send mocks base method.
-func (m *MockWorkerPool) Send(jobItem domain.JobItem) error {
+func (m *MockWorkerPool) Send(w domain.Work) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Send", jobItem)
+	ret := m.ctrl.Call(m, "Send", w)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockWorkerPoolMockRecorder) Send(jobItem interface{}) *gomock.Call {
+func (mr *MockWorkerPoolMockRecorder) Send(w interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockWorkerPool)(nil).Send), jobItem)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockWorkerPool)(nil).Send), w)
 }
 
 // Start mocks base method.

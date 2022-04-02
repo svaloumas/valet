@@ -274,17 +274,17 @@ func (mr *MockJobServiceMockRecorder) Delete(id interface{}) *gomock.Call {
 }
 
 // Exec mocks base method.
-func (m *MockJobService) Exec(ctx context.Context, item domain.JobItem) error {
+func (m *MockJobService) Exec(ctx context.Context, w domain.Work) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Exec", ctx, item)
+	ret := m.ctrl.Call(m, "Exec", ctx, w)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Exec indicates an expected call of Exec.
-func (mr *MockJobServiceMockRecorder) Exec(ctx, item interface{}) *gomock.Call {
+func (mr *MockJobServiceMockRecorder) Exec(ctx, w interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockJobService)(nil).Exec), ctx, item)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockJobService)(nil).Exec), ctx, w)
 }
 
 // Get mocks base method.

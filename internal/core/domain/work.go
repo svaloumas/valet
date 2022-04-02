@@ -4,19 +4,19 @@ import (
 	"time"
 )
 
-type JobItem struct {
+type Work struct {
 	Job         *Job
 	Result      chan JobResult
 	TimeoutUnit time.Duration
 }
 
-// NewJobItem initializes and returns a new JobItem instance.
-func NewJobItem(
+// NewWork initializes and returns a new Work instance.
+func NewWork(
 	j *Job,
 	resultChan chan JobResult,
-	timeoutUnit time.Duration) JobItem {
+	timeoutUnit time.Duration) Work {
 
-	return JobItem{
+	return Work{
 		Job:         j,
 		Result:      resultChan,
 		TimeoutUnit: timeoutUnit,
