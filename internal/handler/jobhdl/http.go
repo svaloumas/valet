@@ -32,6 +32,9 @@ func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 		case *apperrors.ResourceValidationErr:
 			hdl.handleError(c, http.StatusBadRequest, err)
 			return
+		case *apperrors.FullQueueErr:
+			hdl.handleError(c, http.StatusServiceUnavailable, err)
+			return
 		default:
 			hdl.handleError(c, http.StatusInternalServerError, err)
 			return
