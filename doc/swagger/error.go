@@ -1,6 +1,8 @@
 package swagger
 
 type errResponse struct {
+	Error   bool   `json:"error"`
+	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 

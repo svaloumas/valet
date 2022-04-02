@@ -10,9 +10,9 @@
   ],
   "swagger": "2.0",
   "info": {
-    "description": "Documentation of valet service API.",
-    "title": "valet service.",
-    "version": "1.0.0"
+    "description": "Documentation of the valet API.",
+    "title": "valet",
+    "version": "0.8.0"
   },
   "host": "localhost:8080",
   "basePath": "/api",
@@ -313,6 +313,15 @@
     "errResponse": {
       "type": "object",
       "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Code"
+        },
+        "error": {
+          "type": "boolean",
+          "x-go-name": "Error"
+        },
         "message": {
           "type": "string",
           "x-go-name": "Message"

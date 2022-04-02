@@ -97,6 +97,13 @@ definitions:
     x-go-package: valet/internal/handler/jobhdl
   errResponse:
     properties:
+      code:
+        format: int64
+        type: integer
+        x-go-name: Code
+      error:
+        type: boolean
+        x-go-name: Error
       message:
         type: string
         x-go-name: Message
@@ -104,9 +111,9 @@ definitions:
     x-go-package: valet/doc/swagger
 host: localhost:8080
 info:
-  description: Documentation of valet service API.
-  title: valet service.
-  version: 1.0.0
+  description: Documentation of the valet API.
+  title: valet
+  version: 0.8.0
 paths:
   /jobs:
     post:

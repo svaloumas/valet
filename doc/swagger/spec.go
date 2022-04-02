@@ -1,10 +1,10 @@
-// Package classification valet service.
+// Package classification valet
 //
-// Documentation of valet service API.
+// Documentation of the valet API.
 //
 //     Schemes: http
 //     BasePath: /api
-//     Version: 1.0.0
+//     Version: 0.8.0
 //     Host: localhost:8080
 //
 //     Consumes:
