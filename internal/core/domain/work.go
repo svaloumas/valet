@@ -2,11 +2,14 @@ package domain
 
 import (
 	"time"
+
+	"valet/internal/core/domain/taskrepo"
 )
 
 type Work struct {
 	Job         *Job
 	Result      chan JobResult
+	TaskFunc    taskrepo.TaskFunc
 	TimeoutUnit time.Duration
 }
 
@@ -14,11 +17,13 @@ type Work struct {
 func NewWork(
 	j *Job,
 	resultChan chan JobResult,
+	taskFunc taskrepo.TaskFunc,
 	timeoutUnit time.Duration) Work {
 
 	return Work{
 		Job:         j,
 		Result:      resultChan,
+		TaskFunc:    taskFunc,
 		TimeoutUnit: timeoutUnit,
 	}
 }

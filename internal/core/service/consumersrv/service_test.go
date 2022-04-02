@@ -22,8 +22,10 @@ func TestConsume(t *testing.T) {
 
 	jobChan := make(chan *domain.Job, 1)
 
-	resultChan := make(chan domain.JobResult, 1)
-	w := domain.NewWork(j, resultChan, time.Second)
+	w := domain.Work{
+		Job:         j,
+		TimeoutUnit: time.Millisecond,
+	}
 	logger := log.New(ioutil.Discard, "", 0)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)

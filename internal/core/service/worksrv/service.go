@@ -84,12 +84,11 @@ func (srv *workservice) Send(w domain.Work) error {
 
 // CreateWork creates and return a new Work instance.
 func (srv *workservice) CreateWork(j *domain.Job) domain.Work {
+	// Should be already validated.
+	taskFunc, _ := srv.taskrepo.GetTaskFunc(j.TaskName)
+	resultChan := make(chan domain.JobResult, 1)
 	// TODO: Consider making timeout unit configurable.
-	return domain.Work{
-		Job:         j,
-		Result:      make(chan domain.JobResult, 1),
-		TimeoutUnit: time.Second,
-	}
+	return domain.NewWork(j, resultChan, taskFunc, time.Second)
 }
 
 // Stop signals the workers to stop working gracefully.
@@ -101,9 +100,6 @@ func (srv *workservice) Stop() {
 
 // Exec executes the work.
 func (srv *workservice) Exec(ctx context.Context, w domain.Work) error {
-	// Should be already validated.
-	taskFunc, _ := srv.taskrepo.GetTaskFunc(w.Job.TaskName)
-
 	startedAt := srv.time.Now()
 	w.Job.MarkStarted(&startedAt)
 	if err := srv.jobRepository.Update(w.Job.ID, w.Job); err != nil {
@@ -131,7 +127,7 @@ func (srv *workservice) Exec(ctx context.Context, w domain.Work) error {
 		var errMsg string
 
 		// Perform the actual work.
-		resultMetadata, jobErr := taskFunc(w.Job.Metadata)
+		resultMetadata, jobErr := w.TaskFunc(w.Job.Metadata)
 		if jobErr != nil {
 			errMsg = jobErr.Error()
 		}
