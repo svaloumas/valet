@@ -26,7 +26,7 @@ type postJobsRequestParams struct {
 	Body jobhdl.RequestBodyDTO
 }
 
-// swagger:route GET /jobs/:id jobs getJob
+// swagger:route GET /jobs/{id} jobs getJob
 // Returns a specified job.
 // responses:
 //   200: getJobResponse
@@ -48,7 +48,7 @@ type getJobRequestParams struct {
 	ID string `json:"id"`
 }
 
-// swagger:route PATCH /jobs/:id jobs patchJob
+// swagger:route PATCH /jobs/{id} jobs patchJob
 // Updates a job's name of description.
 // responses:
 //   204:
@@ -63,7 +63,7 @@ type patchJobRequestParams struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /jobs/:id jobs deleteJob
+// swagger:route DELETE /jobs/{id} jobs deleteJob
 // Deletes a specified job.
 // responses:
 //   204:

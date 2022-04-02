@@ -127,7 +127,7 @@ paths:
       summary: Creates a new job.
       tags:
       - jobs
-  /jobs/:id:
+  /jobs/{id}:
     delete:
       operationId: deleteJob
       parameters:
@@ -185,7 +185,7 @@ paths:
       summary: Updates a job's name of description.
       tags:
       - jobs
-  /jobs/:id/results:
+  /jobs/{id}/results:
     delete:
       operationId: deleteJobResults
       parameters:

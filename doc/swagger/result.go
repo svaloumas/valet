@@ -4,7 +4,7 @@ import (
 	"valet/internal/core/domain"
 )
 
-// swagger:route GET /jobs/:id/results jobs getJobResults
+// swagger:route GET /jobs/{id}/results jobs getJobResults
 // Returns a specified job's results.
 // responses:
 //   200: getJobResultsResponse
@@ -26,7 +26,7 @@ type getJobResultsRequestParams struct {
 	ID string `json:"id"`
 }
 
-// swagger:route DELETE /jobs/:id/results jobs deleteJobResults
+// swagger:route DELETE /jobs/{id}/results jobs deleteJobResults
 // Deletes a job's results.
 // responses:
 //   204:

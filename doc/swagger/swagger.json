@@ -47,7 +47,7 @@
         }
       }
     },
-    "/jobs/:id": {
+    "/jobs/{id}": {
       "get": {
         "tags": [
           "jobs"
@@ -133,7 +133,7 @@
         }
       }
     },
-    "/jobs/:id/results": {
+    "/jobs/{id}/results": {
       "get": {
         "tags": [
           "jobs"
