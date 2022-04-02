@@ -69,7 +69,7 @@ func DummyTask(metadata interface{}) (interface{}, error) {
         if err != nil {
             return nil, err
         }
-    serializedContent, _ := json.Marshal(content)
+        serializedContent, _ := json.Marshal(content)
 	return serializedContent, nil
 }
 
