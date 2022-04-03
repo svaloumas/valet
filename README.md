@@ -2,7 +2,7 @@
 [![CI](https://github.com/svaloumas/valet/actions/workflows/ci.yml/badge.svg)](https://github.com/svaloumas/valet/actions/workflows/ci.yml)
 ![Coverage](https://img.shields.io/badge/Coverage-90.6%25-brightgreen)
 
-Simple stateless Go server responsible for executing tasks, referred as jobs.
+Stateless Go server responsible for executing tasks asynchronously and concurrently.
 
 * [Overview](#overview)
 * [Installation](#installation)
@@ -14,12 +14,14 @@ Simple stateless Go server responsible for executing tasks, referred as jobs.
 
 ## Overview
 
-At its core, `valet` is an asynchronous task executor. It executes the tasks concurrently, by leveraging the built-in concurrency support of the language.
+At its core, `valet` is a simple asynchronous task executor and scheduler. A task is a user-defined `func` that is executed as a callback by the service.
+The implementation uses the notion of `job`, which describes the work that needs to be done and carries information about the task that will run for the specific job.
+User-defined tasks are assigned to `jobs`. Every `job` can be assigned with a different task, a JSON payload with the data required for the task to be executed,
+and an optional timeout interval.
 
-The user can define callbacks to be executed by the service and assign them to jobs. Every job can be assigned with a different user defined
-callback, a JSON payload with the data required for the callback to be executed, and an optional timeout interval.
+After the tasks have been executed, their results along with the errors (if any) are stored in a repository.
 
-The service exposes a JSON RestAPI providing CRUD endpoints for the job management. Configuration uses a single `yaml` file living under the root
+The service exposes a JSON RestAPI providing CRUD endpoints for the job resource management. Configuration uses a single `yaml` file living under the root
 directory of the project.
 
 <a name="installation"/>
@@ -48,12 +50,13 @@ All configuration is set through `config.yaml`, which lives in the project's roo
 
 Available configuration options:
 
-| Parameter               | Type     | Default                     | Description                                                          |
-| ----------------------- | -------- | --------------------------- | -------------------------------------------------------------------- |
-| port                    | string   | 8080                        | The port that the server should listen to                            |
-| job_queue_capacity      | integer  | 100                         | The capacity of the job queue (applies only for in-memory job queue) |
-| worker_pool_concurrency | integer  | number of CPU cores         | The number of go-routines that will executes the tasks concurrently  |
-| worker_pool_backlog     | integer  | worker_pool_concurrency * 2 | The capacity of the worker pool work queue                           |
+| Parameter               | Type     | Default                     | Description                               |
+| ----------------------- | -------- | --------------------------- | ----------------------------------------- |
+| port                    | string   | 8080                        | The port that the server should listen to |
+| job_queue_capacity      | integer  | 100                         | The capacity of the job queue (applies only for in-memory job queue)|
+| worker_pool_concurrency | integer  | number of CPU cores         | The number of go-routines responsible for executing the jobs concurrently |
+| worker_pool_backlog     | integer  | worker_pool_concurrency * 2 | The capacity of the worker pool work queue |
+| timeout_unit            | string   | second                      | The unit of time that will be used for the timeout interval specified for each job |
 
 <a name="usage"/>
 
