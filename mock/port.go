@@ -406,11 +406,9 @@ func (mr *MockWorkServiceMockRecorder) Exec(ctx, w interface{}) *gomock.Call {
 }
 
 // Send mocks base method.
-func (m *MockWorkService) Send(w domain.Work) error {
+func (m *MockWorkService) Send(w domain.Work) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Send", w)
-	ret0, _ := ret[0].(error)
-	return ret0
+	m.ctrl.Call(m, "Send", w)
 }
 
 // Send indicates an expected call of Send.

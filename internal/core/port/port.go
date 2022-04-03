@@ -77,8 +77,8 @@ type WorkService interface {
 	// Stop signals the workers to stop working gracefully.
 	Stop()
 
-	// Send schedules the work. An error is returned if the work backlog is full.
-	Send(w domain.Work) error
+	// Send sends a work to the worker pool.
+	Send(w domain.Work)
 
 	// CreateWork creates and return a new Work instance.
 	CreateWork(j *domain.Job) domain.Work

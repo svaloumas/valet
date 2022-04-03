@@ -11,7 +11,6 @@ import (
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/taskrepo"
 	"valet/internal/core/port"
-	"valet/pkg/apperrors"
 	rtime "valet/pkg/time"
 )
 
@@ -64,22 +63,17 @@ func (srv *workservice) Start() {
 	srv.Log.Printf("set up %d workers with a queue of backlog %d", srv.concurrency, srv.backlog)
 }
 
-// Send schedules work. An error is returned if the work backlog is full.
-func (srv *workservice) Send(w domain.Work) error {
-	select {
-	case srv.queue <- w:
-		go func() {
-			futureResult := domain.FutureJobResult{Result: w.Result}
-			result := futureResult.Wait()
+// Send sends a work to the worker pool.
+func (srv *workservice) Send(w domain.Work) {
+	srv.queue <- w
+	go func() {
+		futureResult := domain.FutureJobResult{Result: w.Result}
+		result := futureResult.Wait()
 
-			if err := srv.resultRepository.Create(&result); err != nil {
-				srv.Log.Printf("could not create job result to the repository")
-			}
-		}()
-		return nil
-	default:
-		return &apperrors.FullWorkerPoolBacklog{}
-	}
+		if err := srv.resultRepository.Create(&result); err != nil {
+			srv.Log.Printf("could not create job result to the repository")
+		}
+	}()
 }
 
 // CreateWork creates and return a new Work instance.

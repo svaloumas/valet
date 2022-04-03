@@ -34,34 +34,19 @@ func TestConsume(t *testing.T) {
 		Pop().
 		Return(jobChan).
 		Times(2)
-	jobQueue.
-		EXPECT().
-		Close().
-		Return().
-		Times(1)
-	wp := mock.NewMockWorkService(ctrl)
-	wp.
-		EXPECT().
-		Start().
-		Return().
-		Times(1)
-	wp.
+	workService := mock.NewMockWorkService(ctrl)
+	workService.
 		EXPECT().
 		Send(w).
-		Return(nil).
+		Return().
 		Times(1)
-	wp.
+	workService.
 		EXPECT().
 		CreateWork(j).
 		Return(w).
 		Times(1)
-	wp.
-		EXPECT().
-		Stop().
-		Return().
-		Times(1)
 
-	consumerService := New(jobQueue, wp, logger)
+	consumerService := New(jobQueue, workService, logger)
 
 	go consumerService.Consume()
 	defer consumerService.Stop()

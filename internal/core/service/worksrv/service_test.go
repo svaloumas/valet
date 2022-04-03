@@ -3,9 +3,11 @@ package worksrv
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,25 +18,65 @@ import (
 	"valet/mock"
 )
 
-func TestBacklogLimit(t *testing.T) {
+func TestSend(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	j := new(domain.Job)
+	j.ID = "job_id"
+	j.TaskName = "test_task"
+
+	work := domain.Work{Job: j, Result: make(chan domain.JobResult, 1)}
+
+	result := domain.JobResult{
+		JobID:    j.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+
+	work.Result <- result
+
+	freezed := mock.NewMockTime(ctrl)
+	taskrepo := taskrepo.NewTaskRepository()
+	jobRepository := mock.NewMockJobRepository(ctrl)
+	resultRepository := mock.NewMockResultRepository(ctrl)
+	wg.Add(1)
+	resultRepository.
+		EXPECT().
+		Create(&result).
+		DoAndReturn(func(result *domain.JobResult) error {
+			wg.Done()
+			return nil
+		})
+
+	workservice := New(jobRepository, resultRepository, taskrepo, freezed, 0, 1)
+	workservice.Log = log.New(ioutil.Discard, "", 0)
+	workservice.Start()
+	defer workservice.Stop()
+
+	workservice.Send(work)
+
+	if len(workservice.queue) != 1 {
+		t.Errorf("work service send did not increase the queue length: got %v want 1", len(workservice.queue))
+	}
+}
+
+func TestSendBacklogLimit(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	j := new(domain.Job)
 	j.TaskName = "test_task"
 
-	var taskFunc = func(metadata interface{}) (interface{}, error) {
-		return "test_metadata", nil
-	}
+	work := domain.Work{Job: j}
 
-	resultChan1 := make(chan domain.JobResult, 1)
-	work := domain.NewWork(j, resultChan1, taskFunc, time.Millisecond)
+	jDeemedToBlock := new(domain.Job)
+	jDeemedToBlock.TaskName = "test_task"
 
-	jDeemedToFail := new(domain.Job)
-	jDeemedToFail.TaskName = "test_task"
-
-	resultChan2 := make(chan domain.JobResult, 1)
-	workDeemedToFail := domain.NewWork(jDeemedToFail, resultChan2, taskFunc, time.Millisecond)
+	workDeemedToBlock := domain.Work{Job: jDeemedToBlock}
 
 	freezed := mock.NewMockTime(ctrl)
 	taskrepo := taskrepo.NewTaskRepository()
@@ -46,17 +88,28 @@ func TestBacklogLimit(t *testing.T) {
 	workservice.Start()
 	defer workservice.Stop()
 
-	err := workservice.Send(work)
-	if err != nil {
-		t.Errorf("Error sending job to workerpool: %v", err)
+	workservice.Send(work)
+
+	if len(workservice.queue) != 1 {
+		t.Errorf("work service send did not increase the queue length: got %v want 1", len(workservice.queue))
 	}
 
-	err = workservice.Send(workDeemedToFail)
-	if err == nil {
-		t.Fatal("Expected error, due to backlog being full")
+	go func() {
+		defer func() {
+			if p := recover(); p != nil {
+				if err := fmt.Errorf("%s", p); err.Error() != "send on closed channel" {
+					t.Error("work service send did not panic while sending on closed channel")
+				}
+			}
+		}()
+		// This should block forever.
+		workservice.Send(workDeemedToBlock)
+	}()
+
+	if len(workservice.queue) != 1 {
+		t.Errorf("work service send did changed the queue length instead of blocking: got %v want 1", len(workservice.queue))
 	}
 }
-
 func TestExecCompletedJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

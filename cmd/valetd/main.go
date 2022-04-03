@@ -51,6 +51,7 @@ func main() {
 
 	workService := worksrv.New(
 		jobRepository, resultRepository, taskrepo, rtime.New(), cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
+	workService.Start()
 
 	consumerLogger := log.New(os.Stderr, "[consumer] ", log.LstdFlags)
 	consumerService := consumersrv.New(jobQueue, workService, consumerLogger)
@@ -80,4 +81,6 @@ func main() {
 	logger.Println("server exiting...")
 
 	consumerService.Stop()
+	jobQueue.Close()
+	workService.Stop()
 }
