@@ -14,7 +14,7 @@ Simple stateless Go server responsible for executing tasks, referred as jobs.
 
 ## Overview
 
-At its core, `valet` is an asynchronous task executor.
+At its core, `valet` is an asynchronous task executor. It executes the tasks concurrently, by leveraging the built-in concurrency support of the language.
 
 The user can define callbacks to be executed by the service and assign them to jobs. Every job can be assigned with a different user defined
 callback, a JSON payload with the data required for the callback to be executed, and an optional timeout interval.
@@ -45,6 +45,15 @@ docker-compose up --build -d
 ## Configuration
 
 All configuration is set through `config.yaml`, which lives in the project's root directory.
+
+Available configuration options:
+
+| Parameter               | Type     | Default                     | Description                                                          |
+| ----------------------- | -------- | --------------------------- | -------------------------------------------------------------------- |
+| port                    | string   | 8080                        | The port that the server should listen to                            |
+| job_queue_capacity      | integer  | 100                         | The capacity of the job queue (applies only for in-memory job queue) |
+| worker_pool_concurrency | integer  | number of CPU cores         | The number of go-routines that will executes the tasks concurrently  |
+| worker_pool_backlog     | integer  | worker_pool_concurrency * 2 | The capacity of the worker pool work queue                           |
 
 <a name="usage"/>
 

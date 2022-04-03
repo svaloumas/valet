@@ -25,6 +25,12 @@ func (cfg *Config) Load() error {
 	if err != nil {
 		return err
 	}
+	if cfg.Port == "" {
+		cfg.Port = "8080"
+	}
+	if cfg.JobQueueCapacity == 0 {
+		cfg.JobQueueCapacity = 100
+	}
 	if cfg.WorkerPoolConcurrency == 0 {
 		// Work is CPU bound so number of cores should be fine.
 		cfg.WorkerPoolConcurrency = runtime.NumCPU() / 2
