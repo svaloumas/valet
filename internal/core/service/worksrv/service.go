@@ -121,7 +121,7 @@ func (srv *workservice) Exec(ctx context.Context, w domain.Work) error {
 		var errMsg string
 
 		// Perform the actual work.
-		resultMetadata, jobErr := w.TaskFunc(w.Job.Metadata)
+		resultMetadata, jobErr := w.TaskFunc(w.Job.TaskParams)
 		if jobErr != nil {
 			errMsg = jobErr.Error()
 		}

@@ -38,14 +38,14 @@ func New(
 // Create creates a new job.
 func (srv *jobservice) Create(
 	name, taskName, description string,
-	timeout int, metadata interface{}) (*domain.Job, error) {
+	timeout int, taskParams interface{}) (*domain.Job, error) {
 
 	uuid, err := srv.uuidGen.GenerateRandomUUIDString()
 	if err != nil {
 		return nil, err
 	}
 	createdAt := srv.time.Now()
-	j := domain.NewJob(uuid, name, taskName, description, timeout, &createdAt, metadata)
+	j := domain.NewJob(uuid, name, taskName, description, timeout, &createdAt, taskParams)
 
 	if err := j.Validate(srv.taskrepo); err != nil {
 		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}

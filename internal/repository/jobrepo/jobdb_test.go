@@ -30,7 +30,7 @@ func TestJobDBCreate(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		Metadata:    "some metadata",
+		TaskParams:  "some task params",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
@@ -70,7 +70,7 @@ func TestJobDBGet(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		Metadata:    "some metadata",
+		TaskParams:  "some task params",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
@@ -134,7 +134,7 @@ func TestJobDBUpdate(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		Metadata:    "some metadata",
+		TaskParams:  "some task params",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
@@ -170,7 +170,7 @@ func TestJobDBDelete(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		Metadata:    "some metadata",
+		TaskParams:  "some task params",
 		Status:      domain.Pending,
 	}
 	invalidID := "invalid_id"

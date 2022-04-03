@@ -10,7 +10,7 @@ type RequestBodyDTO struct {
 	Description string      `json:"description"`
 	TaskName    string      `json:"task_name"`
 	Timeout     int         `json:"timeout"`
-	Metadata    interface{} `json:"metadata"`
+	TaskParams  interface{} `json:"task_params"`
 }
 
 // NewRequestBodyDTO initializes and returns a new BodyDTO instance.

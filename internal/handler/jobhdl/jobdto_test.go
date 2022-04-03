@@ -28,7 +28,7 @@ func TestBuildResponseBodyDTO(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		Metadata:    "some metadata",
+		TaskParams:  "some params",
 		Status:      domain.Completed,
 		CreatedAt:   &testTime,
 		StartedAt:   &testTime,

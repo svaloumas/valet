@@ -31,7 +31,7 @@ func TestFIFOQueuePush(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		Metadata:    "some metadata",
+		TaskParams:  "some task params",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
@@ -63,7 +63,7 @@ func TestFIFOQueuePop(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		Metadata:    "some metadata",
+		TaskParams:  "some task params",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
@@ -101,7 +101,7 @@ func TestFIFOQueueClose(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		Metadata:    "some metadata",
+		TaskParams:  "some task params",
 		Status:      domain.Pending,
 	}
 

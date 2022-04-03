@@ -6,17 +6,25 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// DummyMetadata is an example of a task metadata structure.
-type DummyMetadata struct {
+// DummyParams is an example of a task params structure.
+type DummyParams struct {
 	URL string `json:"url,omitempty"`
 }
 
 // DummyTask is a dummy task callback.
-func DummyTask(metadata interface{}) (interface{}, error) {
-	taskMetadata := &DummyMetadata{}
-	mapstructure.Decode(metadata, taskMetadata)
+func DummyTask(taskParams interface{}) (interface{}, error) {
+	params := &DummyParams{}
+	mapstructure.Decode(taskParams, params)
 
 	log.Println("Hello from dummy task")
-	taskMetadata.URL = "http://www.test-url.com"
-	return taskMetadata, nil
+	params.URL = "http://www.test-url.com"
+	metadata, err := downloadContent(params.URL)
+	if err != nil {
+		return nil, err
+	}
+	return metadata, nil
+}
+
+func downloadContent(URL string) (string, error) {
+	return "some metadata", nil
 }

@@ -48,7 +48,7 @@ type JobQueue interface {
 // JobService represents a driver actor service interface.
 type JobService interface {
 	// Create creates a new job.
-	Create(name, taskName, description string, timeout int, metadata interface{}) (*domain.Job, error)
+	Create(name, taskName, description string, timeout int, taskParams interface{}) (*domain.Job, error)
 
 	// Get fetches a job.
 	Get(id string) (*domain.Job, error)

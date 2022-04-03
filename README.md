@@ -65,12 +65,11 @@ func DummyTask(metadata interface{}) (interface{}, error) {
 
         // Do something with the metadata you injected through the API
         // ...
-	content, err := DownloadContent(taskMetadata.URL)
+	metadata, err := downloadContent(taskMetadata.URL)
         if err != nil {
             return nil, err
         }
-        serializedContent, _ := json.Marshal(content)
-	return serializedContent, nil
+	return metadata, nil
 }
 
 ```

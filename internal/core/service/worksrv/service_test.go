@@ -126,7 +126,7 @@ func TestExecCompletedJob(t *testing.T) {
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskName:    "test_task",
-		Metadata:    "some metadata",
+		TaskParams:  "some task params",
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,

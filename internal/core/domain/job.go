@@ -18,6 +18,9 @@ type Job struct {
 	// TaskName is the name of the task to be executed.
 	TaskName string `json:"task_name"`
 
+	// TaskParams are the required parameters for the task assigned to the specific job.
+	TaskParams interface{} `json:"task_params"`
+
 	// Timeout is the time in seconds after which the job task will be interrupted.
 	Timeout int `json:"timeout,omitempty"`
 
@@ -38,15 +41,12 @@ type Job struct {
 
 	// CompletedAt is the UTC timestamp of the moment the job finished.
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
-
-	// Metadata is the payload provided for the specific job.
-	Metadata interface{} `json:"metadata"`
 }
 
 // NewJob initializes and returns a new Job instance.
 func NewJob(
 	uuid, name, taskName, description string, timeout int,
-	createdAt *time.Time, metadata interface{}) *Job {
+	createdAt *time.Time, taskParams interface{}) *Job {
 
 	return &Job{
 		ID:          uuid,
@@ -54,7 +54,7 @@ func NewJob(
 		TaskName:    taskName,
 		Timeout:     timeout,
 		Description: description,
-		Metadata:    metadata,
+		TaskParams:  taskParams,
 		Status:      Pending,
 		CreatedAt:   createdAt,
 	}
