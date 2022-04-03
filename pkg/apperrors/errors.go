@@ -44,3 +44,13 @@ type ResourceValidationErr struct {
 func (e *ResourceValidationErr) Error() string {
 	return e.Message
 }
+
+// ParseTimeErr is an erros indicating that the input string
+// is not in a valid timestamp format.
+type ParseTimeErr struct {
+	Message string
+}
+
+func (e *ParseTimeErr) Error() string {
+	return e.Message
+}

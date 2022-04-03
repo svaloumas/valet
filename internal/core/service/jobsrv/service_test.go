@@ -41,13 +41,15 @@ func TestCreateErrorCases(t *testing.T) {
 	jobRepositoryErr := errors.New("some job repository error")
 	jobQueueErr := &apperrors.FullQueueErr{}
 	jobTaskNameErr := &apperrors.ResourceValidationErr{Message: "wrongtask is not a valid task name - valid tasks: [test_task]"}
+	parseTimeErr := &apperrors.ParseTimeErr{
+		Message: "parsing time \"invalid_timestamp_format\" as \"2006-01-02T15:04:05.999999999Z07:00\": cannot parse \"invalid_timestamp_format\" as \"2006\""}
 
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
 		Return(job.ID, nil).
-		Times(4)
+		Times(5)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
@@ -82,45 +84,58 @@ func TestCreateErrorCases(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		jobname  string
+		jobName  string
 		taskName string
+		runAt    string
 		err      error
 	}{
 		{
 			"job validation error",
 			"",
 			"test_task",
+			"",
 			jobValidateErr,
 		},
 		{
 			"job repository error",
 			"job_name",
 			"test_task",
+			"",
 			jobRepositoryErr,
 		},
 		{
 			"job queue error",
 			"job_name",
 			"test_task",
+			"",
 			jobQueueErr,
 		},
 		{
 			"job task type error",
 			"job_name",
 			"wrongtask",
+			"",
 			jobTaskNameErr,
+		},
+		{
+			"parse time error",
+			"job_name",
+			"test_task",
+			"invalid_timestamp_format",
+			parseTimeErr,
 		},
 		{
 			"uuid generator error",
 			"job_name",
 			"test_task",
+			"",
 			uuidGenErr,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := service.Create(tt.jobname, tt.taskName, job.Description, "", job.Timeout, job.TaskParams)
+			_, err := service.Create(tt.jobName, tt.taskName, job.Description, tt.runAt, job.Timeout, job.TaskParams)
 			if err == nil {
 				t.Error("service created expected error, returned nil instead")
 			}
@@ -140,10 +155,12 @@ func TestCreate(t *testing.T) {
 		EXPECT().
 		Now().
 		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
-		Times(2)
+		Times(3)
 
+	runAt := "2022-01-02T15:04:05.999999999Z"
+	runAtTime, _ := time.Parse(time.RFC3339Nano, runAt)
 	createdAt := freezed.Now()
-	expected := &domain.Job{
+	jobWithoutSchedule := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskName:    "test_task",
@@ -154,24 +171,33 @@ func TestCreate(t *testing.T) {
 		CreatedAt:   &createdAt,
 	}
 
+	jobWithSchedule := &domain.Job{}
+	*jobWithSchedule = *jobWithoutSchedule
+	jobWithSchedule.RunAt = &runAtTime
+
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
-		Return(expected.ID, nil).
-		Times(1)
+		Return(jobWithoutSchedule.ID, nil).
+		Times(2)
 
 	jobRepository := mock.NewMockJobRepository(ctrl)
 	jobRepository.
 		EXPECT().
-		Create(expected).
+		Create(jobWithoutSchedule).
+		Return(nil).
+		Times(1)
+	jobRepository.
+		EXPECT().
+		Create(jobWithSchedule).
 		Return(nil).
 		Times(1)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 	jobQueue.
 		EXPECT().
-		Push(expected).
+		Push(jobWithoutSchedule).
 		Return(true).
 		Times(1)
 
@@ -183,12 +209,48 @@ func TestCreate(t *testing.T) {
 
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
-	j, err := service.Create(expected.Name, expected.TaskName, expected.Description, "", expected.Timeout, expected.TaskParams)
-	if err != nil {
-		t.Errorf("service create returned unexpected error: %#v", err)
+	tests := []struct {
+		name        string
+		jobName     string
+		taskName    string
+		description string
+		runAt       string
+		timeout     int
+		taskParams  interface{}
+		expected    *domain.Job
+	}{
+		{
+			"job without schedule",
+			jobWithoutSchedule.Name,
+			jobWithoutSchedule.TaskName,
+			jobWithoutSchedule.Description,
+			"",
+			jobWithoutSchedule.Timeout,
+			jobWithoutSchedule.TaskParams,
+			jobWithoutSchedule,
+		},
+		{
+			"job with schedule",
+			jobWithSchedule.Name,
+			jobWithSchedule.TaskName,
+			jobWithSchedule.Description,
+			"2022-01-02T15:04:05.999999999Z",
+			jobWithSchedule.Timeout,
+			jobWithSchedule.TaskParams,
+			jobWithSchedule,
+		},
 	}
-	if eq := reflect.DeepEqual(j, expected); !eq {
-		t.Errorf("service create returned wrong job, got %#v want %#v", j, expected)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			j, err := service.Create(tt.jobName, tt.taskName, tt.description, tt.runAt, tt.timeout, tt.taskParams)
+			if err != nil {
+				t.Errorf("service create returned unexpected error: %#v", err)
+			}
+			if eq := reflect.DeepEqual(j, tt.expected); !eq {
+				t.Errorf("service create returned wrong job, got %#v want %#v", j, tt.expected)
+			}
+		})
 	}
 }
 

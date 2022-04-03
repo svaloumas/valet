@@ -13,6 +13,7 @@ import (
 	"valet/internal/core/service/consumersrv"
 	"valet/internal/core/service/jobsrv"
 	"valet/internal/core/service/resultsrv"
+	"valet/internal/core/service/schedulersrv"
 	"valet/internal/core/service/worksrv"
 	"valet/internal/repository/jobqueue"
 	"valet/internal/repository/jobrepo"
@@ -55,9 +56,16 @@ func main() {
 		cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
 	workService.Start()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	consumerLogger := log.New(os.Stderr, "[consumer] ", log.LstdFlags)
 	consumerService := consumersrv.New(jobQueue, workService, consumerLogger)
-	go consumerService.Consume()
+	consumerService.Consume(ctx, time.Duration(cfg.JobQueuePollingInterval)*cfg.TimeoutUnit)
+
+	schedulerLogger := log.New(os.Stderr, "[scheduler] ", log.LstdFlags)
+	schedulerService := schedulersrv.New(jobRepository, workService, rtime.New(), schedulerLogger)
+	schedulerService.Schedule(ctx, time.Duration(cfg.SchedulerPollingInterval)*cfg.TimeoutUnit)
 
 	srv := http.Server{
 		Addr:    ":" + cfg.Port,
@@ -75,14 +83,13 @@ func main() {
 	sig := <-gracefulTerm
 	logger.Printf("server notified %+v", sig)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Fatal("failed to properly shutdown the server:", err)
 	}
 	logger.Println("server exiting...")
 
-	consumerService.Stop()
 	jobQueue.Close()
 	workService.Stop()
 }

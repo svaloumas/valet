@@ -73,7 +73,7 @@ func TestFIFOQueuePop(t *testing.T) {
 	if ok := jobqueue.Push(expected); !ok {
 		t.Errorf("fifoqueue could not push job to queue: got %#v want true", ok)
 	}
-	job := <-jobqueue.Pop()
+	job := jobqueue.Pop()
 	if job == nil {
 		t.Errorf("fifoqueue pop did not return job: got nil want %#v", job)
 	} else {

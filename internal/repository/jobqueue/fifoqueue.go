@@ -37,8 +37,13 @@ func (q *fifoqueue) Push(j *domain.Job) bool {
 }
 
 // Pop removes and returns the head job from the queue.
-func (q *fifoqueue) Pop() <-chan *domain.Job {
-	return q.jobs
+func (q *fifoqueue) Pop() *domain.Job {
+	select {
+	case j := <-q.jobs:
+		return j
+	default:
+		return nil
+	}
 }
 
 // Close closes tha job queue channel.

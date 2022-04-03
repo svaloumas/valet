@@ -36,6 +36,9 @@ type Job struct {
 	// RunAt is the UTC timestamp indicating the time for the job to run.
 	RunAt *time.Time `json:"run_at,omitempty"`
 
+	// ScheduledAt is the UTC timestamp indicating the time that the job got scheduled.
+	ScheduledAt *time.Time `json:"scheduled_at,omitempty"`
+
 	// CreatedAt is the UTC timestamp of the job creation.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 
@@ -50,6 +53,10 @@ type Job struct {
 func NewJob(
 	uuid, name, taskName, description string, timeout int,
 	runAt *time.Time, createdAt *time.Time, taskParams interface{}) *Job {
+
+	if runAt.IsZero() {
+		runAt = nil
+	}
 
 	return &Job{
 		ID:          uuid,

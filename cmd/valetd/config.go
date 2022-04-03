@@ -18,12 +18,14 @@ var (
 )
 
 type Config struct {
-	Port                  string `yaml:"port"`
-	JobQueueCapacity      int    `yaml:"job_queue_capacity"`
-	WorkerPoolConcurrency int    `yaml:"worker_pool_concurrency"`
-	WorkerPoolBacklog     int    `yaml:"worker_pool_backlog"`
-	TimeoutUnitOption     string `yaml:"timeout_unit"`
-	TimeoutUnit           time.Duration
+	Port                     string `yaml:"port"`
+	JobQueueCapacity         int    `yaml:"job_queue_capacity"`
+	WorkerPoolConcurrency    int    `yaml:"worker_pool_concurrency"`
+	WorkerPoolBacklog        int    `yaml:"worker_pool_backlog"`
+	SchedulerPollingInterval int    `yaml:"scheduler_polling_interval"`
+	JobQueuePollingInterval  int    `yaml:"job_queue_polling_interval"`
+	TimeoutUnitOption        string `yaml:"timeout_unit"`
+	TimeoutUnit              time.Duration
 }
 
 func (cfg *Config) Load() error {
@@ -55,5 +57,19 @@ func (cfg *Config) Load() error {
 		return fmt.Errorf("%s is not a valid timeout_unit option, valid options: %v", cfg.TimeoutUnitOption, validTimeoutUnitOptions)
 	}
 	cfg.TimeoutUnit = timeoutUnit
+	if cfg.SchedulerPollingInterval == 0 {
+		if cfg.TimeoutUnit == time.Second {
+			cfg.SchedulerPollingInterval = 60
+		} else {
+			cfg.SchedulerPollingInterval = 60000
+		}
+	}
+	if cfg.JobQueuePollingInterval == 0 {
+		if cfg.TimeoutUnit == time.Second {
+			cfg.JobQueuePollingInterval = 1
+		} else {
+			cfg.SchedulerPollingInterval = 1000
+		}
+	}
 	return nil
 }

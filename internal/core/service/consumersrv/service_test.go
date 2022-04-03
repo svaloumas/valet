@@ -1,6 +1,7 @@
 package consumersrv
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"testing"
@@ -19,8 +20,8 @@ func TestConsume(t *testing.T) {
 	j := new(domain.Job)
 	j.ID = "job_1"
 	j.TaskName = "test_task"
-
-	jobChan := make(chan *domain.Job, 1)
+	j.Status = domain.Pending
+	j.RunAt = nil
 
 	w := domain.Work{
 		Job:         j,
@@ -32,8 +33,8 @@ func TestConsume(t *testing.T) {
 	jobQueue.
 		EXPECT().
 		Pop().
-		Return(jobChan).
-		Times(2)
+		Return(j).
+		Times(1)
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
@@ -48,10 +49,11 @@ func TestConsume(t *testing.T) {
 
 	consumerService := New(jobQueue, workService, logger)
 
-	go consumerService.Consume()
-	defer consumerService.Stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	jobChan <- j
+	consumerService.Consume(ctx, 8*time.Millisecond)
 
+	// give some time for the scheduler to consume the job
 	time.Sleep(10 * time.Millisecond)
 }

@@ -15,7 +15,7 @@ import (
 )
 
 var _ port.WorkService = &workservice{}
-var defaultJobTimeout time.Duration = 84600
+var defaultJobTimeout time.Duration = 84600 * time.Second
 
 type workservice struct {
 	// The fixed amount of goroutines that will be handling running jobs.
@@ -102,10 +102,10 @@ func (srv *workservice) Exec(ctx context.Context, w domain.Work) error {
 		return err
 	}
 	timeout := defaultJobTimeout
-	if w.Job.Timeout > 0 && w.Job.Timeout <= 84600 {
-		timeout = time.Duration(w.Job.Timeout)
+	if w.Job.Timeout > 0 {
+		timeout = time.Duration(w.Job.Timeout) * w.TimeoutUnit
 	}
-	ctx, cancel := context.WithTimeout(ctx, timeout*w.TimeoutUnit)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	jobResultChan := make(chan domain.JobResult, 1)

@@ -40,14 +40,17 @@ func New(
 func (srv *jobservice) Create(
 	name, taskName, description, runAt string,
 	timeout int, taskParams interface{}) (*domain.Job, error) {
+	var runAtTime time.Time
 
 	uuid, err := srv.uuidGen.GenerateRandomUUIDString()
 	if err != nil {
 		return nil, err
 	}
-	runAtTime, err := time.Parse(time.RFC3339Nano, runAt)
-	if err != nil {
-		return nil, err
+	if runAt != "" {
+		runAtTime, err = time.Parse(time.RFC3339Nano, runAt)
+		if err != nil {
+			return nil, &apperrors.ParseTimeErr{Message: err.Error()}
+		}
 	}
 	createdAt := srv.time.Now()
 	j := domain.NewJob(uuid, name, taskName, description, timeout, &runAtTime, &createdAt, taskParams)
@@ -55,8 +58,10 @@ func (srv *jobservice) Create(
 	if err := j.Validate(srv.taskrepo); err != nil {
 		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}
 	}
-	if ok := srv.jobQueue.Push(j); !ok {
-		return nil, &apperrors.FullQueueErr{}
+	if runAtTime.IsZero() {
+		if ok := srv.jobQueue.Push(j); !ok {
+			return nil, &apperrors.FullQueueErr{}
+		}
 	}
 	if err := srv.jobRepository.Create(j); err != nil {
 		return nil, err

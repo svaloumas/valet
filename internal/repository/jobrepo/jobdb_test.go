@@ -215,3 +215,7 @@ func TestJobDBDelete(t *testing.T) {
 		})
 	}
 }
+
+func TestJobDBGetDueJobs(t *testing.T) {
+	// Implement this.
+}

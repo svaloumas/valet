@@ -7,6 +7,7 @@ package mock
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 	domain "valet/internal/core/domain"
 
 	gomock "github.com/golang/mock/gomock"
@@ -76,6 +77,21 @@ func (m *MockJobRepository) Get(id string) (*domain.Job, error) {
 func (mr *MockJobRepositoryMockRecorder) Get(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockJobRepository)(nil).Get), id)
+}
+
+// GetDueJobs mocks base method.
+func (m *MockJobRepository) GetDueJobs() ([]*domain.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDueJobs")
+	ret0, _ := ret[0].([]*domain.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDueJobs indicates an expected call of GetDueJobs.
+func (mr *MockJobRepositoryMockRecorder) GetDueJobs() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDueJobs", reflect.TypeOf((*MockJobRepository)(nil).GetDueJobs))
 }
 
 // Update mocks base method.
@@ -194,10 +210,10 @@ func (mr *MockJobQueueMockRecorder) Close() *gomock.Call {
 }
 
 // Pop mocks base method.
-func (m *MockJobQueue) Pop() <-chan *domain.Job {
+func (m *MockJobQueue) Pop() *domain.Job {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Pop")
-	ret0, _ := ret[0].(<-chan *domain.Job)
+	ret0, _ := ret[0].(*domain.Job)
 	return ret0
 }
 
@@ -441,49 +457,72 @@ func (mr *MockWorkServiceMockRecorder) Stop() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockWorkService)(nil).Stop))
 }
 
-// MockConsumerService is a mock of ConsumerService interface.
-type MockConsumerService struct {
+// MockConsumer is a mock of Consumer interface.
+type MockConsumer struct {
 	ctrl     *gomock.Controller
-	recorder *MockConsumerServiceMockRecorder
+	recorder *MockConsumerMockRecorder
 }
 
-// MockConsumerServiceMockRecorder is the mock recorder for MockConsumerService.
-type MockConsumerServiceMockRecorder struct {
-	mock *MockConsumerService
+// MockConsumerMockRecorder is the mock recorder for MockConsumer.
+type MockConsumerMockRecorder struct {
+	mock *MockConsumer
 }
 
-// NewMockConsumerService creates a new mock instance.
-func NewMockConsumerService(ctrl *gomock.Controller) *MockConsumerService {
-	mock := &MockConsumerService{ctrl: ctrl}
-	mock.recorder = &MockConsumerServiceMockRecorder{mock}
+// NewMockConsumer creates a new mock instance.
+func NewMockConsumer(ctrl *gomock.Controller) *MockConsumer {
+	mock := &MockConsumer{ctrl: ctrl}
+	mock.recorder = &MockConsumerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockConsumerService) EXPECT() *MockConsumerServiceMockRecorder {
+func (m *MockConsumer) EXPECT() *MockConsumerMockRecorder {
 	return m.recorder
 }
 
 // Consume mocks base method.
-func (m *MockConsumerService) Consume() {
+func (m *MockConsumer) Consume(ctx context.Context, duration time.Duration) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Consume")
+	m.ctrl.Call(m, "Consume", ctx, duration)
 }
 
 // Consume indicates an expected call of Consume.
-func (mr *MockConsumerServiceMockRecorder) Consume() *gomock.Call {
+func (mr *MockConsumerMockRecorder) Consume(ctx, duration interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Consume", reflect.TypeOf((*MockConsumerService)(nil).Consume))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Consume", reflect.TypeOf((*MockConsumer)(nil).Consume), ctx, duration)
 }
 
-// Stop mocks base method.
-func (m *MockConsumerService) Stop() {
+// MockScheduler is a mock of Scheduler interface.
+type MockScheduler struct {
+	ctrl     *gomock.Controller
+	recorder *MockSchedulerMockRecorder
+}
+
+// MockSchedulerMockRecorder is the mock recorder for MockScheduler.
+type MockSchedulerMockRecorder struct {
+	mock *MockScheduler
+}
+
+// NewMockScheduler creates a new mock instance.
+func NewMockScheduler(ctrl *gomock.Controller) *MockScheduler {
+	mock := &MockScheduler{ctrl: ctrl}
+	mock.recorder = &MockSchedulerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockScheduler) EXPECT() *MockSchedulerMockRecorder {
+	return m.recorder
+}
+
+// Schedule mocks base method.
+func (m *MockScheduler) Schedule(ctx context.Context, duration time.Duration) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Stop")
+	m.ctrl.Call(m, "Schedule", ctx, duration)
 }
 
-// Stop indicates an expected call of Stop.
-func (mr *MockConsumerServiceMockRecorder) Stop() *gomock.Call {
+// Schedule indicates an expected call of Schedule.
+func (mr *MockSchedulerMockRecorder) Schedule(ctx, duration interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockConsumerService)(nil).Stop))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Schedule", reflect.TypeOf((*MockScheduler)(nil).Schedule), ctx, duration)
 }

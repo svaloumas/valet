@@ -2,6 +2,7 @@ package port
 
 import (
 	"context"
+	"time"
 
 	"valet/internal/core/domain"
 )
@@ -19,6 +20,9 @@ type JobRepository interface {
 
 	// Delete deletes a job from the repository.
 	Delete(id string) error
+
+	// GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
+	GetDueJobs() ([]*domain.Job, error)
 }
 
 // ResultRepository represents a driven actor repository interface.
@@ -39,7 +43,7 @@ type JobQueue interface {
 	Push(j *domain.Job) bool
 
 	// Pop removes and returns the head job from the queue.
-	Pop() <-chan *domain.Job
+	Pop() *domain.Job
 
 	// Close liberates the bound resources of the job queue.
 	Close()
@@ -87,12 +91,14 @@ type WorkService interface {
 	Exec(ctx context.Context, w domain.Work) error
 }
 
-// ConsumerService represents a domain event listener.
-type ConsumerService interface {
+type Consumer interface {
 	// Consume listens to the job queue for messages, consumes them and
 	// schedules the job items for execution.
-	Consume()
+	Consume(ctx context.Context, duration time.Duration)
+}
 
-	// Stop terminates the job item service.
-	Stop()
+// Scheduler represents a domain event listener.
+type Scheduler interface {
+	// Schedule polls the repository in given interval and schedules due jobs for execution.
+	Schedule(ctx context.Context, duration time.Duration)
 }

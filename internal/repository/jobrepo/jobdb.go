@@ -2,6 +2,7 @@ package jobrepo
 
 import (
 	"encoding/json"
+	"time"
 
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
@@ -36,7 +37,9 @@ func (repo *jobdb) Get(id string) (*domain.Job, error) {
 		return nil, &apperrors.NotFoundErr{ID: id, ResourceName: "job"}
 	}
 	j := &domain.Job{}
-	json.Unmarshal(serializedJob, j)
+	if err := json.Unmarshal(serializedJob, j); err != nil {
+		return nil, err
+	}
 	return j, nil
 }
 
@@ -57,4 +60,21 @@ func (repo *jobdb) Delete(id string) error {
 	}
 	delete(repo.db, id)
 	return nil
+}
+
+// GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
+func (repo *jobdb) GetDueJobs() ([]*domain.Job, error) {
+	dueJobs := []*domain.Job{}
+	for _, serializedJob := range repo.db {
+		j := &domain.Job{}
+		if err := json.Unmarshal(serializedJob, j); err != nil {
+			return nil, err
+		}
+		if j.RunAt != nil {
+			if j.RunAt.Before(time.Now()) && j.ScheduledAt == nil {
+				dueJobs = append(dueJobs, j)
+			}
+		}
+	}
+	return dueJobs, nil
 }

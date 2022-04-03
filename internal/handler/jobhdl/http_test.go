@@ -48,6 +48,7 @@ func TestPostJobs(t *testing.T) {
 	jobServiceErr := errors.New("some job service error")
 	jobValidationErr := &apperrors.ResourceValidationErr{Message: "some job validation error"}
 	fullQueueErr := &apperrors.FullQueueErr{}
+	parseTimeErr := &apperrors.ParseTimeErr{}
 
 	jobService := mock.NewMockJobService(ctrl)
 	jobService.
@@ -70,6 +71,16 @@ func TestPostJobs(t *testing.T) {
 		Create("", job.TaskName, job.Description, "", job.Timeout, job.TaskParams).
 		Return(nil, jobValidationErr).
 		Times(1)
+	jobService.
+		EXPECT().
+		Create(job.Name, job.TaskName, job.Description, "invalid_timestamp_format", job.Timeout, job.TaskParams).
+		Return(nil, parseTimeErr).
+		Times(1)
+	jobService.
+		EXPECT().
+		Create(job.Name, job.TaskName, job.Description, "2006-01-02T15:04:05.999999999Z", job.Timeout, job.TaskParams).
+		Return(job, nil).
+		Times(1)
 
 	hdl := NewJobHTTPHandler(jobService)
 
@@ -87,6 +98,19 @@ func TestPostJobs(t *testing.T) {
 				"timeout": 10,
 				"task_params": "some task params", 
 				"task_name": "test_task"
+			}`,
+			http.StatusAccepted,
+			"",
+		},
+		{
+			"ok with schedule",
+			`{
+				"name":"job_name", 
+				"description": "some description", 
+				"timeout": 10,
+				"task_params": "some task params", 
+				"task_name": "test_task",
+				"run_at": "2006-01-02T15:04:05.999999999Z"
 			}`,
 			http.StatusAccepted,
 			"",
@@ -125,6 +149,19 @@ func TestPostJobs(t *testing.T) {
 			}`,
 			http.StatusServiceUnavailable,
 			"job queue is full - try again later",
+		},
+		{
+			"invalid timestamp format",
+			`{
+				"name":"job_name", 
+				"description": "some description", 
+				"timeout": 10,
+				"task_params": "some task params", 
+				"task_name": "test_task",
+				"run_at": "invalid_timestamp_format"
+			}`,
+			http.StatusBadRequest,
+			"",
 		},
 	}
 
