@@ -52,7 +52,7 @@ func TestSend(t *testing.T) {
 			return nil
 		})
 
-	workservice := New(jobRepository, resultRepository, taskrepo, freezed, 0, 1)
+	workservice := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 0, 1)
 	workservice.Log = log.New(ioutil.Discard, "", 0)
 	workservice.Start()
 	defer workservice.Stop()
@@ -83,7 +83,7 @@ func TestSendBacklogLimit(t *testing.T) {
 	jobRepository := mock.NewMockJobRepository(ctrl)
 	resultRepository := mock.NewMockResultRepository(ctrl)
 
-	workservice := New(jobRepository, resultRepository, taskrepo, freezed, 0, 1)
+	workservice := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 0, 1)
 	workservice.Log = log.New(ioutil.Discard, "", 0)
 	workservice.Start()
 	defer workservice.Stop()
@@ -164,7 +164,7 @@ func TestExecCompletedJob(t *testing.T) {
 	}
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
-	service := New(jobRepository, resultRepository, taskrepo, freezed, 1, 1)
+	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1)
 
 	workWithNoError := domain.Work{
 		Job:         job,
@@ -250,7 +250,7 @@ func TestExecFailedJob(t *testing.T) {
 	}
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
-	service := New(jobRepository, resultRepository, taskrepo, freezed, 1, 1)
+	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1)
 
 	workWithError := domain.Work{
 		Job:         expectedJob,
@@ -334,7 +334,7 @@ func TestExecPanicJob(t *testing.T) {
 	}
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
-	service := New(jobRepository, resultRepository, taskrepo, freezed, 1, 1)
+	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1)
 
 	workWithError := domain.Work{
 		Job:         job,
@@ -423,7 +423,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	}
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
-	service := New(jobRepository, resultRepository, taskrepo, freezed, 1, 1)
+	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1)
 
 	w := domain.Work{
 		Job:         job,
@@ -526,7 +526,7 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 	}
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
-	service := New(jobRepository, resultRepository, taskrepo, freezed, 1, 1)
+	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1)
 
 	workWithError := domain.Work{
 		Job:         job,

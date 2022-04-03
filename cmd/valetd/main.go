@@ -50,7 +50,9 @@ func main() {
 	resultService := resultsrv.New(resultRepository)
 
 	workService := worksrv.New(
-		jobRepository, resultRepository, taskrepo, rtime.New(), cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
+		jobRepository, resultRepository,
+		taskrepo, rtime.New(), cfg.TimeoutUnit,
+		cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
 	workService.Start()
 
 	consumerLogger := log.New(os.Stderr, "[consumer] ", log.LstdFlags)

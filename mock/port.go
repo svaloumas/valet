@@ -245,18 +245,18 @@ func (m *MockJobService) EXPECT() *MockJobServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockJobService) Create(name, taskName, description string, timeout int, metadata interface{}) (*domain.Job, error) {
+func (m *MockJobService) Create(name, taskName, description string, timeout int, taskParams interface{}) (*domain.Job, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", name, taskName, description, timeout, metadata)
+	ret := m.ctrl.Call(m, "Create", name, taskName, description, timeout, taskParams)
 	ret0, _ := ret[0].(*domain.Job)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockJobServiceMockRecorder) Create(name, taskName, description, timeout, metadata interface{}) *gomock.Call {
+func (mr *MockJobServiceMockRecorder) Create(name, taskName, description, timeout, taskParams interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockJobService)(nil).Create), name, taskName, description, timeout, metadata)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockJobService)(nil).Create), name, taskName, description, timeout, taskParams)
 }
 
 // Delete mocks base method.

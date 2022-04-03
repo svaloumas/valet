@@ -56,7 +56,7 @@ Available configuration options:
 | job_queue_capacity      | integer  | 100                         | The capacity of the job queue (applies only for in-memory job queue)|
 | worker_pool_concurrency | integer  | number of CPU cores         | The number of go-routines responsible for executing the jobs concurrently |
 | worker_pool_backlog     | integer  | worker_pool_concurrency * 2 | The capacity of the worker pool work queue |
-| timeout_unit            | string   | second                      | The unit of time that will be used for the timeout interval specified for each job |
+| timeout_unit            | string   | -                           | The unit of time that will be used for the timeout interval specified for each job |
 
 <a name="usage"/>
 

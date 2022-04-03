@@ -23,6 +23,8 @@ type workservice struct {
 	// The maximum capacity of the worker pool queue. If exceeded, sending new
 	// tasks to the pool will return an error.
 	backlog int
+	// The time unit for the calculation of the timeout interval for each task.
+	timeoutUnit time.Duration
 
 	jobRepository    port.JobRepository
 	resultRepository port.ResultRepository
@@ -38,7 +40,7 @@ func New(
 	jobRepository port.JobRepository,
 	resultRepository port.ResultRepository,
 	taskrepo *taskrepo.TaskRepository,
-	time rtime.Time,
+	time rtime.Time, timeoutUnit time.Duration,
 	concurrency int, backlog int) *workservice {
 
 	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
@@ -48,6 +50,7 @@ func New(
 		taskrepo:         taskrepo,
 		concurrency:      concurrency,
 		backlog:          backlog,
+		timeoutUnit:      timeoutUnit,
 		queue:            make(chan domain.Work, backlog),
 		time:             time,
 		Log:              logger,
@@ -81,8 +84,7 @@ func (srv *workservice) CreateWork(j *domain.Job) domain.Work {
 	// Should be already validated.
 	taskFunc, _ := srv.taskrepo.GetTaskFunc(j.TaskName)
 	resultChan := make(chan domain.JobResult, 1)
-	// TODO: Consider making timeout unit configurable.
-	return domain.NewWork(j, resultChan, taskFunc, time.Second)
+	return domain.NewWork(j, resultChan, taskFunc, srv.timeoutUnit)
 }
 
 // Stop signals the workers to stop working gracefully.

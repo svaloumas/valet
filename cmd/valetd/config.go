@@ -1,11 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"gopkg.in/yaml.v2"
+)
+
+var (
+	validTimeoutUnitOptions = map[string]time.Duration{
+		"second":      time.Second,
+		"millisecond": time.Millisecond,
+	}
 )
 
 type Config struct {
@@ -13,6 +22,8 @@ type Config struct {
 	JobQueueCapacity      int    `yaml:"job_queue_capacity"`
 	WorkerPoolConcurrency int    `yaml:"worker_pool_concurrency"`
 	WorkerPoolBacklog     int    `yaml:"worker_pool_backlog"`
+	TimeoutUnitOption     string `yaml:"timeout_unit"`
+	TimeoutUnit           time.Duration
 }
 
 func (cfg *Config) Load() error {
@@ -39,5 +50,10 @@ func (cfg *Config) Load() error {
 		// By default allow a request spike double the worker capacity
 		cfg.WorkerPoolBacklog = cfg.WorkerPoolConcurrency * 2
 	}
+	timeoutUnit, ok := validTimeoutUnitOptions[cfg.TimeoutUnitOption]
+	if !ok {
+		return fmt.Errorf("%s is not a valid timeout_unit option, valid options: %v", cfg.TimeoutUnitOption, validTimeoutUnitOptions)
+	}
+	cfg.TimeoutUnit = timeoutUnit
 	return nil
 }
