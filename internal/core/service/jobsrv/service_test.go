@@ -120,7 +120,7 @@ func TestCreateErrorCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := service.Create(tt.jobname, tt.taskName, job.Description, job.Timeout, job.TaskParams)
+			_, err := service.Create(tt.jobname, tt.taskName, job.Description, "", job.Timeout, job.TaskParams)
 			if err == nil {
 				t.Error("service created expected error, returned nil instead")
 			}
@@ -183,7 +183,7 @@ func TestCreate(t *testing.T) {
 
 	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
 
-	j, err := service.Create(expected.Name, expected.TaskName, expected.Description, expected.Timeout, expected.TaskParams)
+	j, err := service.Create(expected.Name, expected.TaskName, expected.Description, "", expected.Timeout, expected.TaskParams)
 	if err != nil {
 		t.Errorf("service create returned unexpected error: %#v", err)
 	}

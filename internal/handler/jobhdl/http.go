@@ -26,7 +26,8 @@ func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 	body := NewRequestBodyDTO()
 	c.BindJSON(&body)
 
-	j, err := hdl.jobService.Create(body.Name, body.TaskName, body.Description, body.Timeout, body.TaskParams)
+	j, err := hdl.jobService.Create(
+		body.Name, body.TaskName, body.Description, body.RunAt, body.Timeout, body.TaskParams)
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.ResourceValidationErr:

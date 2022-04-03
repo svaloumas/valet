@@ -19,7 +19,7 @@ type Job struct {
 	TaskName string `json:"task_name"`
 
 	// TaskParams are the required parameters for the task assigned to the specific job.
-	TaskParams interface{} `json:"task_params"`
+	TaskParams interface{} `json:"task_params,omitempty"`
 
 	// Timeout is the time in seconds after which the job task will be interrupted.
 	Timeout int `json:"timeout,omitempty"`
@@ -32,6 +32,9 @@ type Job struct {
 
 	// FailureReason holds the error message that led to the job failure, if any.
 	FailureReason string `json:"failure_reason,omitempty"`
+
+	// RunAt is the UTC timestamp indicating the time for the job to run.
+	RunAt *time.Time `json:"run_at,omitempty"`
 
 	// CreatedAt is the UTC timestamp of the job creation.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
@@ -46,7 +49,7 @@ type Job struct {
 // NewJob initializes and returns a new Job instance.
 func NewJob(
 	uuid, name, taskName, description string, timeout int,
-	createdAt *time.Time, taskParams interface{}) *Job {
+	runAt *time.Time, createdAt *time.Time, taskParams interface{}) *Job {
 
 	return &Job{
 		ID:          uuid,
@@ -56,6 +59,7 @@ func NewJob(
 		Description: description,
 		TaskParams:  taskParams,
 		Status:      Pending,
+		RunAt:       runAt,
 		CreatedAt:   createdAt,
 	}
 }

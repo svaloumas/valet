@@ -1,6 +1,7 @@
 package jobsrv
 
 import (
+	"time"
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/taskrepo"
 	"valet/internal/core/port"
@@ -37,15 +38,19 @@ func New(
 
 // Create creates a new job.
 func (srv *jobservice) Create(
-	name, taskName, description string,
+	name, taskName, description, runAt string,
 	timeout int, taskParams interface{}) (*domain.Job, error) {
 
 	uuid, err := srv.uuidGen.GenerateRandomUUIDString()
 	if err != nil {
 		return nil, err
 	}
+	runAtTime, err := time.Parse(time.RFC3339Nano, runAt)
+	if err != nil {
+		return nil, err
+	}
 	createdAt := srv.time.Now()
-	j := domain.NewJob(uuid, name, taskName, description, timeout, &createdAt, taskParams)
+	j := domain.NewJob(uuid, name, taskName, description, timeout, &runAtTime, &createdAt, taskParams)
 
 	if err := j.Validate(srv.taskrepo); err != nil {
 		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}

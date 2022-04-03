@@ -52,22 +52,22 @@ func TestPostJobs(t *testing.T) {
 	jobService := mock.NewMockJobService(ctrl)
 	jobService.
 		EXPECT().
-		Create(job.Name, job.TaskName, job.Description, job.Timeout, job.TaskParams).
+		Create(job.Name, job.TaskName, job.Description, "", job.Timeout, job.TaskParams).
 		Return(job, nil).
 		Times(1)
 	jobService.
 		EXPECT().
-		Create(job.Name, job.TaskName, job.Description, job.Timeout, job.TaskParams).
+		Create(job.Name, job.TaskName, job.Description, "", job.Timeout, job.TaskParams).
 		Return(nil, jobServiceErr).
 		Times(1)
 	jobService.
 		EXPECT().
-		Create(job.Name, job.TaskName, job.Description, job.Timeout, job.TaskParams).
+		Create(job.Name, job.TaskName, job.Description, "", job.Timeout, job.TaskParams).
 		Return(nil, fullQueueErr).
 		Times(1)
 	jobService.
 		EXPECT().
-		Create("", job.TaskName, job.Description, job.Timeout, job.TaskParams).
+		Create("", job.TaskName, job.Description, "", job.Timeout, job.TaskParams).
 		Return(nil, jobValidationErr).
 		Times(1)
 
