@@ -3,10 +3,10 @@ package worksrv
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/taskrepo"
@@ -32,7 +32,7 @@ type workservice struct {
 	time             rtime.Time
 	queue            chan domain.Work
 	wg               sync.WaitGroup
-	Log              *log.Logger
+	logger           *logrus.Logger
 }
 
 // New creates a new work service.
@@ -41,9 +41,8 @@ func New(
 	resultRepository port.ResultRepository,
 	taskrepo *taskrepo.TaskRepository,
 	time rtime.Time, timeoutUnit time.Duration,
-	concurrency int, backlog int) *workservice {
+	concurrency, backlog int, logger *logrus.Logger) *workservice {
 
-	logger := log.New(os.Stderr, "[worker-pool] ", log.LstdFlags)
 	return &workservice{
 		jobRepository:    jobRepository,
 		resultRepository: resultRepository,
@@ -53,7 +52,7 @@ func New(
 		timeoutUnit:      timeoutUnit,
 		queue:            make(chan domain.Work, backlog),
 		time:             time,
-		Log:              logger,
+		logger:           logger,
 	}
 }
 
@@ -63,7 +62,7 @@ func (srv *workservice) Start() {
 		srv.wg.Add(1)
 		go srv.work(i, srv.queue, &srv.wg)
 	}
-	srv.Log.Printf("set up %d workers with a queue of backlog %d", srv.concurrency, srv.backlog)
+	srv.logger.Infof("set up %d workers with a queue of backlog %d", srv.concurrency, srv.backlog)
 }
 
 // Send sends a work to the worker pool.
@@ -74,7 +73,7 @@ func (srv *workservice) Send(w domain.Work) {
 		result := futureResult.Wait()
 
 		if err := srv.resultRepository.Create(&result); err != nil {
-			srv.Log.Printf("could not create job result to the repository")
+			srv.logger.Errorf("could not create job result to the repository", err)
 		}
 	}()
 }
@@ -90,7 +89,7 @@ func (srv *workservice) CreateWork(j *domain.Job) domain.Work {
 // Stop signals the workers to stop working gracefully.
 func (srv *workservice) Stop() {
 	close(srv.queue)
-	srv.Log.Println("waiting for ongoing tasks to finish...")
+	srv.logger.Info("waiting for ongoing tasks to finish...")
 	srv.wg.Wait()
 }
 
@@ -170,11 +169,11 @@ func (srv *workservice) work(id int, queue <-chan domain.Work, wg *sync.WaitGrou
 	defer wg.Done()
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for work := range queue {
-		srv.Log.Printf("%s executing task...", logPrefix)
+		srv.logger.Infof("%s executing task...", logPrefix)
 		if err := srv.Exec(context.Background(), work); err != nil {
-			srv.Log.Printf("could not update job status: %s", err)
+			srv.logger.Errorf("could not update job status: %s", err)
 		}
-		srv.Log.Printf("%s task finished!", logPrefix)
+		srv.logger.Infof("%s task finished!", logPrefix)
 	}
-	srv.Log.Printf("%s exiting...", logPrefix)
+	srv.logger.Infof("%s exiting...", logPrefix)
 }

@@ -8,6 +8,8 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/mitchellh/mapstructure v1.4.3
+	github.com/sirupsen/logrus v1.8.1
+	gopkg.in/yaml.v2 v2.2.8
 )
 
 require (
@@ -24,5 +26,4 @@ require (
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

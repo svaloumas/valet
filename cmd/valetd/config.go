@@ -26,6 +26,7 @@ type Config struct {
 	JobQueuePollingInterval  int    `yaml:"job_queue_polling_interval"`
 	TimeoutUnitOption        string `yaml:"timeout_unit"`
 	TimeoutUnit              time.Duration
+	Env                      string `yaml:"env"`
 }
 
 func (cfg *Config) Load() error {
@@ -46,7 +47,7 @@ func (cfg *Config) Load() error {
 	}
 	if cfg.WorkerPoolConcurrency == 0 {
 		// Work is CPU bound so number of cores should be fine.
-		cfg.WorkerPoolConcurrency = runtime.NumCPU() / 2
+		cfg.WorkerPoolConcurrency = runtime.NumCPU()
 	}
 	if cfg.WorkerPoolBacklog == 0 {
 		// By default allow a request spike double the worker capacity
@@ -70,6 +71,9 @@ func (cfg *Config) Load() error {
 		} else {
 			cfg.SchedulerPollingInterval = 1000
 		}
+	}
+	if cfg.Env == "" {
+		cfg.Env = "development"
 	}
 	return nil
 }

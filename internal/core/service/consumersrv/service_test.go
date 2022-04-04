@@ -3,11 +3,11 @@ package consumersrv
 import (
 	"context"
 	"io/ioutil"
-	"log"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/sirupsen/logrus"
 
 	"valet/internal/core/domain"
 	"valet/mock"
@@ -27,7 +27,7 @@ func TestConsume(t *testing.T) {
 		Job:         j,
 		TimeoutUnit: time.Millisecond,
 	}
-	logger := log.New(ioutil.Discard, "", 0)
+	logger := &logrus.Logger{Out: ioutil.Discard}
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 	jobQueue.
@@ -62,7 +62,7 @@ func TestConsumeJobJobInQueue(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	logger := log.New(ioutil.Discard, "", 0)
+	logger := &logrus.Logger{Out: ioutil.Discard}
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 	jobQueue.

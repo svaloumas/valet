@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
-	"log"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/sirupsen/logrus"
 
 	"valet/internal/core/domain"
 	"valet/mock"
@@ -29,7 +29,7 @@ func TestSchedule(t *testing.T) {
 		Job:         j,
 		TimeoutUnit: time.Millisecond,
 	}
-	logger := log.New(ioutil.Discard, "", 0)
+	logger := &logrus.Logger{Out: ioutil.Discard}
 
 	dueJobs := []*domain.Job{j}
 
@@ -85,7 +85,7 @@ func TestScheduleErrorCases(t *testing.T) {
 		Job:         j,
 		TimeoutUnit: time.Millisecond,
 	}
-	logger := log.New(ioutil.Discard, "", 0)
+	logger := &logrus.Logger{Out: ioutil.Discard}
 
 	dueJobs := []*domain.Job{j}
 
@@ -136,5 +136,5 @@ func TestScheduleErrorCases(t *testing.T) {
 
 	schedulerService.Schedule(ctx, 5*time.Millisecond)
 	// give some time for the scheduler to schedule two jobs
-	time.Sleep(13 * time.Millisecond)
+	time.Sleep(12 * time.Millisecond)
 }

@@ -18,6 +18,7 @@ import (
 	"valet/internal/repository/jobqueue"
 	"valet/internal/repository/jobrepo"
 	"valet/internal/repository/resultrepo"
+	vlog "valet/pkg/log"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
 	"valet/task"
@@ -32,12 +33,12 @@ var (
 )
 
 func main() {
-	logger := log.New(os.Stderr, "[valet] ", log.LstdFlags)
-
 	cfg := new(Config)
 	if err := cfg.Load(); err != nil {
-		logger.Fatalf("could not load config: %s", err)
+		log.Fatalf("could not load config: %s", err)
 	}
+
+	logger := vlog.NewLogger("valet", cfg.Env)
 
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("dummytask", task.DummyTask)
@@ -50,26 +51,27 @@ func main() {
 	jobService := jobsrv.New(jobRepository, jobQueue, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(resultRepository)
 
+	workpoolLogger := vlog.NewLogger("workerpool", cfg.Env)
 	workService := worksrv.New(
 		jobRepository, resultRepository,
 		taskrepo, rtime.New(), cfg.TimeoutUnit,
-		cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog)
+		cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog, workpoolLogger)
 	workService.Start()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	consumerLogger := log.New(os.Stderr, "[consumer] ", log.LstdFlags)
+	consumerLogger := vlog.NewLogger("consumer", cfg.Env)
 	consumerService := consumersrv.New(jobQueue, workService, consumerLogger)
 	consumerService.Consume(ctx, time.Duration(cfg.JobQueuePollingInterval)*cfg.TimeoutUnit)
 
-	schedulerLogger := log.New(os.Stderr, "[scheduler] ", log.LstdFlags)
+	schedulerLogger := vlog.NewLogger("scheduler", cfg.Env)
 	schedulerService := schedulersrv.New(jobRepository, workService, rtime.New(), schedulerLogger)
 	schedulerService.Schedule(ctx, time.Duration(cfg.SchedulerPollingInterval)*cfg.TimeoutUnit)
 
 	srv := http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: NewRouter(jobService, resultService),
+		Handler: NewRouter(jobService, resultService, cfg.Env),
 	}
 
 	go func() {

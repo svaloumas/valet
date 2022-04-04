@@ -2,8 +2,9 @@ package schedulersrv
 
 import (
 	"context"
-	"log"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"valet/internal/core/port"
 	rtime "valet/pkg/time"
@@ -15,7 +16,7 @@ type schedulerservice struct {
 	jobRepository port.JobRepository
 	workService   port.WorkService
 	time          rtime.Time
-	logger        *log.Logger
+	logger        *logrus.Logger
 }
 
 // New creates a new scheduler service.
@@ -23,7 +24,7 @@ func New(
 	jobRepository port.JobRepository,
 	workService port.WorkService,
 	time rtime.Time,
-	logger *log.Logger) *schedulerservice {
+	logger *logrus.Logger) *schedulerservice {
 
 	return &schedulerservice{
 		jobRepository: jobRepository,
@@ -41,12 +42,12 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 			select {
 			case <-ctx.Done():
 				ticker.Stop()
-				srv.logger.Println("exiting...")
+				srv.logger.Info("exiting...")
 				return
 			case <-ticker.C:
 				dueJobs, err := srv.jobRepository.GetDueJobs()
 				if err != nil {
-					srv.logger.Printf("could not get due jobs from repository: %s", err)
+					srv.logger.Errorf("could not get due jobs from repository: %s", err)
 					continue
 				}
 				for _, j := range dueJobs {
@@ -57,9 +58,9 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 					scheduledAt := srv.time.Now()
 					j.ScheduledAt = &scheduledAt
 					if err := srv.jobRepository.Update(j.ID, j); err != nil {
-						srv.logger.Printf("could not update job: %s", err)
+						srv.logger.Errorf("could not update job: %s", err)
 					}
-					srv.logger.Printf("scheduled work for job with ID: %s to worker pool", j.ID)
+					srv.logger.Infof("scheduled work for job with ID: %s to worker pool", j.ID)
 				}
 			}
 		}

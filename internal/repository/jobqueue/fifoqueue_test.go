@@ -2,8 +2,6 @@ package jobqueue
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"reflect"
 	"testing"
 	"time"
@@ -106,7 +104,6 @@ func TestFIFOQueueClose(t *testing.T) {
 	}
 
 	jobqueue := NewFIFOQueue(1)
-	jobqueue.logger = log.New(ioutil.Discard, "", 0)
 
 	jobqueue.Close()
 	jobqueue.Push(expected)

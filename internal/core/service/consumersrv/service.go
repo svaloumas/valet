@@ -2,8 +2,9 @@ package consumersrv
 
 import (
 	"context"
-	"log"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"valet/internal/core/port"
 )
@@ -13,14 +14,14 @@ var _ port.Consumer = &consumerservice{}
 type consumerservice struct {
 	jobQueue    port.JobQueue
 	workService port.WorkService
-	logger      *log.Logger
+	logger      *logrus.Logger
 }
 
 // New creates a new consumer service.
 func New(
 	jobQueue port.JobQueue,
 	workService port.WorkService,
-	logger *log.Logger) *consumerservice {
+	logger *logrus.Logger) *consumerservice {
 
 	return &consumerservice{
 		jobQueue:    jobQueue,
@@ -38,7 +39,7 @@ func (srv *consumerservice) Consume(ctx context.Context, duration time.Duration)
 			select {
 			case <-ctx.Done():
 				ticker.Stop()
-				srv.logger.Println("exiting...")
+				srv.logger.Info("exiting...")
 				return
 			case <-ticker.C:
 				j := srv.jobQueue.Pop()
@@ -48,7 +49,7 @@ func (srv *consumerservice) Consume(ctx context.Context, duration time.Duration)
 				w := srv.workService.CreateWork(j)
 				// Blocks until worker pool backlog has some space.
 				srv.workService.Send(w)
-				srv.logger.Printf("sent work for job with ID: %s to worker pool", j.ID)
+				srv.logger.Infof("sent work for job with ID: %s to worker pool", j.ID)
 			}
 		}
 	}()
