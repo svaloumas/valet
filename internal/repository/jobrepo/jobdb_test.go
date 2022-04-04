@@ -272,7 +272,29 @@ func TestJobDBGetDueJobs(t *testing.T) {
 	if err != nil {
 		t.Errorf("jobdb get due jobs returned error: got %#v want nil", err)
 	}
-	if eq := reflect.DeepEqual(dueJobs, expected); !eq {
+	if len(dueJobs) != 2 {
+		t.Errorf("jobdb get due jobs returned wrong number of due jobs: got %#v want 2", len(dueJobs))
+	}
+	dueJob1 := dueJobs[0]
+	found := false
+	for _, job := range expected {
+		if eq := reflect.DeepEqual(dueJob1, job); eq {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("jobdb get due jobs returned wrong due jobs: got %#v want %#v", dueJobs, expected)
+	}
+	dueJob2 := dueJobs[1]
+	found = false
+	for _, job := range expected {
+		if eq := reflect.DeepEqual(dueJob2, job); eq {
+			found = true
+			break
+		}
+	}
+	if !found {
 		t.Errorf("jobdb get due jobs returned wrong due jobs: got %#v want %#v", dueJobs, expected)
 	}
 }
