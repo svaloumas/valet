@@ -32,17 +32,17 @@ directory of the project.
 The project strives to follow the hexagonal architecture design pattern and to support modularity and extendability.
 Currently, it provides the following interfaces and can be configured accordingly:
 
-### API
+#### API
 
 * HTTP
 * gRPC (to be implemented)
 
-### Repository
+#### Repository
 
 * In memory key-value storage.
 * MySQL (to be implemented)
 
-### Message queue
+#### Message queue
 
 * In memory job queue.
 * RabbitMQ (to be implemented)
