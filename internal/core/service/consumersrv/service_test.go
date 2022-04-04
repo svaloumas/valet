@@ -57,3 +57,28 @@ func TestConsume(t *testing.T) {
 	// give some time for the scheduler to consume the job
 	time.Sleep(10 * time.Millisecond)
 }
+
+func TestConsumeJobJobInQueue(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	logger := log.New(ioutil.Discard, "", 0)
+
+	jobQueue := mock.NewMockJobQueue(ctrl)
+	jobQueue.
+		EXPECT().
+		Pop().
+		Return(nil).
+		Times(2)
+	workService := mock.NewMockWorkService(ctrl)
+
+	consumerService := New(jobQueue, workService, logger)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	consumerService.Consume(ctx, 5*time.Millisecond)
+
+	// give some time for the scheduler to try to consume two jobs
+	time.Sleep(13 * time.Millisecond)
+}

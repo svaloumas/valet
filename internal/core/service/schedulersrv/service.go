@@ -47,7 +47,7 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 				dueJobs, err := srv.jobRepository.GetDueJobs()
 				if err != nil {
 					srv.logger.Printf("could not get due jobs from repository: %s", err)
-					return
+					continue
 				}
 				for _, j := range dueJobs {
 					w := srv.workService.CreateWork(j)

@@ -217,5 +217,62 @@ func TestJobDBDelete(t *testing.T) {
 }
 
 func TestJobDBGetDueJobs(t *testing.T) {
-	// Implement this.
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(2)
+
+	runAt := freezed.Now()
+	j1 := &domain.Job{
+		ID:       "due_job1_id",
+		TaskName: "some task",
+		Status:   domain.Pending,
+		RunAt:    &runAt,
+	}
+	j2 := &domain.Job{
+		ID:       "due_job2_id",
+		TaskName: "some other task",
+		Status:   domain.Pending,
+		RunAt:    &runAt,
+	}
+	scheduledAt := freezed.Now()
+	scheduledJob := &domain.Job{
+		ID:          "scheduled_job_id",
+		TaskName:    "some third task",
+		Status:      domain.Failed,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+
+	expected := []*domain.Job{j1, j2}
+
+	jobdb := NewJobDB()
+	serializedJob1, err := json.Marshal(j1)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	serializedJob2, err := json.Marshal(j2)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	serializedScheduledJob, err := json.Marshal(scheduledJob)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	jobdb.db[j1.ID] = serializedJob1
+	jobdb.db[j2.ID] = serializedJob2
+	jobdb.db[scheduledJob.ID] = serializedScheduledJob
+
+	dueJobs, err := jobdb.GetDueJobs()
+	if err != nil {
+		t.Errorf("jobdb get due jobs returned error: got %#v want nil", err)
+	}
+	if eq := reflect.DeepEqual(dueJobs, expected); !eq {
+		t.Errorf("jobdb get due jobs returned wrong due jobs: got %#v want %#v", dueJobs, expected)
+	}
 }

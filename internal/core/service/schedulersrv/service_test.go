@@ -2,6 +2,7 @@ package schedulersrv
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
 	"log"
 	"testing"
@@ -72,5 +73,68 @@ func TestSchedule(t *testing.T) {
 }
 
 func TestScheduleErrorCases(t *testing.T) {
-	// Implement this.
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	j := &domain.Job{
+		ID:       "due_job_id",
+		TaskName: "some task",
+	}
+
+	w := domain.Work{
+		Job:         j,
+		TimeoutUnit: time.Millisecond,
+	}
+	logger := log.New(ioutil.Discard, "", 0)
+
+	dueJobs := []*domain.Job{j}
+
+	jobRepositoryErr := errors.New("some repository error")
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(2)
+
+	scheduledAt := freezed.Now()
+	j.ScheduledAt = &scheduledAt
+
+	jobRepository := mock.NewMockJobRepository(ctrl)
+	jobRepository.
+		EXPECT().
+		GetDueJobs().
+		Return(nil, jobRepositoryErr).
+		Times(1)
+	jobRepository.
+		EXPECT().
+		GetDueJobs().
+		Return(dueJobs, nil).
+		Times(1)
+	jobRepository.
+		EXPECT().
+		Update(j.ID, j).
+		Return(jobRepositoryErr).
+		Times(1)
+	workService := mock.NewMockWorkService(ctrl)
+	workService.
+		EXPECT().
+		Send(w).
+		Return().
+		Times(1)
+	workService.
+		EXPECT().
+		CreateWork(j).
+		Return(w).
+		Times(1)
+
+	schedulerService := New(jobRepository, workService, freezed, logger)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	schedulerService.Schedule(ctx, 5*time.Millisecond)
+	// give some time for the scheduler to schedule two jobs
+	time.Sleep(13 * time.Millisecond)
 }

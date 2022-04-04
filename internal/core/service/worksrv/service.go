@@ -61,7 +61,7 @@ func New(
 func (srv *workservice) Start() {
 	for i := 0; i < srv.concurrency; i++ {
 		srv.wg.Add(1)
-		go srv.schedule(i, srv.queue, &srv.wg)
+		go srv.work(i, srv.queue, &srv.wg)
 	}
 	srv.Log.Printf("set up %d workers with a queue of backlog %d", srv.concurrency, srv.backlog)
 }
@@ -166,7 +166,7 @@ func (srv *workservice) Exec(ctx context.Context, w domain.Work) error {
 	return nil
 }
 
-func (srv *workservice) schedule(id int, queue <-chan domain.Work, wg *sync.WaitGroup) {
+func (srv *workservice) work(id int, queue <-chan domain.Work, wg *sync.WaitGroup) {
 	defer wg.Done()
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for work := range queue {
