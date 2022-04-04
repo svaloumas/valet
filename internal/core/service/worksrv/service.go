@@ -73,7 +73,7 @@ func (srv *workservice) Send(w domain.Work) {
 		result := futureResult.Wait()
 
 		if err := srv.resultRepository.Create(&result); err != nil {
-			srv.logger.Errorf("could not create job result to the repository", err)
+			srv.logger.Errorf("could not create job result to the repository %s", err)
 		}
 	}()
 }
