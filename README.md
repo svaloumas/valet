@@ -82,6 +82,7 @@ Available configuration options:
 | timeout_unit               | string   | -                           | The unit of time that will be used for the timeout interval specified for each job |
 | scheduler_polling_interval | integer  | 60 seconds                  | The time interval in which the scheduler will poll for new events |
 | job_queue_polling_timeout  | integer  | 1 second                    | The time interval in which the consumer will poll the queue for new jobs |
+| env                        | string   | development                 | The current environment |
 
 <a name="usage"/>
 
