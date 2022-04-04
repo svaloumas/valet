@@ -5,6 +5,7 @@
 Stateless Go server responsible for executing tasks asynchronously and concurrently.
 
 * [Overview](#overview)
+* [Architecture](#architecture)
 * [Installation](#installation)
 * [Configuration](#configuration)
 * [Usage](#usage)
@@ -16,13 +17,35 @@ Stateless Go server responsible for executing tasks asynchronously and concurren
 
 At its core, `valet` is a simple asynchronous task executor and scheduler. A task is a user-defined `func` that is executed as a callback by the service.
 The implementation uses the notion of `job`, which describes the work that needs to be done and carries information about the task that will run for the specific job.
-User-defined tasks are assigned to `jobs`. Every `job` can be assigned with a different task, a JSON payload with the data required for the task to be executed,
-and an optional timeout interval.
+User-defined tasks are assigned to jobs. Every job can be assigned with a different task, a JSON payload with the data required for the task to be executed,
+and an optional timeout interval. Jobs can be scheduled to run at a specified time or immediately.
 
-After the tasks have been executed, their results along with the errors (if any) are stored in a repository.
+After the tasks have been executed, their results along with the errors (if any) are stored into a repository.
 
 The service exposes a JSON RestAPI providing CRUD endpoints for the job resource management. Configuration uses a single `yaml` file living under the root
 directory of the project.
+
+<a name="architecture"/>
+
+## Architecture
+
+The project strives to follow the hexagonal architecture design pattern and to support modularity and extendability.
+Currently, it provides the following interfaces and can be configured accordingly:
+
+### API
+
+* HTTP
+* gRPC (to be implemented)
+
+### Repository
+
+* In memory key-value storage.
+* MySQL (to be implemented)
+
+### Message queue
+
+* In memory job queue.
+* RabbitMQ (to be implemented)
 
 <a name="installation"/>
 
@@ -50,13 +73,15 @@ All configuration is set through `config.yaml`, which lives in the project's roo
 
 Available configuration options:
 
-| Parameter               | Type     | Default                     | Description                               |
-| ----------------------- | -------- | --------------------------- | ----------------------------------------- |
-| port                    | string   | 8080                        | The port that the server should listen to |
-| job_queue_capacity      | integer  | 100                         | The capacity of the job queue (applies only for in-memory job queue)|
-| worker_pool_concurrency | integer  | number of CPU cores         | The number of go-routines responsible for executing the jobs concurrently |
-| worker_pool_backlog     | integer  | worker_pool_concurrency * 2 | The capacity of the worker pool work queue |
-| timeout_unit            | string   | -                           | The unit of time that will be used for the timeout interval specified for each job |
+| Parameter                  | Type     | Default                     | Description                               |
+| -------------------------- | -------- | --------------------------- | ----------------------------------------- |
+| port                       | string   | 8080                        | The port that the server should listen to |
+| job_queue_capacity         | integer  | 100                         | The capacity of the job queue (applies only for in-memory job queue)|
+| worker_pool_concurrency    | integer  | number of CPU cores         | The number of go-routines responsible for executing the jobs concurrently |
+| worker_pool_backlog        | integer  | worker_pool_concurrency * 2 | The capacity of the worker pool work queue |
+| timeout_unit               | string   | -                           | The unit of time that will be used for the timeout interval specified for each job |
+| scheduler_polling_interval | integer  | 60 seconds                  | The time interval in which the scheduler will poll for new events |
+| job_queue_polling_timeout  | integer  | 1 second                    | The time interval in which the consumer will poll the queue for new jobs |
 
 <a name="usage"/>
 
@@ -65,19 +90,19 @@ Available configuration options:
 Define your own tasks under `task/` directory. The tasks should implement the `task.TaskFunc` type.
 
 ```go
-// DummyMetadata is an example of a task metadata structure.
-type DummyMetadata struct {
+// DummyParams is an example of a task params structure.
+type DummyParams struct {
 	URL string `json:"url,omitempty"`
 }
 
 // DummyTask is a dummy task callback.
-func DummyTask(metadata interface{}) (interface{}, error) {
-	taskMetadata := &DummyMetadata{}
-	mapstructure.Decode(metadata, taskMetadata)
+func DummyTask(taskParams interface{}) (interface{}, error) {
+	params := &DummyParams{}
+	mapstructure.Decode(taskParams, params)
 
-        // Do something with the metadata you injected through the API
+        // Do something with the task params you injected through the API
         // ...
-	metadata, err := downloadContent(taskMetadata.URL)
+	metadata, err := downloadContent(params.URL)
         if err != nil {
             return nil, err
         }
@@ -92,7 +117,7 @@ Register your new task callback in `main` function living in `cmd/valetd/main.go
 taskrepo.Register("dummytask", task.DummyTask)
 ```
 
-Create a new job by making an POST HTTP call to `/jobs`. You can inject any arbitrary metadata for your task to run
+Create a new job by making an POST HTTP call to `/jobs`. You can inject arbitrary parameters for your task to run
 by including them in the request body.
 
 ```json
@@ -100,6 +125,20 @@ by including them in the request body.
     "name": "a job",
     "description": "what this job is all about, but briefly",
     "task_name": "dummytask",
+    "metadata": {
+        "url": "www.some-url.com"
+    }
+}
+```
+
+To schedule a new job to run at a specific time in the future, add `run_at` field to the request body.
+
+```json
+{
+    "name": "a scheduled job",
+    "description": "what this scheduled job is all about, but briefly",
+    "task_name": "dummytask",
+    "run_at": "2022-06-06T15:04:05.999",
     "metadata": {
         "url": "www.some-url.com"
     }
