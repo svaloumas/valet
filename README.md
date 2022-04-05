@@ -30,7 +30,7 @@ directory of the project.
 ## Architecture
 
 The project strives to follow the hexagonal architecture design pattern and to support modularity and extendability.
-Currently, it provides the following interfaces and can be configured accordingly:
+It provides the following interfaces and can be configured accordingly:
 
 #### API
 
