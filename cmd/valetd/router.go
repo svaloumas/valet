@@ -16,12 +16,12 @@ import (
 )
 
 // NewRouter initializes and returns a new gin.Engine instance.
-func NewRouter(jobService port.JobService, resultService port.ResultService, env string) *gin.Engine {
+func NewRouter(jobService port.JobService, resultService port.ResultService, loggingFormat string) *gin.Engine {
 	jobHandhler := jobhdl.NewJobHTTPHandler(jobService)
 	resultHandhler := resulthdl.NewResultHTTPHandler(resultService)
 
 	r := gin.New()
-	if env == "development" {
+	if loggingFormat == "text" {
 		r.Use(gin.Logger())
 	} else {
 		r.Use(JSONLogMiddleware())

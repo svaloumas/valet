@@ -15,10 +15,16 @@ var (
 		"second":      time.Second,
 		"millisecond": time.Millisecond,
 	}
+	validLoggingFormatOptions = map[string]bool{
+		"text": true,
+		"json": true,
+	}
 )
 
 type Config struct {
 	Port                     string `yaml:"port"`
+	LoggingFormatOption      string `yaml:"logging_format"`
+	LoggingFormat            string
 	JobQueueCapacity         int    `yaml:"job_queue_capacity"`
 	WorkerPoolConcurrency    int    `yaml:"worker_pool_concurrency"`
 	WorkerPoolBacklog        int    `yaml:"worker_pool_backlog"`
@@ -26,7 +32,6 @@ type Config struct {
 	JobQueuePollingInterval  int    `yaml:"job_queue_polling_interval"`
 	TimeoutUnitOption        string `yaml:"timeout_unit"`
 	TimeoutUnit              time.Duration
-	Env                      string `yaml:"env"`
 }
 
 func (cfg *Config) Load() error {
@@ -72,8 +77,9 @@ func (cfg *Config) Load() error {
 			cfg.SchedulerPollingInterval = 1000
 		}
 	}
-	if cfg.Env == "" {
-		cfg.Env = "development"
+	if _, ok := validLoggingFormatOptions[cfg.LoggingFormatOption]; !ok {
+		return fmt.Errorf("%s is not a valid logging_format option, valid options: %v", cfg.LoggingFormatOption, validLoggingFormatOptions)
 	}
+	cfg.LoggingFormat = cfg.LoggingFormatOption
 	return nil
 }

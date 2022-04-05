@@ -6,10 +6,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func NewLogger(key, env string) *logrus.Logger {
+func NewLogger(key, format string) *logrus.Logger {
 
 	logger := logrus.New()
-	if env == "development" {
+	if format == "text" {
 		customFormatter := &logrus.TextFormatter{
 			ForceColors:   true,
 			FullTimestamp: true,

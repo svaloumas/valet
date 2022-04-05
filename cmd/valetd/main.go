@@ -38,7 +38,7 @@ func main() {
 		log.Fatalf("could not load config: %s", err)
 	}
 
-	logger := vlog.NewLogger("valet", cfg.Env)
+	logger := vlog.NewLogger("valet", cfg.LoggingFormat)
 
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("dummytask", task.DummyTask)
@@ -51,7 +51,7 @@ func main() {
 	jobService := jobsrv.New(jobRepository, jobQueue, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(resultRepository)
 
-	workpoolLogger := vlog.NewLogger("workerpool", cfg.Env)
+	workpoolLogger := vlog.NewLogger("workerpool", cfg.LoggingFormat)
 	workService := worksrv.New(
 		jobRepository, resultRepository,
 		taskrepo, rtime.New(), cfg.TimeoutUnit,
@@ -61,17 +61,17 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	consumerLogger := vlog.NewLogger("consumer", cfg.Env)
+	consumerLogger := vlog.NewLogger("consumer", cfg.LoggingFormat)
 	consumerService := consumersrv.New(jobQueue, workService, consumerLogger)
 	consumerService.Consume(ctx, time.Duration(cfg.JobQueuePollingInterval)*cfg.TimeoutUnit)
 
-	schedulerLogger := vlog.NewLogger("scheduler", cfg.Env)
+	schedulerLogger := vlog.NewLogger("scheduler", cfg.LoggingFormat)
 	schedulerService := schedulersrv.New(jobRepository, workService, rtime.New(), schedulerLogger)
 	schedulerService.Schedule(ctx, time.Duration(cfg.SchedulerPollingInterval)*cfg.TimeoutUnit)
 
 	srv := http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: NewRouter(jobService, resultService, cfg.Env),
+		Handler: NewRouter(jobService, resultService, cfg.LoggingFormat),
 	}
 
 	go func() {
