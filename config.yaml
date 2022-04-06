@@ -11,6 +11,8 @@ consumer:
 repository:
   option: memory
   mysql:
+    dsn: root:password@tcp(mysql:3306)/valetdb?parseTime=true&sql_mode=NO_ZERO_DATE
+    ca_pem_file:
     connection_max_lifetime:
     max_idle_connections:
     max_open_connections:

@@ -7,7 +7,7 @@ import (
 	"valet/internal/core/domain"
 )
 
-// Storage represents a driven actor storage interface.
+// Storage represents a driven actor repository interface.
 type Storage interface {
 	// CreateJob adds new job to the repository.
 	CreateJob(j *domain.Job) error
@@ -32,6 +32,9 @@ type Storage interface {
 
 	// DeleteJobResult deletes a job result from the repository.
 	DeleteJobResult(id string) error
+
+	// CheckHealth checks if the storage is alive.
+	CheckHealth() bool
 }
 
 // JobQueue represents a driven actor queue interface.

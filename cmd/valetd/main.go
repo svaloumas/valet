@@ -69,7 +69,7 @@ func main() {
 
 	srv := http.Server{
 		Addr:    ":" + cfg.Port,
-		Handler: NewRouter(jobService, resultService, cfg.LoggingFormat),
+		Handler: NewRouter(jobService, resultService, storage, cfg.LoggingFormat),
 	}
 
 	go func() {

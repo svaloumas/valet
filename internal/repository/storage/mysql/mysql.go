@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"time"
+	"valet/internal/core/domain"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
@@ -91,4 +92,49 @@ func (mySQL *MySQL) CheckHealth() bool {
 // Close terminates any store connections gracefully.
 func (mySQL *MySQL) Close() error {
 	return mySQL.DB.Close()
+}
+
+// CreateJob adds new job to the repository.
+func (storage *MySQL) CreateJob(j *domain.Job) error {
+	return nil
+}
+
+// GetJob fetches a job from the repository.
+func (storage *MySQL) GetJob(id string) (*domain.Job, error) {
+	return nil, nil
+}
+
+// UpdateJob updates a job to the repository.
+func (storage *MySQL) UpdateJob(id string, j *domain.Job) error {
+	return nil
+}
+
+// DeleteJob deletes a job from the repository.
+func (storage *MySQL) DeleteJob(id string) error {
+	return nil
+}
+
+// GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
+func (storage *MySQL) GetDueJobs() ([]*domain.Job, error) {
+	return nil, nil
+}
+
+// CreateJobResult adds new job result to the repository.
+func (storage *MySQL) CreateJobResult(result *domain.JobResult) error {
+	return nil
+}
+
+// GetJobResult fetches a job result from the repository.
+func (storage *MySQL) GetJobResult(id string) (*domain.JobResult, error) {
+	return nil, nil
+}
+
+// UpdateJobResult updates a job result to the repository.
+func (storage *MySQL) UpdateJobResult(id string, result *domain.JobResult) error {
+	return nil
+}
+
+// DeleteJobResult deletes a job result from the repository.
+func (storage *MySQL) DeleteJobResult(id string) error {
+	return nil
 }

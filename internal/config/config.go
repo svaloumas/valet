@@ -44,13 +44,15 @@ type Consumer struct {
 
 type Repository struct {
 	Option string `yaml:"option"`
-	MySQL  Mysql  `yaml:"mysql"`
+	MySQL  MySQL  `yaml:"mysql"`
 }
 
-type Mysql struct {
-	ConnectionMaxLifetime int `yaml:"connection_max_lifetime"`
-	MaxIdleConnections    int `yaml:"max_idle_connections"`
-	MaxOpenConnections    int `yaml:"max_open_connections"`
+type MySQL struct {
+	DSN                   string `yaml:"dsn"`
+	CaPemFile             string `yaml:"ca_pem_file"`
+	ConnectionMaxLifetime int    `yaml:"connection_max_lifetime"`
+	MaxIdleConnections    int    `yaml:"max_idle_connections"`
+	MaxOpenConnections    int    `yaml:"max_open_connections"`
 }
 
 type Config struct {

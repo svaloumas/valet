@@ -16,7 +16,11 @@ import (
 )
 
 // NewRouter initializes and returns a new gin.Engine instance.
-func NewRouter(jobService port.JobService, resultService port.ResultService, loggingFormat string) *gin.Engine {
+func NewRouter(
+	jobService port.JobService,
+	resultService port.ResultService,
+	storage port.Storage, loggingFormat string) *gin.Engine {
+
 	jobHandhler := jobhdl.NewJobHTTPHandler(jobService)
 	resultHandhler := resulthdl.NewResultHTTPHandler(resultService)
 
@@ -35,7 +39,7 @@ func NewRouter(jobService port.JobService, resultService port.ResultService, log
 	// CORS: Allow all origins - Revisit in production
 	r.Use(cors.Default())
 
-	r.GET("/api/status", HandleStatus)
+	r.GET("/api/status", HandleStatus(storage))
 
 	r.POST("/api/jobs", jobHandhler.Create)
 	r.GET("/api/jobs/:id", jobHandhler.Get)
@@ -49,15 +53,17 @@ func NewRouter(jobService port.JobService, resultService port.ResultService, log
 
 // HandleStatus is an endpoint providing information and the status of the server,
 // usually pinged for healthchecks by other services.
-func HandleStatus(c *gin.Context) {
-	now := time.Now().UTC()
-	res := map[string]interface{}{
-		"build_time": buildTime,
-		"commit":     commit,
-		"time":       now,
-		"version":    version,
+func HandleStatus(storage port.Storage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		now := time.Now().UTC()
+		res := map[string]interface{}{
+			"build_time": buildTime,
+			"commit":     commit,
+			"time":       now,
+			"version":    version,
+		}
+		c.JSON(http.StatusOK, res)
 	}
-	c.JSON(http.StatusOK, res)
 }
 
 // JSONLogMiddleware logs a gin HTTP request in JSON format.

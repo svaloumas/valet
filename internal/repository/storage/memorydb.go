@@ -122,3 +122,7 @@ func (storage *memorydb) DeleteJobResult(id string) error {
 	delete(storage.jobresultdb, id)
 	return nil
 }
+
+func (storage *memorydb) CheckHealth() bool {
+	return storage.jobdb != nil && storage.jobresultdb != nil
+}

@@ -18,6 +18,7 @@ services:
   mysql:
     image: mysql:8-oracle
     environment:
+      MYSQL_DATABASE: valetdb
       MYSQL_ROOT_PASSWORD: "password"
     volumes:
       - mysql-data:/var/lib/mysql/
