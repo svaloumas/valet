@@ -36,6 +36,20 @@ func (m *MockStorage) EXPECT() *MockStorageMockRecorder {
 	return m.recorder
 }
 
+// CheckHealth mocks base method.
+func (m *MockStorage) CheckHealth() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckHealth")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// CheckHealth indicates an expected call of CheckHealth.
+func (mr *MockStorageMockRecorder) CheckHealth() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckHealth", reflect.TypeOf((*MockStorage)(nil).CheckHealth))
+}
+
 // CreateJob mocks base method.
 func (m *MockStorage) CreateJob(j *domain.Job) error {
 	m.ctrl.T.Helper()
