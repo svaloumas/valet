@@ -38,7 +38,7 @@ func TestCreateErrorCases(t *testing.T) {
 	}
 	uuidGenErr := errors.New("some uuid generator error")
 	jobValidateErr := errors.New("name required")
-	jobRepositoryErr := errors.New("some job repository error")
+	storageErr := errors.New("some storage error")
 	jobQueueErr := &apperrors.FullQueueErr{}
 	jobTaskNameErr := &apperrors.ResourceValidationErr{Message: "wrongtask is not a valid task name - valid tasks: [test_task]"}
 	parseTimeErr := &apperrors.ParseTimeErr{
@@ -56,11 +56,11 @@ func TestCreateErrorCases(t *testing.T) {
 		Return("", uuidGenErr).
 		Times(1)
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Create(job).
-		Return(jobRepositoryErr).
+		CreateJob(job).
+		Return(storageErr).
 		Times(1)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
@@ -80,7 +80,7 @@ func TestCreateErrorCases(t *testing.T) {
 	}
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name     string
@@ -97,11 +97,11 @@ func TestCreateErrorCases(t *testing.T) {
 			jobValidateErr,
 		},
 		{
-			"job repository error",
+			"storage error",
 			"job_name",
 			"test_task",
 			"",
-			jobRepositoryErr,
+			storageErr,
 		},
 		{
 			"job queue error",
@@ -182,15 +182,15 @@ func TestCreate(t *testing.T) {
 		Return(jobWithoutSchedule.ID, nil).
 		Times(2)
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Create(jobWithoutSchedule).
+		CreateJob(jobWithoutSchedule).
 		Return(nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Create(jobWithSchedule).
+		CreateJob(jobWithSchedule).
 		Return(nil).
 		Times(1)
 
@@ -207,7 +207,7 @@ func TestCreate(t *testing.T) {
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
 
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name        string
@@ -276,26 +276,26 @@ func TestGet(t *testing.T) {
 		CreatedAt:   &createdAt,
 	}
 
-	jobRepositoryErr := errors.New("some repository error")
+	storageErr := errors.New("some storage error")
 	invalidID := "invalid_id"
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Get(expected.ID).
+		GetJob(expected.ID).
 		Return(expected, nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Get(invalidID).
-		Return(nil, jobRepositoryErr).
+		GetJob(invalidID).
+		Return(nil, storageErr).
 		Times(1)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
 	taskrepo := taskrepo.NewTaskRepository()
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name string
@@ -308,9 +308,9 @@ func TestGet(t *testing.T) {
 			nil,
 		},
 		{
-			"job repository error",
+			"storage error",
 			invalidID,
-			jobRepositoryErr,
+			storageErr,
 		},
 	}
 
@@ -359,37 +359,37 @@ func TestUpdate(t *testing.T) {
 
 	invalidID := "invalid_id"
 
-	jobRepositoryErr := errors.New("some job repository error")
+	storageErr := errors.New("some storage error")
 	jobNotFoundErr := errors.New("job not found")
 
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Get(job.ID).
+		GetJob(job.ID).
 		Return(job, nil).
 		Times(2)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(job.ID, updatedJob).
-		Return(jobRepositoryErr).
+		UpdateJob(job.ID, updatedJob).
+		Return(storageErr).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(job.ID, updatedJob).
+		UpdateJob(job.ID, updatedJob).
 		Return(nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Get(invalidID).
+		GetJob(invalidID).
 		Return(nil, jobNotFoundErr).
 		Times(1)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
 	taskrepo := taskrepo.NewTaskRepository()
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name string
@@ -397,9 +397,9 @@ func TestUpdate(t *testing.T) {
 		err  error
 	}{
 		{
-			"job repository error",
+			"storage error",
 			job.ID,
-			jobRepositoryErr,
+			storageErr,
 		},
 		{
 			"ok",
@@ -448,25 +448,25 @@ func TestDelete(t *testing.T) {
 	}
 
 	invalidID := "invalid_id"
-	jobRepositoryErr := errors.New("some repository error")
+	storageErr := errors.New("some storage error")
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Delete(expectedJob.ID).
+		DeleteJob(expectedJob.ID).
 		Return(nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Delete(invalidID).
-		Return(jobRepositoryErr).
+		DeleteJob(invalidID).
+		Return(storageErr).
 		Times(1)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
 	taskrepo := taskrepo.NewTaskRepository()
-	service := New(jobRepository, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name string
@@ -479,9 +479,9 @@ func TestDelete(t *testing.T) {
 			nil,
 		},
 		{
-			"job repository error",
+			"storage error",
 			invalidID,
-			jobRepositoryErr,
+			storageErr,
 		},
 	}
 

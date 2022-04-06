@@ -80,5 +80,5 @@ func TestConsumeJobJobInQueue(t *testing.T) {
 	consumerService.Consume(ctx, 5*time.Millisecond)
 
 	// give some time for the scheduler to try to consume two jobs
-	time.Sleep(12 * time.Millisecond)
+	time.Sleep(13 * time.Millisecond)
 }

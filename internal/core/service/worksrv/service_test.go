@@ -41,19 +41,18 @@ func TestSend(t *testing.T) {
 
 	freezed := mock.NewMockTime(ctrl)
 	taskrepo := taskrepo.NewTaskRepository()
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	resultRepository := mock.NewMockResultRepository(ctrl)
+	storage := mock.NewMockStorage(ctrl)
 	wg.Add(1)
-	resultRepository.
+	storage.
 		EXPECT().
-		Create(&result).
+		CreateJobResult(&result).
 		DoAndReturn(func(result *domain.JobResult) error {
 			wg.Done()
 			return nil
 		})
 
 	logger := &logrus.Logger{Out: ioutil.Discard}
-	workservice := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 0, 1, logger)
+	workservice := New(storage, taskrepo, freezed, time.Second, 0, 1, logger)
 	workservice.Start()
 	defer workservice.Stop()
 
@@ -80,11 +79,10 @@ func TestSendBacklogLimit(t *testing.T) {
 
 	freezed := mock.NewMockTime(ctrl)
 	taskrepo := taskrepo.NewTaskRepository()
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	resultRepository := mock.NewMockResultRepository(ctrl)
+	storage := mock.NewMockStorage(ctrl)
 
 	logger := &logrus.Logger{Out: ioutil.Discard}
-	workservice := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 0, 1, logger)
+	workservice := New(storage, taskrepo, freezed, time.Second, 0, 1, logger)
 	workservice.Start()
 	defer workservice.Stop()
 
@@ -146,18 +144,17 @@ func TestExecCompletedJob(t *testing.T) {
 	completedJob.Status = domain.Completed
 	completedJob.CompletedAt = &completedAt
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Update(startedJob.ID, startedJob).
+		UpdateJob(startedJob.ID, startedJob).
 		Return(nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(completedJob.ID, completedJob).
+		UpdateJob(completedJob.ID, completedJob).
 		Return(nil).
 		Times(1)
-	resultRepository := mock.NewMockResultRepository(ctrl)
 
 	var taskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
@@ -165,7 +162,7 @@ func TestExecCompletedJob(t *testing.T) {
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
 	logger := &logrus.Logger{Out: ioutil.Discard}
-	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1, logger)
+	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
 	workWithNoError := domain.Work{
 		Job:         job,
@@ -233,18 +230,17 @@ func TestExecFailedJob(t *testing.T) {
 	failedJob.FailureReason = failureReason
 	failedJob.CompletedAt = &failedAt
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Update(startedJob.ID, startedJob).
+		UpdateJob(startedJob.ID, startedJob).
 		Return(nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(failedJob.ID, failedJob).
+		UpdateJob(failedJob.ID, failedJob).
 		Return(nil).
 		Times(1)
-	resultRepository := mock.NewMockResultRepository(ctrl)
 
 	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		return nil, errors.New(failureReason)
@@ -252,7 +248,7 @@ func TestExecFailedJob(t *testing.T) {
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	logger := &logrus.Logger{Out: ioutil.Discard}
-	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1, logger)
+	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
 	workWithError := domain.Work{
 		Job:         expectedJob,
@@ -318,18 +314,17 @@ func TestExecPanicJob(t *testing.T) {
 	failedJob.FailureReason = panicMessage
 	failedJob.CompletedAt = &failedAt
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Update(startedJob.ID, startedJob).
+		UpdateJob(startedJob.ID, startedJob).
 		Return(nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(failedJob.ID, failedJob).
+		UpdateJob(failedJob.ID, failedJob).
 		Return(nil).
 		Times(1)
-	resultRepository := mock.NewMockResultRepository(ctrl)
 
 	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		panic(panicMessage)
@@ -337,7 +332,7 @@ func TestExecPanicJob(t *testing.T) {
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	logger := &logrus.Logger{Out: ioutil.Discard}
-	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1, logger)
+	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
 	workWithError := domain.Work{
 		Job:         job,
@@ -401,25 +396,24 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	completedJob.Status = domain.Completed
 	completedJob.CompletedAt = &completedAt
 
-	jobRepositoryErr := errors.New("some repository error")
+	storageErr := errors.New("some repository error")
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Update(startedJob.ID, startedJob).
-		Return(jobRepositoryErr).
+		UpdateJob(startedJob.ID, startedJob).
+		Return(storageErr).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(startedJob.ID, startedJob).
+		UpdateJob(startedJob.ID, startedJob).
 		Return(nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(completedJob.ID, completedJob).
-		Return(jobRepositoryErr).
+		UpdateJob(completedJob.ID, completedJob).
+		Return(storageErr).
 		Times(1)
-	resultRepository := mock.NewMockResultRepository(ctrl)
 
 	var taskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
@@ -427,7 +421,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFunc)
 	logger := &logrus.Logger{Out: ioutil.Discard}
-	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1, logger)
+	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
 	w := domain.Work{
 		Job:         job,
@@ -442,14 +436,14 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 		err  error
 	}{
 		{
-			"job repository error",
+			"storage error",
 			w,
-			jobRepositoryErr,
+			storageErr,
 		},
 		{
-			"job repository error",
+			"storage error",
 			w,
-			jobRepositoryErr,
+			storageErr,
 		},
 	}
 
@@ -511,18 +505,17 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 	failedJob.FailureReason = timeoutErrorMessage
 	failedJob.CompletedAt = &failedAt
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Update(startedJob.ID, startedJob).
+		UpdateJob(startedJob.ID, startedJob).
 		Return(nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(failedJob.ID, failedJob).
+		UpdateJob(failedJob.ID, failedJob).
 		Return(nil).
 		Times(1)
-	resultRepository := mock.NewMockResultRepository(ctrl)
 
 	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		time.Sleep(time.Millisecond * 50)
@@ -531,7 +524,7 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	logger := &logrus.Logger{Out: ioutil.Discard}
-	service := New(jobRepository, resultRepository, taskrepo, freezed, time.Second, 1, 1, logger)
+	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
 	workWithError := domain.Work{
 		Job:         job,

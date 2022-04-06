@@ -8,22 +8,22 @@ import (
 var _ port.ResultService = &resultservice{}
 
 type resultservice struct {
-	resultRepository port.ResultRepository
+	storage port.Storage
 }
 
 // New creates a new job result service.
-func New(resultRepository port.ResultRepository) *resultservice {
+func New(storage port.Storage) *resultservice {
 	return &resultservice{
-		resultRepository: resultRepository,
+		storage: storage,
 	}
 }
 
 // Get fetches a job result.
 func (srv *resultservice) Get(id string) (*domain.JobResult, error) {
-	return srv.resultRepository.Get(id)
+	return srv.storage.GetJobResult(id)
 }
 
 // Delete deletes a job result.
 func (srv *resultservice) Delete(id string) error {
-	return srv.resultRepository.Delete(id)
+	return srv.storage.DeleteJobResult(id)
 }

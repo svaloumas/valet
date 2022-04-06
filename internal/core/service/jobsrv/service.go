@@ -13,26 +13,26 @@ import (
 var _ port.JobService = &jobservice{}
 
 type jobservice struct {
-	jobRepository port.JobRepository
-	jobQueue      port.JobQueue
-	taskrepo      *taskrepo.TaskRepository
-	uuidGen       uuidgen.UUIDGenerator
-	time          rtime.Time
+	storage  port.Storage
+	jobQueue port.JobQueue
+	taskrepo *taskrepo.TaskRepository
+	uuidGen  uuidgen.UUIDGenerator
+	time     rtime.Time
 }
 
 // New creates a new job service.
 func New(
-	jobRepository port.JobRepository,
+	storage port.Storage,
 	jobQueue port.JobQueue,
 	taskrepo *taskrepo.TaskRepository,
 	uuidGen uuidgen.UUIDGenerator,
 	time rtime.Time) *jobservice {
 	return &jobservice{
-		jobRepository: jobRepository,
-		jobQueue:      jobQueue,
-		taskrepo:      taskrepo,
-		uuidGen:       uuidGen,
-		time:          time,
+		storage:  storage,
+		jobQueue: jobQueue,
+		taskrepo: taskrepo,
+		uuidGen:  uuidGen,
+		time:     time,
 	}
 }
 
@@ -63,7 +63,7 @@ func (srv *jobservice) Create(
 			return nil, &apperrors.FullQueueErr{}
 		}
 	}
-	if err := srv.jobRepository.Create(j); err != nil {
+	if err := srv.storage.CreateJob(j); err != nil {
 		return nil, err
 	}
 	return j, nil
@@ -71,21 +71,21 @@ func (srv *jobservice) Create(
 
 // Get fetches a job.
 func (srv *jobservice) Get(id string) (*domain.Job, error) {
-	return srv.jobRepository.Get(id)
+	return srv.storage.GetJob(id)
 }
 
 // Update updates a job.
 func (srv *jobservice) Update(id, name, description string) error {
-	j, err := srv.jobRepository.Get(id)
+	j, err := srv.storage.GetJob(id)
 	if err != nil {
 		return err
 	}
 	j.Name = name
 	j.Description = description
-	return srv.jobRepository.Update(id, j)
+	return srv.storage.UpdateJob(id, j)
 }
 
 // Delete deletes a job.
 func (srv *jobservice) Delete(id string) error {
-	return srv.jobRepository.Delete(id)
+	return srv.storage.DeleteJob(id)
 }

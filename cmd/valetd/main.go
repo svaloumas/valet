@@ -9,15 +9,15 @@ import (
 	"syscall"
 	"time"
 
+	"valet/internal/config"
 	"valet/internal/core/domain/taskrepo"
 	"valet/internal/core/service/consumersrv"
 	"valet/internal/core/service/jobsrv"
 	"valet/internal/core/service/resultsrv"
 	"valet/internal/core/service/schedulersrv"
 	"valet/internal/core/service/worksrv"
+	"valet/internal/factory"
 	"valet/internal/repository/jobqueue"
-	"valet/internal/repository/jobrepo"
-	"valet/internal/repository/resultrepo"
 	vlog "valet/pkg/log"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
@@ -33,7 +33,7 @@ var (
 )
 
 func main() {
-	cfg := new(Config)
+	cfg := new(config.Config)
 	if err := cfg.Load(); err != nil {
 		log.Fatalf("could not load config: %s", err)
 	}
@@ -43,19 +43,17 @@ func main() {
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("dummytask", task.DummyTask)
 
-	jobQueue := jobqueue.NewFIFOQueue(cfg.JobQueueCapacity)
+	jobQueue := jobqueue.NewFIFOQueue(cfg.JobQueue.Capacity)
 
-	jobRepository := jobrepo.NewJobDB()
-	resultRepository := resultrepo.NewResultDB()
+	storage := factory.StorageFactory(cfg.Repository)
 
-	jobService := jobsrv.New(jobRepository, jobQueue, taskrepo, uuidgen.New(), rtime.New())
-	resultService := resultsrv.New(resultRepository)
+	jobService := jobsrv.New(storage, jobQueue, taskrepo, uuidgen.New(), rtime.New())
+	resultService := resultsrv.New(storage)
 
 	workpoolLogger := vlog.NewLogger("workerpool", cfg.LoggingFormat)
 	workService := worksrv.New(
-		jobRepository, resultRepository,
-		taskrepo, rtime.New(), cfg.TimeoutUnit,
-		cfg.WorkerPoolConcurrency, cfg.WorkerPoolBacklog, workpoolLogger)
+		storage, taskrepo, rtime.New(), cfg.TimeoutUnit,
+		cfg.WorkerPool.Concurrency, cfg.WorkerPool.Backlog, workpoolLogger)
 	workService.Start()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -63,11 +61,11 @@ func main() {
 
 	consumerLogger := vlog.NewLogger("consumer", cfg.LoggingFormat)
 	consumerService := consumersrv.New(jobQueue, workService, consumerLogger)
-	consumerService.Consume(ctx, time.Duration(cfg.JobQueuePollingInterval)*cfg.TimeoutUnit)
+	consumerService.Consume(ctx, time.Duration(cfg.Consumer.JobQueuePollingInterval)*cfg.TimeoutUnit)
 
 	schedulerLogger := vlog.NewLogger("scheduler", cfg.LoggingFormat)
-	schedulerService := schedulersrv.New(jobRepository, workService, rtime.New(), schedulerLogger)
-	schedulerService.Schedule(ctx, time.Duration(cfg.SchedulerPollingInterval)*cfg.TimeoutUnit)
+	schedulerService := schedulersrv.New(storage, workService, rtime.New(), schedulerLogger)
+	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
 
 	srv := http.Server{
 		Addr:    ":" + cfg.Port,

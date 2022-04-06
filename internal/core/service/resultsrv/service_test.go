@@ -21,21 +21,21 @@ func TestGet(t *testing.T) {
 	}
 
 	invalidJobID := "invalid_job_id"
-	resultRepositoryErr := errors.New("some job result repository error")
+	storageErr := errors.New("some storage error")
 
-	resultRepository := mock.NewMockResultRepository(ctrl)
-	resultRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Get(expectedResult.JobID).
+		GetJobResult(expectedResult.JobID).
 		Return(expectedResult, nil).
 		Times(1)
-	resultRepository.
+	storage.
 		EXPECT().
-		Get(invalidJobID).
-		Return(nil, resultRepositoryErr).
+		GetJobResult(invalidJobID).
+		Return(nil, storageErr).
 		Times(1)
 
-	service := New(resultRepository)
+	service := New(storage)
 
 	tests := []struct {
 		name string
@@ -48,9 +48,9 @@ func TestGet(t *testing.T) {
 			nil,
 		},
 		{
-			"repository error",
+			"storage error",
 			invalidJobID,
-			resultRepositoryErr,
+			storageErr,
 		},
 	}
 
@@ -81,21 +81,21 @@ func TestDelete(t *testing.T) {
 	}
 
 	invalidJobID := "invalid_job_id"
-	resultRepositoryErr := errors.New("some job result repository error")
+	storageErr := errors.New("some storage error")
 
-	resultRepository := mock.NewMockResultRepository(ctrl)
-	resultRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
-		Delete(expectedResult.JobID).
+		DeleteJobResult(expectedResult.JobID).
 		Return(nil).
 		Times(1)
-	resultRepository.
+	storage.
 		EXPECT().
-		Delete(invalidJobID).
-		Return(resultRepositoryErr).
+		DeleteJobResult(invalidJobID).
+		Return(storageErr).
 		Times(1)
 
-	service := New(resultRepository)
+	service := New(storage)
 
 	tests := []struct {
 		name string
@@ -108,9 +108,9 @@ func TestDelete(t *testing.T) {
 			nil,
 		},
 		{
-			"repository error",
+			"storage error",
 			invalidJobID,
-			resultRepositoryErr,
+			storageErr,
 		},
 	}
 

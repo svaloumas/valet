@@ -14,3 +14,13 @@ services:
       - ./:/valet
     ports:
       - ${PORT:-8080}:8080
+  
+  mysql:
+    image: mysql:8-oracle
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+    volumes:
+      - mysql-data:/var/lib/mysql/
+
+volumes:
+  mysql-data:

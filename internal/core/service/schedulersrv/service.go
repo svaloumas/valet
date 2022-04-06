@@ -13,24 +13,24 @@ import (
 var _ port.Scheduler = &schedulerservice{}
 
 type schedulerservice struct {
-	jobRepository port.JobRepository
-	workService   port.WorkService
-	time          rtime.Time
-	logger        *logrus.Logger
+	storage     port.Storage
+	workService port.WorkService
+	time        rtime.Time
+	logger      *logrus.Logger
 }
 
 // New creates a new scheduler service.
 func New(
-	jobRepository port.JobRepository,
+	storage port.Storage,
 	workService port.WorkService,
 	time rtime.Time,
 	logger *logrus.Logger) *schedulerservice {
 
 	return &schedulerservice{
-		jobRepository: jobRepository,
-		workService:   workService,
-		time:          time,
-		logger:        logger,
+		storage:     storage,
+		workService: workService,
+		time:        time,
+		logger:      logger,
 	}
 }
 
@@ -45,7 +45,7 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 				srv.logger.Info("exiting...")
 				return
 			case <-ticker.C:
-				dueJobs, err := srv.jobRepository.GetDueJobs()
+				dueJobs, err := srv.storage.GetDueJobs()
 				if err != nil {
 					srv.logger.Errorf("could not get due jobs from repository: %s", err)
 					continue
@@ -57,7 +57,7 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 
 					scheduledAt := srv.time.Now()
 					j.ScheduledAt = &scheduledAt
-					if err := srv.jobRepository.Update(j.ID, j); err != nil {
+					if err := srv.storage.UpdateJob(j.ID, j); err != nil {
 						srv.logger.Errorf("could not update job: %s", err)
 					}
 					srv.logger.Infof("scheduled work for job with ID: %s to worker pool", j.ID)

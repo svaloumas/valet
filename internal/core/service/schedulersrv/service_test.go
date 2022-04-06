@@ -39,15 +39,15 @@ func TestSchedule(t *testing.T) {
 		Now().
 		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
 		Times(1)
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
 		GetDueJobs().
 		Return(dueJobs, nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(j.ID, j).
+		UpdateJob(j.ID, j).
 		Return(nil).
 		Times(1)
 	workService := mock.NewMockWorkService(ctrl)
@@ -62,7 +62,7 @@ func TestSchedule(t *testing.T) {
 		Return(w).
 		Times(1)
 
-	schedulerService := New(jobRepository, workService, freezed, logger)
+	schedulerService := New(storage, workService, freezed, logger)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -89,7 +89,7 @@ func TestScheduleErrorCases(t *testing.T) {
 
 	dueJobs := []*domain.Job{j}
 
-	jobRepositoryErr := errors.New("some repository error")
+	storageErr := errors.New("some storage error")
 
 	freezed := mock.NewMockTime(ctrl)
 	freezed.
@@ -101,21 +101,21 @@ func TestScheduleErrorCases(t *testing.T) {
 	scheduledAt := freezed.Now()
 	j.ScheduledAt = &scheduledAt
 
-	jobRepository := mock.NewMockJobRepository(ctrl)
-	jobRepository.
+	storage := mock.NewMockStorage(ctrl)
+	storage.
 		EXPECT().
 		GetDueJobs().
-		Return(nil, jobRepositoryErr).
+		Return(nil, storageErr).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
 		GetDueJobs().
 		Return(dueJobs, nil).
 		Times(1)
-	jobRepository.
+	storage.
 		EXPECT().
-		Update(j.ID, j).
-		Return(jobRepositoryErr).
+		UpdateJob(j.ID, j).
+		Return(storageErr).
 		Times(1)
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
@@ -129,7 +129,7 @@ func TestScheduleErrorCases(t *testing.T) {
 		Return(w).
 		Times(1)
 
-	schedulerService := New(jobRepository, workService, freezed, logger)
+	schedulerService := New(storage, workService, freezed, logger)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

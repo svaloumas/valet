@@ -7,34 +7,31 @@ import (
 	"valet/internal/core/domain"
 )
 
-// JobRepository represents a driven actor repository interface.
-type JobRepository interface {
-	// Create adds new job to the repository.
-	Create(j *domain.Job) error
+// Storage represents a driven actor storage interface.
+type Storage interface {
+	// CreateJob adds new job to the repository.
+	CreateJob(j *domain.Job) error
 
-	// Get fetches a job from the repository.
-	Get(id string) (*domain.Job, error)
+	// GetJob fetches a job from the repository.
+	GetJob(id string) (*domain.Job, error)
 
-	// Update updates a job to the repository.
-	Update(id string, j *domain.Job) error
+	// UpdateJob updates a job to the repository.
+	UpdateJob(id string, j *domain.Job) error
 
-	// Delete deletes a job from the repository.
-	Delete(id string) error
+	// DeleteJob deletes a job from the repository.
+	DeleteJob(id string) error
 
 	// GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
 	GetDueJobs() ([]*domain.Job, error)
-}
 
-// ResultRepository represents a driven actor repository interface.
-type ResultRepository interface {
-	// Create adds a new job result to the repository.
-	Create(result *domain.JobResult) error
+	// CreateJobResult adds a new job result to the repository.
+	CreateJobResult(result *domain.JobResult) error
 
-	// Get fetches a job result from the repository.
-	Get(id string) (*domain.JobResult, error)
+	// GetJobResult fetches a job result from the repository.
+	GetJobResult(id string) (*domain.JobResult, error)
 
-	// Delete deletes a job result from the repository.
-	Delete(id string) error
+	// DeleteJobResult deletes a job result from the repository.
+	DeleteJobResult(id string) error
 }
 
 // JobQueue represents a driven actor queue interface.

@@ -13,74 +13,87 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockJobRepository is a mock of JobRepository interface.
-type MockJobRepository struct {
+// MockStorage is a mock of Storage interface.
+type MockStorage struct {
 	ctrl     *gomock.Controller
-	recorder *MockJobRepositoryMockRecorder
+	recorder *MockStorageMockRecorder
 }
 
-// MockJobRepositoryMockRecorder is the mock recorder for MockJobRepository.
-type MockJobRepositoryMockRecorder struct {
-	mock *MockJobRepository
+// MockStorageMockRecorder is the mock recorder for MockStorage.
+type MockStorageMockRecorder struct {
+	mock *MockStorage
 }
 
-// NewMockJobRepository creates a new mock instance.
-func NewMockJobRepository(ctrl *gomock.Controller) *MockJobRepository {
-	mock := &MockJobRepository{ctrl: ctrl}
-	mock.recorder = &MockJobRepositoryMockRecorder{mock}
+// NewMockStorage creates a new mock instance.
+func NewMockStorage(ctrl *gomock.Controller) *MockStorage {
+	mock := &MockStorage{ctrl: ctrl}
+	mock.recorder = &MockStorageMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockJobRepository) EXPECT() *MockJobRepositoryMockRecorder {
+func (m *MockStorage) EXPECT() *MockStorageMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method.
-func (m *MockJobRepository) Create(j *domain.Job) error {
+// CreateJob mocks base method.
+func (m *MockStorage) CreateJob(j *domain.Job) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", j)
+	ret := m.ctrl.Call(m, "CreateJob", j)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Create indicates an expected call of Create.
-func (mr *MockJobRepositoryMockRecorder) Create(j interface{}) *gomock.Call {
+// CreateJob indicates an expected call of CreateJob.
+func (mr *MockStorageMockRecorder) CreateJob(j interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockJobRepository)(nil).Create), j)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJob", reflect.TypeOf((*MockStorage)(nil).CreateJob), j)
 }
 
-// Delete mocks base method.
-func (m *MockJobRepository) Delete(id string) error {
+// CreateJobResult mocks base method.
+func (m *MockStorage) CreateJobResult(result *domain.JobResult) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", id)
+	ret := m.ctrl.Call(m, "CreateJobResult", result)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Delete indicates an expected call of Delete.
-func (mr *MockJobRepositoryMockRecorder) Delete(id interface{}) *gomock.Call {
+// CreateJobResult indicates an expected call of CreateJobResult.
+func (mr *MockStorageMockRecorder) CreateJobResult(result interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockJobRepository)(nil).Delete), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJobResult", reflect.TypeOf((*MockStorage)(nil).CreateJobResult), result)
 }
 
-// Get mocks base method.
-func (m *MockJobRepository) Get(id string) (*domain.Job, error) {
+// DeleteJob mocks base method.
+func (m *MockStorage) DeleteJob(id string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", id)
-	ret0, _ := ret[0].(*domain.Job)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "DeleteJob", id)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// Get indicates an expected call of Get.
-func (mr *MockJobRepositoryMockRecorder) Get(id interface{}) *gomock.Call {
+// DeleteJob indicates an expected call of DeleteJob.
+func (mr *MockStorageMockRecorder) DeleteJob(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockJobRepository)(nil).Get), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJob", reflect.TypeOf((*MockStorage)(nil).DeleteJob), id)
+}
+
+// DeleteJobResult mocks base method.
+func (m *MockStorage) DeleteJobResult(id string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteJobResult", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteJobResult indicates an expected call of DeleteJobResult.
+func (mr *MockStorageMockRecorder) DeleteJobResult(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJobResult", reflect.TypeOf((*MockStorage)(nil).DeleteJobResult), id)
 }
 
 // GetDueJobs mocks base method.
-func (m *MockJobRepository) GetDueJobs() ([]*domain.Job, error) {
+func (m *MockStorage) GetDueJobs() ([]*domain.Job, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDueJobs")
 	ret0, _ := ret[0].([]*domain.Job)
@@ -89,89 +102,53 @@ func (m *MockJobRepository) GetDueJobs() ([]*domain.Job, error) {
 }
 
 // GetDueJobs indicates an expected call of GetDueJobs.
-func (mr *MockJobRepositoryMockRecorder) GetDueJobs() *gomock.Call {
+func (mr *MockStorageMockRecorder) GetDueJobs() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDueJobs", reflect.TypeOf((*MockJobRepository)(nil).GetDueJobs))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDueJobs", reflect.TypeOf((*MockStorage)(nil).GetDueJobs))
 }
 
-// Update mocks base method.
-func (m *MockJobRepository) Update(id string, j *domain.Job) error {
+// GetJob mocks base method.
+func (m *MockStorage) GetJob(id string) (*domain.Job, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", id, j)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "GetJob", id)
+	ret0, _ := ret[0].(*domain.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// Update indicates an expected call of Update.
-func (mr *MockJobRepositoryMockRecorder) Update(id, j interface{}) *gomock.Call {
+// GetJob indicates an expected call of GetJob.
+func (mr *MockStorageMockRecorder) GetJob(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockJobRepository)(nil).Update), id, j)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJob", reflect.TypeOf((*MockStorage)(nil).GetJob), id)
 }
 
-// MockResultRepository is a mock of ResultRepository interface.
-type MockResultRepository struct {
-	ctrl     *gomock.Controller
-	recorder *MockResultRepositoryMockRecorder
-}
-
-// MockResultRepositoryMockRecorder is the mock recorder for MockResultRepository.
-type MockResultRepositoryMockRecorder struct {
-	mock *MockResultRepository
-}
-
-// NewMockResultRepository creates a new mock instance.
-func NewMockResultRepository(ctrl *gomock.Controller) *MockResultRepository {
-	mock := &MockResultRepository{ctrl: ctrl}
-	mock.recorder = &MockResultRepositoryMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockResultRepository) EXPECT() *MockResultRepositoryMockRecorder {
-	return m.recorder
-}
-
-// Create mocks base method.
-func (m *MockResultRepository) Create(result *domain.JobResult) error {
+// GetJobResult mocks base method.
+func (m *MockStorage) GetJobResult(id string) (*domain.JobResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", result)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Create indicates an expected call of Create.
-func (mr *MockResultRepositoryMockRecorder) Create(result interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockResultRepository)(nil).Create), result)
-}
-
-// Delete mocks base method.
-func (m *MockResultRepository) Delete(id string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", id)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Delete indicates an expected call of Delete.
-func (mr *MockResultRepositoryMockRecorder) Delete(id interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockResultRepository)(nil).Delete), id)
-}
-
-// Get mocks base method.
-func (m *MockResultRepository) Get(id string) (*domain.JobResult, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", id)
+	ret := m.ctrl.Call(m, "GetJobResult", id)
 	ret0, _ := ret[0].(*domain.JobResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Get indicates an expected call of Get.
-func (mr *MockResultRepositoryMockRecorder) Get(id interface{}) *gomock.Call {
+// GetJobResult indicates an expected call of GetJobResult.
+func (mr *MockStorageMockRecorder) GetJobResult(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockResultRepository)(nil).Get), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobResult", reflect.TypeOf((*MockStorage)(nil).GetJobResult), id)
+}
+
+// UpdateJob mocks base method.
+func (m *MockStorage) UpdateJob(id string, j *domain.Job) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateJob", id, j)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateJob indicates an expected call of UpdateJob.
+func (mr *MockStorageMockRecorder) UpdateJob(id, j interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateJob", reflect.TypeOf((*MockStorage)(nil).UpdateJob), id, j)
 }
 
 // MockJobQueue is a mock of JobQueue interface.

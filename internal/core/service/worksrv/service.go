@@ -26,33 +26,30 @@ type workservice struct {
 	// The time unit for the calculation of the timeout interval for each task.
 	timeoutUnit time.Duration
 
-	jobRepository    port.JobRepository
-	resultRepository port.ResultRepository
-	taskrepo         *taskrepo.TaskRepository
-	time             rtime.Time
-	queue            chan domain.Work
-	wg               sync.WaitGroup
-	logger           *logrus.Logger
+	storage  port.Storage
+	taskrepo *taskrepo.TaskRepository
+	time     rtime.Time
+	queue    chan domain.Work
+	wg       sync.WaitGroup
+	logger   *logrus.Logger
 }
 
 // New creates a new work service.
 func New(
-	jobRepository port.JobRepository,
-	resultRepository port.ResultRepository,
+	storage port.Storage,
 	taskrepo *taskrepo.TaskRepository,
 	time rtime.Time, timeoutUnit time.Duration,
 	concurrency, backlog int, logger *logrus.Logger) *workservice {
 
 	return &workservice{
-		jobRepository:    jobRepository,
-		resultRepository: resultRepository,
-		taskrepo:         taskrepo,
-		concurrency:      concurrency,
-		backlog:          backlog,
-		timeoutUnit:      timeoutUnit,
-		queue:            make(chan domain.Work, backlog),
-		time:             time,
-		logger:           logger,
+		storage:     storage,
+		taskrepo:    taskrepo,
+		concurrency: concurrency,
+		backlog:     backlog,
+		timeoutUnit: timeoutUnit,
+		queue:       make(chan domain.Work, backlog),
+		time:        time,
+		logger:      logger,
 	}
 }
 
@@ -72,7 +69,7 @@ func (srv *workservice) Send(w domain.Work) {
 		futureResult := domain.FutureJobResult{Result: w.Result}
 		result := futureResult.Wait()
 
-		if err := srv.resultRepository.Create(&result); err != nil {
+		if err := srv.storage.CreateJobResult(&result); err != nil {
 			srv.logger.Errorf("could not create job result to the repository %s", err)
 		}
 	}()
@@ -97,7 +94,7 @@ func (srv *workservice) Stop() {
 func (srv *workservice) Exec(ctx context.Context, w domain.Work) error {
 	startedAt := srv.time.Now()
 	w.Job.MarkStarted(&startedAt)
-	if err := srv.jobRepository.Update(w.Job.ID, w.Job); err != nil {
+	if err := srv.storage.UpdateJob(w.Job.ID, w.Job); err != nil {
 		return err
 	}
 	timeout := defaultJobTimeout
@@ -156,7 +153,7 @@ func (srv *workservice) Exec(ctx context.Context, w domain.Work) error {
 			w.Job.MarkCompleted(&completedAt)
 		}
 	}
-	if err := srv.jobRepository.Update(w.Job.ID, w.Job); err != nil {
+	if err := srv.storage.UpdateJob(w.Job.ID, w.Job); err != nil {
 		return err
 	}
 	w.Result <- jobResult

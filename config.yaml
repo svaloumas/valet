@@ -1,8 +1,19 @@
 port: 8080
-job_queue_capacity: 100
-worker_pool_concurrency:
-worker_pool_backlog:
+job_queue:
+  capacity: 100
+worker_pool:
+  concurrency:
+  backlog:
+scheduler:
+  repository_polling_interval: 60
+consumer:
+  job_queue_polling_interval: 5
+repository:
+  option: memory
+  mysql:
+    connection_max_lifetime:
+    max_idle_connections:
+    max_open_connections:
+    
 timeout_unit: second
-scheduler_polling_interval: 60
-job_queue_polling_interval: 5
 logging_format: text
