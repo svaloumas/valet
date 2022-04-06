@@ -45,26 +45,23 @@ func main() {
 
 	jobQueue := jobqueue.NewFIFOQueue(cfg.JobQueue.Capacity)
 
-	storage := factory.StorageFactory(cfg.Repository)
+	storage := factory.StorageFactory(cfg.Repository, cfg.LoggingFormat)
 
 	jobService := jobsrv.New(storage, jobQueue, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(storage)
 
-	workpoolLogger := vlog.NewLogger("workerpool", cfg.LoggingFormat)
 	workService := worksrv.New(
 		storage, taskrepo, rtime.New(), cfg.TimeoutUnit,
-		cfg.WorkerPool.Concurrency, cfg.WorkerPool.Backlog, workpoolLogger)
+		cfg.WorkerPool.Concurrency, cfg.WorkerPool.Backlog, cfg.LoggingFormat)
 	workService.Start()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	consumerLogger := vlog.NewLogger("consumer", cfg.LoggingFormat)
-	consumerService := consumersrv.New(jobQueue, workService, consumerLogger)
+	consumerService := consumersrv.New(jobQueue, workService, cfg.LoggingFormat)
 	consumerService.Consume(ctx, time.Duration(cfg.Consumer.JobQueuePollingInterval)*cfg.TimeoutUnit)
 
-	schedulerLogger := vlog.NewLogger("scheduler", cfg.LoggingFormat)
-	schedulerService := schedulersrv.New(storage, workService, rtime.New(), schedulerLogger)
+	schedulerService := schedulersrv.New(storage, workService, rtime.New(), cfg.LoggingFormat)
 	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
 
 	srv := http.Server{
