@@ -18,7 +18,9 @@ services:
       - ${PORT:-8080}:8080
   
   mysql:
-    image: mysql:8-oracle
+    image: mysql:8
+    command: mysqld --authentication-policy=mysql_native_password
+    restart: always
     environment:
       - MYSQL_DATABASE=valetdb
       - MYSQL_ROOT_USER=root  

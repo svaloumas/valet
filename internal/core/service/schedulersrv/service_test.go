@@ -69,7 +69,7 @@ func TestSchedule(t *testing.T) {
 	schedulerService.Schedule(ctx, 10*time.Millisecond)
 
 	// give some time for the scheduler to schedule the job
-	time.Sleep(15 * time.Millisecond)
+	time.Sleep(13 * time.Millisecond)
 }
 
 func TestScheduleErrorCases(t *testing.T) {
