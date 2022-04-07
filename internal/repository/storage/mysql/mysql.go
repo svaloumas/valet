@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
@@ -96,6 +97,35 @@ func (mySQL *MySQL) Close() error {
 
 // CreateJob adds new job to the repository.
 func (storage *MySQL) CreateJob(j *domain.Job) error {
+	tx, err := storage.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	var query bytes.Buffer
+	query.WriteString("INSERT INTO job (id, name, task_name, task_params, ")
+	query.WriteString("timeout, description, status, failure_reason, run_at, ")
+	query.WriteString("scheduled_at, created_at, started_at, completed_at) ")
+	query.WriteString("VALUES (UuidToBin(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+
+	var taskParams MapInterface = j.TaskParams
+	if err != nil {
+		return err
+	}
+	res, err := tx.Exec(query.String(), j.ID, j.Name, j.TaskName, taskParams,
+		j.Timeout, j.Description, j.Status, j.FailureReason, j.RunAt,
+		j.ScheduledAt, j.CreatedAt, j.StartedAt, j.CompletedAt)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if rowsAffected, _ := res.RowsAffected(); rowsAffected != 1 {
+		tx.Rollback()
+		return fmt.Errorf("could not insert job, rows affected: %d", rowsAffected)
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return nil
 }
 
