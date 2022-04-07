@@ -5,7 +5,6 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile
-      target: build
     command:
       - "/bin/sh"
       - "-c"
