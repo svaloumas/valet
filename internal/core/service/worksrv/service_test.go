@@ -121,10 +121,12 @@ func TestExecCompletedJob(t *testing.T) {
 
 	createdAt := freezed.Now()
 	job := &domain.Job{
-		ID:          "auuid4",
-		Name:        "job_name",
-		TaskName:    "test_task",
-		TaskParams:  "some task params",
+		ID:       "auuid4",
+		Name:     "job_name",
+		TaskName: "test_task",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,

@@ -40,9 +40,11 @@ func TestPostJobs(t *testing.T) {
 		TaskName:    "test_task",
 		Timeout:     10,
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
 	}
 
 	jobServiceErr := errors.New("some job service error")
@@ -96,7 +98,9 @@ func TestPostJobs(t *testing.T) {
 				"name":"job_name", 
 				"description": "some description", 
 				"timeout": 10,
-				"task_params": "some task params", 
+				"task_params": {
+					"url": "some-url.com"
+				},
 				"task_name": "test_task"
 			}`,
 			http.StatusAccepted,
@@ -108,7 +112,9 @@ func TestPostJobs(t *testing.T) {
 				"name":"job_name", 
 				"description": "some description", 
 				"timeout": 10,
-				"task_params": "some task params", 
+				"task_params": {
+					"url": "some-url.com"
+				},
 				"task_name": "test_task",
 				"run_at": "2006-01-02T15:04:05.999999999Z"
 			}`,
@@ -121,7 +127,9 @@ func TestPostJobs(t *testing.T) {
 				"name":"job_name", 
 				"description": "some description", 
 				"timeout": 10,
-				"task_params": "some task params", 
+				"task_params": {
+					"url": "some-url.com"
+				},
 				"task_name": "test_task"
 			}`,
 			http.StatusInternalServerError,
@@ -132,7 +140,9 @@ func TestPostJobs(t *testing.T) {
 			`{
 				"description": "some description", 
 				"timeout": 10,
-				"task_params": "some task params", 
+				"task_params": {
+					"url": "some-url.com"
+				},
 				"task_name": "test_task"
 			}`,
 			http.StatusBadRequest,
@@ -144,7 +154,9 @@ func TestPostJobs(t *testing.T) {
 				"name":"job_name", 
 				"description": "some description", 
 				"timeout": 10,
-				"task_params": "some task params", 
+				"task_params": {
+					"url": "some-url.com"
+				},
 				"task_name": "test_task"
 			}`,
 			http.StatusServiceUnavailable,
@@ -156,7 +168,9 @@ func TestPostJobs(t *testing.T) {
 				"name":"job_name", 
 				"description": "some description", 
 				"timeout": 10,
-				"task_params": "some task params", 
+				"task_params": {
+					"url": "some-url.com"
+				},
 				"task_name": "test_task",
 				"run_at": "invalid_timestamp_format"
 			}`,
@@ -231,9 +245,11 @@ func TestGetJob(t *testing.T) {
 		TaskName:    "test_task",
 		Description: "some description",
 		Timeout:     10,
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
 	}
 
 	jobNotFoundErr := &apperrors.NotFoundErr{ID: job.ID, ResourceName: "job"}

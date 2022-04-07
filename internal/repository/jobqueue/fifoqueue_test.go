@@ -29,9 +29,11 @@ func TestFIFOQueuePush(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
 	}
 
 	jobqueue := NewFIFOQueue(1)
@@ -61,9 +63,11 @@ func TestFIFOQueuePop(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
 	}
 
 	jobqueue := NewFIFOQueue(1)
@@ -99,8 +103,10 @@ func TestFIFOQueueClose(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status: domain.Pending,
 	}
 
 	jobqueue := NewFIFOQueue(1)

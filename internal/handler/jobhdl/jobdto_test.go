@@ -28,7 +28,9 @@ func TestBuildResponseBodyDTO(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		TaskParams:  "some params",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
 		Status:      domain.Completed,
 		CreatedAt:   &testTime,
 		StartedAt:   &testTime,

@@ -39,7 +39,7 @@ func New(
 // Create creates a new job.
 func (srv *jobservice) Create(
 	name, taskName, description, runAt string,
-	timeout int, taskParams interface{}) (*domain.Job, error) {
+	timeout int, taskParams map[string]interface{}) (*domain.Job, error) {
 	var runAtTime time.Time
 
 	uuid, err := srv.uuidGen.GenerateRandomUUIDString()

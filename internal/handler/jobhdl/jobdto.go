@@ -6,12 +6,12 @@ import (
 
 // RequestBodyDTO is the data transfer object used for a job creation or update.
 type RequestBodyDTO struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	TaskName    string      `json:"task_name"`
-	Timeout     int         `json:"timeout"`
-	TaskParams  interface{} `json:"task_params"`
-	RunAt       string      `json:"run_at"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	TaskName    string                 `json:"task_name"`
+	Timeout     int                    `json:"timeout"`
+	TaskParams  map[string]interface{} `json:"task_params"`
+	RunAt       string                 `json:"run_at"`
 }
 
 // NewRequestBodyDTO initializes and returns a new BodyDTO instance.

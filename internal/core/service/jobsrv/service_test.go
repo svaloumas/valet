@@ -32,9 +32,11 @@ func TestCreateErrorCases(t *testing.T) {
 		TaskName:    "test_task",
 		Timeout:     10,
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
 	}
 	uuidGenErr := errors.New("some uuid generator error")
 	jobValidateErr := errors.New("name required")
@@ -166,9 +168,11 @@ func TestCreate(t *testing.T) {
 		TaskName:    "test_task",
 		Timeout:     10,
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
 	}
 
 	jobWithSchedule := &domain.Job{}
@@ -216,7 +220,7 @@ func TestCreate(t *testing.T) {
 		description string
 		runAt       string
 		timeout     int
-		taskParams  interface{}
+		taskParams  map[string]interface{}
 		expected    *domain.Job
 	}{
 		{
@@ -267,10 +271,12 @@ func TestGet(t *testing.T) {
 
 	createdAt := freezed.Now()
 	expected := &domain.Job{
-		ID:          "auuid4",
-		Name:        "job_name",
-		TaskName:    "test_task",
-		TaskParams:  "some task params",
+		ID:       "auuid4",
+		Name:     "job_name",
+		TaskName: "test_task",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -343,10 +349,12 @@ func TestUpdate(t *testing.T) {
 
 	createdAt := freezed.Now()
 	job := &domain.Job{
-		ID:          "auuid4",
-		Name:        "job_name",
-		TaskName:    "test_task",
-		TaskParams:  "some task params",
+		ID:       "auuid4",
+		Name:     "job_name",
+		TaskName: "test_task",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
@@ -438,10 +446,12 @@ func TestDelete(t *testing.T) {
 
 	createdAt := freezed.Now()
 	expectedJob := &domain.Job{
-		ID:          "auuid4",
-		Name:        "job_name",
-		TaskName:    "test_task",
-		TaskParams:  "some task params",
+		ID:       "auuid4",
+		Name:     "job_name",
+		TaskName: "test_task",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
 		Description: "some description",
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,

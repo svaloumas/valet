@@ -126,7 +126,7 @@ by including them in the request body.
     "name": "a job",
     "description": "what this job is all about, but briefly",
     "task_name": "dummytask",
-    "metadata": {
+    "task_params": {
         "url": "www.some-url.com"
     }
 }
@@ -140,7 +140,7 @@ To schedule a new job to run at a specific time in the future, add `run_at` fiel
     "description": "what this scheduled job is all about, but briefly",
     "task_name": "dummytask",
     "run_at": "2022-06-06T15:04:05.999",
-    "metadata": {
+    "task_params": {
         "url": "www.some-url.com"
     }
 }

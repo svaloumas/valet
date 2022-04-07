@@ -19,7 +19,7 @@ type Job struct {
 	TaskName string `json:"task_name"`
 
 	// TaskParams are the required parameters for the task assigned to the specific job.
-	TaskParams interface{} `json:"task_params,omitempty"`
+	TaskParams map[string]interface{} `json:"task_params,omitempty"`
 
 	// Timeout is the time in seconds after which the job task will be interrupted.
 	Timeout int `json:"timeout,omitempty"`
@@ -52,7 +52,7 @@ type Job struct {
 // NewJob initializes and returns a new Job instance.
 func NewJob(
 	uuid, name, taskName, description string, timeout int,
-	runAt *time.Time, createdAt *time.Time, taskParams interface{}) *Job {
+	runAt *time.Time, createdAt *time.Time, taskParams map[string]interface{}) *Job {
 
 	if runAt.IsZero() {
 		runAt = nil

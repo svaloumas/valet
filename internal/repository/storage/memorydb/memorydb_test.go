@@ -30,9 +30,11 @@ func TestMemoryDBCreateJob(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
 	}
 
 	memorydb := NewMemoryDB()
@@ -70,9 +72,11 @@ func TestMemoryDBGetJob(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
 	}
 	invalidID := "invalid_id"
 
@@ -134,9 +138,11 @@ func TestMemoryDBUpdateJob(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
-		CreatedAt:   &createdAt,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
 	}
 
 	memorydb := NewMemoryDB()
@@ -170,8 +176,10 @@ func TestMemoryDBDeleteJob(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
-		TaskParams:  "some task params",
-		Status:      domain.Pending,
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status: domain.Pending,
 	}
 	invalidID := "invalid_id"
 

@@ -252,7 +252,7 @@ func (m *MockJobService) EXPECT() *MockJobServiceMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockJobService) Create(name, taskName, description, runAt string, timeout int, taskParams interface{}) (*domain.Job, error) {
+func (m *MockJobService) Create(name, taskName, description, runAt string, timeout int, taskParams map[string]interface{}) (*domain.Job, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", name, taskName, description, runAt, timeout, taskParams)
 	ret0, _ := ret[0].(*domain.Job)
