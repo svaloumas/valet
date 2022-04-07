@@ -4,6 +4,9 @@ services:
   valet:
     container_name: valet
     image: ${VALET_IMAGE_URL:-registry.valet.com/valet:latest}
+    secrets:
+      - source: mysql-dsn
+        target: mysql_dsn
     working_dir: /valet
     command: /valet/valetd
     healthcheck:
@@ -16,3 +19,7 @@ services:
       timeout: 25s
       retries: 3
 
+secrets:
+  mysql-dsn:
+    external:
+      name: valet-mysql-dsn

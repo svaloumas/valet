@@ -10,6 +10,8 @@ services:
       - "/bin/sh"
       - "-c"
       - "go mod download && make build && /valet/valetd"
+    environment:
+      - MYSQL_DSN=root:password@tcp(mysql:3306)/valetdb?parseTime=true&sql_mode=NO_ZERO_DATE
     volumes:
       - ./:/valet
     ports:
@@ -18,8 +20,9 @@ services:
   mysql:
     image: mysql:8-oracle
     environment:
-      MYSQL_DATABASE: valetdb
-      MYSQL_ROOT_PASSWORD: "password"
+      - MYSQL_DATABASE=valetdb
+      - MYSQL_ROOT_USER=root  
+      - MYSQL_ROOT_PASSWORD=password
     volumes:
       - mysql-data:/var/lib/mysql/
 
