@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	mysqlMigrationsPath = "../repository/storage/mysql/migrations/*.sql"
+	mysqlMigrationsPath = "./internal/repository/storage/mysql/migrations/*.sql"
 )
 
 func StorageFactory(cfg config.Repository, loggingFormat string) port.Storage {

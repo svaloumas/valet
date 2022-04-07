@@ -46,6 +46,7 @@ func main() {
 	jobQueue := jobqueue.NewFIFOQueue(cfg.JobQueue.Capacity)
 
 	storage := factory.StorageFactory(cfg.Repository, cfg.LoggingFormat)
+	logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
 
 	jobService := jobsrv.New(storage, jobQueue, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(storage)
