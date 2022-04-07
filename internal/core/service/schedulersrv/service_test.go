@@ -134,7 +134,7 @@ func TestScheduleErrorCases(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	schedulerService.Schedule(ctx, 5*time.Millisecond)
+	schedulerService.Schedule(ctx, 10*time.Millisecond)
 	// give some time for the scheduler to schedule two jobs
-	time.Sleep(12 * time.Millisecond)
+	time.Sleep(25 * time.Millisecond)
 }

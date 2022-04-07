@@ -3,7 +3,7 @@ package factory
 import (
 	"valet/internal/config"
 	"valet/internal/core/port"
-	"valet/internal/repository/storage"
+	"valet/internal/repository/storage/memorydb"
 	"valet/internal/repository/storage/mysql"
 	"valet/pkg/log"
 )
@@ -14,7 +14,7 @@ const (
 
 func StorageFactory(cfg config.Repository, loggingFormat string) port.Storage {
 	if cfg.Option == "memory" {
-		return storage.NewMemoryDB()
+		return memorydb.NewMemoryDB()
 	}
 
 	options := &mysql.MySQLOptions{

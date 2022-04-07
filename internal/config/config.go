@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -8,6 +9,8 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v2"
+
+	"valet/pkg/env"
 )
 
 var (
@@ -48,11 +51,11 @@ type Repository struct {
 }
 
 type MySQL struct {
-	DSN                   string `yaml:"dsn"`
-	CaPemFile             string `yaml:"ca_pem_file"`
-	ConnectionMaxLifetime int    `yaml:"connection_max_lifetime"`
-	MaxIdleConnections    int    `yaml:"max_idle_connections"`
-	MaxOpenConnections    int    `yaml:"max_open_connections"`
+	DSN                   string
+	CaPemFile             string
+	ConnectionMaxLifetime int `yaml:"connection_max_lifetime"`
+	MaxIdleConnections    int `yaml:"max_idle_connections"`
+	MaxOpenConnections    int `yaml:"max_open_connections"`
 }
 
 type Config struct {
@@ -135,6 +138,14 @@ func (cfg *Config) Load() error {
 		return fmt.Errorf("%s is not a valid repository option, valid options: %v", cfg.Repository.Option, validRepositoryOptions)
 	}
 	if cfg.Repository.Option == "mysql" {
+		dsn := env.LoadVar("MYSQL_DSN")
+		if dsn == "" {
+			return errors.New("MySQL DSN not provided")
+		}
+		caPemFile := env.LoadVar("MYSQL_CA_PEM_FILE")
+		cfg.Repository.MySQL.DSN = dsn
+		cfg.Repository.MySQL.CaPemFile = caPemFile
+
 		if cfg.Repository.MySQL.ConnectionMaxLifetime == 0 {
 			cfg.Repository.MySQL.ConnectionMaxLifetime = 3000
 		}

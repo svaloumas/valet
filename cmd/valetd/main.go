@@ -45,7 +45,7 @@ func main() {
 
 	jobQueue := jobqueue.NewFIFOQueue(cfg.JobQueue.Capacity)
 
-	storage := factory.StorageFactory(cfg.Repository)
+	storage := factory.StorageFactory(cfg.Repository, cfg.LoggingFormat)
 
 	jobService := jobsrv.New(storage, jobQueue, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(storage)
