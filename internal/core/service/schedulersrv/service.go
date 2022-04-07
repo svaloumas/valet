@@ -7,7 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"valet/internal/core/port"
-	"valet/pkg/log"
 	rtime "valet/pkg/time"
 )
 
@@ -24,9 +23,9 @@ type schedulerservice struct {
 func New(
 	storage port.Storage,
 	workService port.WorkService,
-	time rtime.Time, loggingFormat string) *schedulerservice {
+	time rtime.Time,
+	logger *logrus.Logger) *schedulerservice {
 
-	logger := log.NewLogger("scheduler", loggingFormat)
 	return &schedulerservice{
 		storage:     storage,
 		workService: workService,

@@ -7,7 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"valet/internal/core/port"
-	"valet/pkg/log"
 )
 
 var _ port.Consumer = &consumerservice{}
@@ -22,9 +21,8 @@ type consumerservice struct {
 func New(
 	jobQueue port.JobQueue,
 	workService port.WorkService,
-	loggingFormat string) *consumerservice {
+	logger *logrus.Logger) *consumerservice {
 
-	logger := log.NewLogger("consumer", loggingFormat)
 	return &consumerservice{
 		jobQueue:    jobQueue,
 		workService: workService,

@@ -11,7 +11,6 @@ import (
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/taskrepo"
 	"valet/internal/core/port"
-	"valet/pkg/log"
 	rtime "valet/pkg/time"
 )
 
@@ -40,9 +39,8 @@ func New(
 	storage port.Storage,
 	taskrepo *taskrepo.TaskRepository,
 	time rtime.Time, timeoutUnit time.Duration,
-	concurrency, backlog int, loggingFormat string) *workservice {
+	concurrency, backlog int, logger *logrus.Logger) *workservice {
 
-	logger := log.NewLogger("workerpool", loggingFormat)
 	return &workservice{
 		storage:     storage,
 		taskrepo:    taskrepo,
