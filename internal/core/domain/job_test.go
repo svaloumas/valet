@@ -31,6 +31,26 @@ func TestJobMarkStarted(t *testing.T) {
 	}
 }
 
+func TestJobMarkScheduled(t *testing.T) {
+	j := new(Job)
+	createdAt := time.Now()
+	j.CreatedAt = &createdAt
+
+	scheduledAt := createdAt.Add(10 * time.Second)
+	j.ScheduledAt = &scheduledAt
+
+	status := Scheduled
+
+	j.MarkScheduled(&scheduledAt)
+
+	if j.Status != status {
+		t.Errorf("expected job status %s, got %s instead", j.Status, status)
+	}
+	if *j.ScheduledAt != scheduledAt {
+		t.Errorf("expected job scheduled_at %s, got %s instead", j.ScheduledAt, scheduledAt)
+	}
+}
+
 func TestJobMarkCompleted(t *testing.T) {
 	j := new(Job)
 	createdAt := time.Now()
@@ -95,7 +115,7 @@ func TestJobValidate(t *testing.T) {
 		{
 			"wrong stauts",
 			&Job{Name: "a name", TaskName: "test_task", Description: "some_description", Status: 7},
-			"7 is not a valid job status, valid statuses: map[PENDING:1 IN_PROGRESS:2 COMPLETED:3 FAILED:4]",
+			"7 is not a valid job status, valid statuses: map[PENDING:1 SCHEDULED:2 IN_PROGRESS:3 COMPLETED:4 FAILED:5]",
 		},
 		{
 			"wrong task type",

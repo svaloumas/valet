@@ -17,6 +17,11 @@ func TestJobStatusString(t *testing.T) {
 			"PENDING",
 		},
 		{
+			"scheduled",
+			JobStatus(Scheduled),
+			"SCHEDULED",
+		},
+		{
 			"in progress",
 			JobStatus(InProgress),
 			"IN_PROGRESS",
@@ -55,6 +60,11 @@ func TestJobStatusMarshalJSON(t *testing.T) {
 			[]byte("\"PENDING\""),
 		},
 		{
+			"scheduled",
+			JobStatus(Scheduled),
+			[]byte("\"SCHEDULED\""),
+		},
+		{
 			"in progress",
 			JobStatus(InProgress),
 			[]byte("\"IN_PROGRESS\""),
@@ -91,6 +101,11 @@ func TestJobStatusUnmarshalJSON(t *testing.T) {
 			"pending",
 			[]byte("\"PENDING\""),
 			JobStatus(Pending),
+		},
+		{
+			"scheduled",
+			[]byte("\"SCHEDULED\""),
+			JobStatus(Scheduled),
 		},
 		{
 			"in progress",
@@ -132,7 +147,7 @@ func TestJobStatusValidate(t *testing.T) {
 		{
 			"zero status",
 			JobStatus(Undefined),
-			"0 is not a valid job status, valid statuses: map[PENDING:1 IN_PROGRESS:2 COMPLETED:3 FAILED:4]",
+			"0 is not a valid job status, valid statuses: map[PENDING:1 SCHEDULED:2 IN_PROGRESS:3 COMPLETED:4 FAILED:5]",
 		},
 		{
 			"ok",
@@ -142,7 +157,7 @@ func TestJobStatusValidate(t *testing.T) {
 		{
 			"seven status",
 			JobStatus(7),
-			"7 is not a valid job status, valid statuses: map[PENDING:1 IN_PROGRESS:2 COMPLETED:3 FAILED:4]",
+			"7 is not a valid job status, valid statuses: map[PENDING:1 SCHEDULED:2 IN_PROGRESS:3 COMPLETED:4 FAILED:5]",
 		},
 	}
 
@@ -166,16 +181,20 @@ func TestJobStatusIndex(t *testing.T) {
 			1,
 		},
 		{
-			JobStatus(InProgress),
+			JobStatus(Scheduled),
 			2,
 		},
 		{
-			JobStatus(Completed),
+			JobStatus(InProgress),
 			3,
 		},
 		{
-			JobStatus(Failed),
+			JobStatus(Completed),
 			4,
+		},
+		{
+			JobStatus(Failed),
+			5,
 		},
 	}
 

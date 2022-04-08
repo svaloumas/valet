@@ -11,11 +11,13 @@ type JobStatus int
 const (
 	Undefined  JobStatus = iota // 0
 	Pending                     // 1
-	InProgress                  // 2
-	Completed                   // 3
-	Failed                      // 4
+	Scheduled                   // 2
+	InProgress                  // 3
+	Completed                   // 4
+	Failed                      // 5
 
 	PENDING     = "PENDING"
+	SCHEDULED   = "SCHEDULED"
 	IN_PROGRESS = "IN_PROGRESS"
 	COMPLETED   = "COMPLETED"
 	FAILED      = "FAILED"
@@ -23,7 +25,7 @@ const (
 
 // String converts the type to a string.
 func (js JobStatus) String() string {
-	return [...]string{PENDING, IN_PROGRESS, COMPLETED, FAILED}[js-1]
+	return [...]string{PENDING, SCHEDULED, IN_PROGRESS, COMPLETED, FAILED}[js-1]
 }
 
 // Index returns the integer representation of a JobStatus.
@@ -41,6 +43,7 @@ func (js *JobStatus) UnmarshalJSON(data []byte) error {
 	var err error
 	jobStatuses := map[string]JobStatus{
 		PENDING:     Pending,
+		SCHEDULED:   Scheduled,
 		IN_PROGRESS: InProgress,
 		COMPLETED:   Completed,
 		FAILED:      Failed,
@@ -65,6 +68,7 @@ func (js JobStatus) Validate() error {
 	var err error
 	validJobStatuses := map[JobStatus]int{
 		Pending:    Pending.Index(),
+		Scheduled:  Scheduled.Index(),
 		InProgress: InProgress.Index(),
 		Completed:  Completed.Index(),
 		Failed:     Failed.Index(),

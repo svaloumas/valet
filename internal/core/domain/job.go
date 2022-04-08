@@ -77,6 +77,13 @@ func (j *Job) MarkStarted(startedAt *time.Time) {
 	j.StartedAt = startedAt
 }
 
+// MarkScheduled updates the status and timestamp at the moment the job got scheduled.
+func (j *Job) MarkScheduled(scheduledAt *time.Time) {
+
+	j.Status = Scheduled
+	j.ScheduledAt = scheduledAt
+}
+
 // MarkCompleted updates the status and timestamp at the moment the job finished.
 func (j *Job) MarkCompleted(completedAt *time.Time) {
 

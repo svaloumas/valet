@@ -56,7 +56,7 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 					srv.workService.Send(w)
 
 					scheduledAt := srv.time.Now()
-					j.ScheduledAt = &scheduledAt
+					j.MarkScheduled(&scheduledAt)
 					if err := srv.storage.UpdateJob(j.ID, j); err != nil {
 						srv.logger.Errorf("could not update job: %s", err)
 					}
