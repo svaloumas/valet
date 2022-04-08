@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"time"
 	"valet/internal/core/domain"
+	"valet/pkg/apperrors"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
@@ -131,7 +132,28 @@ func (storage *MySQL) CreateJob(j *domain.Job) error {
 
 // GetJob fetches a job from the repository.
 func (storage *MySQL) GetJob(id string) (*domain.Job, error) {
-	return nil, nil
+
+	var query bytes.Buffer
+	query.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")
+	query.WriteString("timeout, description, status, failure_reason, run_at, ")
+	query.WriteString("scheduled_at, created_at, started_at, completed_at ")
+	query.WriteString("FROM job WHERE id=UuidToBin(?)")
+
+	var taskParams MapInterface
+	job := new(domain.Job)
+
+	err := storage.DB.QueryRow(query.String(), id).Scan(
+		&job.ID, &job.Name, &job.TaskName, &taskParams, &job.Timeout,
+		&job.Description, &job.Status, &job.FailureReason, &job.RunAt,
+		&job.ScheduledAt, &job.CreatedAt, &job.StartedAt, &job.CompletedAt)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	if err == sql.ErrNoRows {
+		return nil, &apperrors.NotFoundErr{ID: id, ResourceName: "job"}
+	}
+	job.TaskParams = taskParams
+	return job, nil
 }
 
 // UpdateJob updates a job to the repository.

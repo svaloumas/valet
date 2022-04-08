@@ -6,7 +6,8 @@ import (
 	"fmt"
 )
 
-// MapInterface is used to insert and fetch JSON to and from MySQ MySQL.
+// MapInterface is used to insert and fetch task params type of
+// map[string]interface{} as JSON to and from MySQL.
 type MapInterface map[string]interface{}
 
 // https://golang.org/pkg/database/sql/driver/#Valuer

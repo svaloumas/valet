@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"valet/internal/core/domain"
+	"valet/pkg/apperrors"
 	"valet/pkg/uuidgen"
 )
 
@@ -129,5 +130,69 @@ func TestMySQLCreateJob(t *testing.T) {
 
 	if !reflect.DeepEqual(job, dbJob) {
 		t.Fatalf("expected %#v got %#v instead", job, dbJob)
+	}
+}
+
+func TestMySQLGetJob(t *testing.T) {
+	job := &domain.Job{
+		Name:        "job_name",
+		TaskName:    "test_task",
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Timeout:       3,
+		Status:        domain.Failed,
+		FailureReason: "some failure reason",
+		RunAt:         &testTime,
+		ScheduledAt:   &testTime,
+		CreatedAt:     &testTime,
+		StartedAt:     &testTime,
+		CompletedAt:   &testTime,
+	}
+	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
+	job.ID = uuid
+
+	invalidID := "invalid_id"
+
+	err := mysqlTest.CreateJob(job)
+	if err != nil {
+		t.Fatalf("unexpected error when creating job: %#v", err)
+	}
+
+	tests := []struct {
+		name string
+		id   string
+		job  *domain.Job
+		err  error
+	}{
+		{
+			"ok",
+			job.ID,
+			job,
+			nil,
+		},
+		{
+			"not found",
+			invalidID,
+			nil,
+			&apperrors.NotFoundErr{ID: invalidID, ResourceName: "job"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			dbJob, err := mysqlTest.GetJob(job.ID)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("GetJob returned wrong error: got %#v want %#v", err, tt.err)
+				}
+			} else {
+				if !reflect.DeepEqual(job, dbJob) {
+					t.Fatalf("expected %#v got %#v instead", job, dbJob)
+				}
+			}
+		})
 	}
 }

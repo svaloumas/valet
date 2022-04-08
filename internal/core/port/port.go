@@ -91,6 +91,7 @@ type WorkService interface {
 	Exec(ctx context.Context, w domain.Work) error
 }
 
+// Consumer represents a domain event listener.
 type Consumer interface {
 	// Consume listens to the job queue for messages, consumes them and
 	// schedules the job items for execution.
