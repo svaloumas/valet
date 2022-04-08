@@ -109,7 +109,7 @@ func (storage *MySQL) CreateJob(j *domain.Job) error {
 	query.WriteString("scheduled_at, created_at, started_at, completed_at) ")
 	query.WriteString("VALUES (UuidToBin(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
-	var taskParams MapInterface = j.TaskParams
+	var taskParams MapStringInterface = j.TaskParams
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (storage *MySQL) GetJob(id string) (*domain.Job, error) {
 	query.WriteString("scheduled_at, created_at, started_at, completed_at ")
 	query.WriteString("FROM job WHERE id=UuidToBin(?)")
 
-	var taskParams MapInterface
+	var taskParams MapStringInterface
 	job := new(domain.Job)
 
 	err := storage.DB.QueryRow(query.String(), id).Scan(

@@ -6,30 +6,30 @@ import (
 	"fmt"
 )
 
-// MapInterface is used to insert and fetch task params type of
+// MapStringInterface is used to insert and fetch task params type of
 // map[string]interface{} as JSON to and from MySQL.
-type MapInterface map[string]interface{}
+type MapStringInterface map[string]interface{}
 
 // https://golang.org/pkg/database/sql/driver/#Valuer
-func (ss MapInterface) Value() (driver.Value, error) {
+func (ss MapStringInterface) Value() (driver.Value, error) {
 	value, err := json.Marshal(ss)
 	return string(value), err
 }
 
 // https://golang.org/pkg/database/sql/#Scanner
-func (ss *MapInterface) Scan(src interface{}) error {
+func (ss *MapStringInterface) Scan(src interface{}) error {
 	val, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("unable to scan field value")
 	}
 
-	var jsonMapInterface map[string]interface{}
-	err := json.Unmarshal(val, &jsonMapInterface)
+	var jsonMapStringInterface map[string]interface{}
+	err := json.Unmarshal(val, &jsonMapStringInterface)
 	if err != nil {
 		return err
 	}
 
-	*ss = jsonMapInterface
+	*ss = jsonMapStringInterface
 
 	return nil
 }

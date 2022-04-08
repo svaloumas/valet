@@ -110,7 +110,7 @@ func TestMySQLCreateJob(t *testing.T) {
 	}
 
 	dbJob := new(domain.Job)
-	var taskParams MapInterface
+	var taskParams MapStringInterface
 
 	var sql bytes.Buffer
 	sql.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")
