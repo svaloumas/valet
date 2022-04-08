@@ -75,7 +75,7 @@ func (storage *memorydb) GetDueJobs() ([]*domain.Job, error) {
 			return nil, err
 		}
 		if j.RunAt != nil {
-			if j.RunAt.Before(time.Now()) && j.ScheduledAt == nil {
+			if j.RunAt.Before(time.Now()) && j.Status == domain.Pending {
 				dueJobs = append(dueJobs, j)
 			}
 		}

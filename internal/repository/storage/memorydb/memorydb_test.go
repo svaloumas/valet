@@ -252,7 +252,7 @@ func TestMemoryDBGetDueJobs(t *testing.T) {
 	scheduledJob := &domain.Job{
 		ID:          "scheduled_job_id",
 		TaskName:    "some third task",
-		Status:      domain.Failed,
+		Status:      domain.Scheduled,
 		RunAt:       &runAt,
 		ScheduledAt: &scheduledAt,
 	}

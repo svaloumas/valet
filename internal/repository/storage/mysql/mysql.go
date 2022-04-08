@@ -216,7 +216,37 @@ func (storage *MySQL) DeleteJob(id string) error {
 
 // GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
 func (storage *MySQL) GetDueJobs() ([]*domain.Job, error) {
-	return nil, nil
+
+	var query bytes.Buffer
+	query.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")
+	query.WriteString("timeout, description, status, failure_reason, run_at, ")
+	query.WriteString("scheduled_at, created_at, started_at, completed_at ")
+	query.WriteString("FROM job WHERE run_at IS NOT NULL AND run_at < ? ")
+	query.WriteString("AND status = 1 ORDER BY run_at ASC")
+
+	dueJobs := make([]*domain.Job, 0)
+
+	rows, err := storage.DB.Query(query.String(), time.Now())
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var taskParams MapStringInterface
+		job := new(domain.Job)
+
+		err := rows.Scan(
+			&job.ID, &job.Name, &job.TaskName, &taskParams, &job.Timeout,
+			&job.Description, &job.Status, &job.FailureReason, &job.RunAt,
+			&job.ScheduledAt, &job.CreatedAt, &job.StartedAt, &job.CompletedAt)
+		if err != nil {
+			return nil, err
+		}
+		job.TaskParams = taskParams
+		dueJobs = append(dueJobs, job)
+	}
+
+	return dueJobs, nil
 }
 
 // CreateJobResult adds new job result to the repository.
