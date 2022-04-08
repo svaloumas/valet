@@ -11,6 +11,8 @@ services:
       - "go mod download && make build && /valet/valetd"
     environment:
       - MYSQL_DSN=root:password@tcp(mysql:3306)/valetdb?parseTime=true&sql_mode=NO_ZERO_DATE
+    depends_on:
+      - mysql
     volumes:
       - ./:/valet
     ports:
