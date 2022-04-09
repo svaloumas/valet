@@ -99,13 +99,36 @@ func (cfg *Config) Load() error {
 	if err != nil {
 		return err
 	}
+	cfg.setServerConfig()
+	err = cfg.setJobQueueConfig()
+	if err != nil {
+		return err
+	}
+	cfg.setWorkerPoolConfig()
+	err = cfg.setTimeoutUnitConfig()
+	if err != nil {
+		return err
+	}
+	cfg.setSchedulerConfig()
+	cfg.setConsumerConfig()
+	err = cfg.setLoggingFormatConfig()
+	if err != nil {
+		return err
+	}
+	err = cfg.setRepositoryConfig()
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-	// Server config
+func (cfg *Config) setServerConfig() {
 	if cfg.Port == "" {
 		cfg.Port = "8080"
 	}
+}
 
-	// Job queue config
+func (cfg *Config) setJobQueueConfig() error {
 	if _, ok := validJobQueueOptions[cfg.JobQueue.Option]; !ok {
 		return fmt.Errorf("%s is not a valid job queue option, valid options: %v", cfg.JobQueue.Option, validJobQueueOptions)
 	}
@@ -114,8 +137,10 @@ func (cfg *Config) Load() error {
 			cfg.JobQueue.MemoryJobQueue.Capacity = 100
 		}
 	}
+	return nil
+}
 
-	// Workerpool config
+func (cfg *Config) setWorkerPoolConfig() {
 	if cfg.WorkerPool.Concurrency == 0 {
 		// Work is CPU bound so number of cores should be fine.
 		cfg.WorkerPool.Concurrency = runtime.NumCPU()
@@ -124,15 +149,18 @@ func (cfg *Config) Load() error {
 		// By default allow a request spike double the worker capacity
 		cfg.WorkerPool.Backlog = cfg.WorkerPool.Concurrency * 2
 	}
+}
 
-	// Timeout unit config
+func (cfg *Config) setTimeoutUnitConfig() error {
 	timeoutUnit, ok := validTimeoutUnitOptions[cfg.TimeoutUnitOption]
 	if !ok {
 		return fmt.Errorf("%s is not a valid timeout_unit option, valid options: %v", cfg.TimeoutUnitOption, validTimeoutUnitOptions)
 	}
 	cfg.TimeoutUnit = timeoutUnit
+	return nil
+}
 
-	// Scheduler config
+func (cfg *Config) setSchedulerConfig() {
 	if cfg.Scheduler.RepositoryPollingInterval == 0 {
 		if cfg.TimeoutUnit == time.Second {
 			cfg.Scheduler.RepositoryPollingInterval = 60
@@ -140,8 +168,9 @@ func (cfg *Config) Load() error {
 			cfg.Scheduler.RepositoryPollingInterval = 60000
 		}
 	}
+}
 
-	// Consumer config
+func (cfg *Config) setConsumerConfig() {
 	if cfg.Consumer.JobQueuePollingInterval == 0 {
 		if cfg.TimeoutUnit == time.Second {
 			cfg.Consumer.JobQueuePollingInterval = 1
@@ -149,14 +178,17 @@ func (cfg *Config) Load() error {
 			cfg.Consumer.JobQueuePollingInterval = 1000
 		}
 	}
+}
 
-	// Logging format config
+func (cfg *Config) setLoggingFormatConfig() error {
 	if _, ok := validLoggingFormatOptions[cfg.LoggingFormatOption]; !ok {
 		return fmt.Errorf("%s is not a valid logging_format option, valid options: %v", cfg.LoggingFormatOption, validLoggingFormatOptions)
 	}
 	cfg.LoggingFormat = cfg.LoggingFormatOption
+	return nil
+}
 
-	// Repository config
+func (cfg *Config) setRepositoryConfig() error {
 	if _, ok := validRepositoryOptions[cfg.Repository.Option]; !ok {
 		return fmt.Errorf("%s is not a valid repository option, valid options: %v", cfg.Repository.Option, validRepositoryOptions)
 	}
