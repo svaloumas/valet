@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"time"
@@ -129,7 +130,6 @@ func (storage *MySQL) CreateJob(j *domain.Job) error {
 
 // GetJob fetches a job from the repository.
 func (storage *MySQL) GetJob(id string) (*domain.Job, error) {
-
 	var query bytes.Buffer
 	query.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")
 	query.WriteString("timeout, description, status, failure_reason, run_at, ")
@@ -191,14 +191,15 @@ func (storage *MySQL) DeleteJob(id string) error {
 		return err
 	}
 
+	// CASCADE
 	var query bytes.Buffer
-	// query.WriteString("DELETE FROM jobresult WHERE job_id=UuidToBin(?)")
-	// if _, err = tx.Exec(query.String(), id); err != nil {
-	// 	tx.Rollback()
-	// 	return err
-	// }
+	query.WriteString("DELETE FROM jobresult WHERE job_id=UuidToBin(?)")
+	if _, err = tx.Exec(query.String(), id); err != nil {
+		tx.Rollback()
+		return err
+	}
 
-	// query.Reset()
+	query.Reset()
 	query.WriteString("DELETE FROM job WHERE id=UuidToBin(?)")
 	if _, err = tx.Exec(query.String(), id); err != nil {
 		tx.Rollback()
@@ -248,20 +249,104 @@ func (storage *MySQL) GetDueJobs() ([]*domain.Job, error) {
 
 // CreateJobResult adds new job result to the repository.
 func (storage *MySQL) CreateJobResult(result *domain.JobResult) error {
+	tx, err := storage.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	metadataBytes, err := json.Marshal(result.Metadata)
+	if err != nil {
+		return err
+	}
+
+	var query bytes.Buffer
+	query.WriteString("INSERT INTO jobresult (job_id, metadata, error) ")
+	query.WriteString("VALUES (UuidToBin(?), ?, ?)")
+
+	res, err := tx.Exec(query.String(), result.JobID, metadataBytes, result.Error)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if rowsAffected, _ := res.RowsAffected(); rowsAffected != 1 {
+		tx.Rollback()
+		return fmt.Errorf("could not insert job result, rows affected: %d", rowsAffected)
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return nil
 }
 
 // GetJobResult fetches a job result from the repository.
-func (storage *MySQL) GetJobResult(id string) (*domain.JobResult, error) {
-	return nil, nil
+func (storage *MySQL) GetJobResult(jobID string) (*domain.JobResult, error) {
+	var query bytes.Buffer
+	query.WriteString("SELECT UuidFromBin(job_id), metadata, error ")
+	query.WriteString("FROM jobresult WHERE job_id=UuidToBin(?)")
+
+	var metadataBytes []byte
+	result := new(domain.JobResult)
+
+	err := storage.DB.QueryRow(query.String(), jobID).Scan(
+		&result.JobID, &metadataBytes, &result.Error)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	if err == sql.ErrNoRows {
+		return nil, &apperrors.NotFoundErr{ID: jobID, ResourceName: "job result"}
+	}
+	if err := json.Unmarshal(metadataBytes, &result.Metadata); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // UpdateJobResult updates a job result to the repository.
-func (storage *MySQL) UpdateJobResult(id string, result *domain.JobResult) error {
+func (storage *MySQL) UpdateJobResult(jobID string, result *domain.JobResult) error {
+	tx, err := storage.DB.Begin()
+	if err != nil {
+		return err
+	}
+	metadataBytes, err := json.Marshal(result.Metadata)
+	if err != nil {
+		return err
+	}
+
+	var query bytes.Buffer
+	query.WriteString("UPDATE jobresult SET metadata=?, error=? ")
+	query.WriteString("WHERE job_id=UuidToBin(?)")
+
+	res, err := tx.Exec(query.String(), metadataBytes, result.Error, jobID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if rowsAffected, _ := res.RowsAffected(); rowsAffected != 1 {
+		tx.Rollback()
+		return fmt.Errorf("could not update job result, rows affected: %d", rowsAffected)
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return nil
 }
 
 // DeleteJobResult deletes a job result from the repository.
-func (storage *MySQL) DeleteJobResult(id string) error {
+func (storage *MySQL) DeleteJobResult(jobID string) error {
+	tx, err := storage.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	var query bytes.Buffer
+	query.WriteString("DELETE FROM jobresult WHERE job_id=UuidToBin(?)")
+	if _, err = tx.Exec(query.String(), jobID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
 	return nil
 }

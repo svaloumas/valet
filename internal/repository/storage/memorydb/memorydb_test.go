@@ -181,6 +181,11 @@ func TestMemoryDBDeleteJob(t *testing.T) {
 		},
 		Status: domain.Pending,
 	}
+	result := &domain.JobResult{
+		JobID:    job.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
 	invalidID := "invalid_id"
 
 	memorydb := NewMemoryDB()
@@ -189,6 +194,11 @@ func TestMemoryDBDeleteJob(t *testing.T) {
 		t.Errorf("json marshal returned error: got %#v want nil", err)
 	}
 	memorydb.jobdb[job.ID] = serializedJob
+	serializedJobResult, err := json.Marshal(result)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.jobresultdb[result.JobID] = serializedJobResult
 
 	tests := []struct {
 		name string
@@ -218,6 +228,9 @@ func TestMemoryDBDeleteJob(t *testing.T) {
 			} else {
 				if job := memorydb.jobdb[job.ID]; job != nil {
 					t.Errorf("DeletJob did not delete job: got %#v want nil", job)
+				}
+				if result := memorydb.jobresultdb[result.JobID]; result != nil {
+					t.Errorf("DeletJob did not delete job result (CASCADE): got %#v want nil", job)
 				}
 			}
 		})

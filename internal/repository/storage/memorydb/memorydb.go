@@ -63,6 +63,8 @@ func (storage *memorydb) DeleteJob(id string) error {
 		return &apperrors.NotFoundErr{ID: id, ResourceName: "job"}
 	}
 	delete(storage.jobdb, id)
+	// CASCADE
+	delete(storage.jobresultdb, id)
 	return nil
 }
 
@@ -94,10 +96,10 @@ func (storage *memorydb) CreateJobResult(result *domain.JobResult) error {
 }
 
 // GetJobResult fetches a job result from the repository.
-func (storage *memorydb) GetJobResult(id string) (*domain.JobResult, error) {
-	serializedJobResult, ok := storage.jobresultdb[id]
+func (storage *memorydb) GetJobResult(jobID string) (*domain.JobResult, error) {
+	serializedJobResult, ok := storage.jobresultdb[jobID]
 	if !ok {
-		return nil, &apperrors.NotFoundErr{ID: id, ResourceName: "job result"}
+		return nil, &apperrors.NotFoundErr{ID: jobID, ResourceName: "job result"}
 	}
 	result := &domain.JobResult{}
 	json.Unmarshal(serializedJobResult, result)
@@ -105,7 +107,7 @@ func (storage *memorydb) GetJobResult(id string) (*domain.JobResult, error) {
 }
 
 // UpdateJobResult updates a job result to the repository.
-func (storage *memorydb) UpdateJobResult(id string, result *domain.JobResult) error {
+func (storage *memorydb) UpdateJobResult(jobID string, result *domain.JobResult) error {
 	serializedJobResult, err := json.Marshal(result)
 	if err != nil {
 		return err

@@ -3,6 +3,7 @@ package mysql
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"os"
 	"reflect"
 	"testing"
@@ -56,7 +57,7 @@ func resetDB() {
 		panic(err)
 	}
 
-	sql.WriteString("DELETE FROM job;")
+	sql.WriteString("DELETE FROM jobresult;")
 	_, err = tx.Exec(sql.String())
 	if err != nil {
 		tx.Rollback()
@@ -64,7 +65,7 @@ func resetDB() {
 	}
 
 	sql.Reset()
-	sql.WriteString("DELETE FROM jobresult;")
+	sql.WriteString("DELETE FROM job;")
 	_, err = tx.Exec(sql.String())
 	if err != nil {
 		tx.Rollback()
@@ -293,6 +294,17 @@ func TestMySQLDeleteJob(t *testing.T) {
 		t.Fatalf("unexpected error when creating test job: %#v", err)
 	}
 
+	result := &domain.JobResult{
+		JobID:    job.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+
+	err = mysqlTest.CreateJobResult(result)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job result: %#v", err)
+	}
+
 	err = mysqlTest.DeleteJob(job.ID)
 	if err != nil {
 		t.Fatalf("unexpected error when deleting test job: %#v", err)
@@ -303,6 +315,16 @@ func TestMySQLDeleteJob(t *testing.T) {
 	rows, err := db.Query(sql.String(), job.ID)
 	if err != nil {
 		t.Fatalf("unexpected error when selecting test job: %#v", err)
+	}
+	if rows.Next() {
+		t.Fatal("expected the job row to be deleted, got some back")
+	}
+	// Should CASCADE
+	sql.Reset()
+	sql.WriteString("SELECT * FROM jobresult WHERE job_id=UuidToBin(?)")
+	rows, err = db.Query(sql.String(), job.ID)
+	if err != nil {
+		t.Fatalf("unexpected error when selecting test job result: %#v", err)
 	}
 	if rows.Next() {
 		t.Fatal("expected the job row to be deleted, got some back")
@@ -419,5 +441,267 @@ func TestMySQLGetDueJobs(t *testing.T) {
 		if !reflect.DeepEqual(dueJobs[i], dbDueJobs[i]) {
 			t.Fatalf("expected %#v got %#v instead", dueJobs[i], dbDueJobs[i])
 		}
+	}
+}
+
+func TestMySQLCreateJobResult(t *testing.T) {
+	defer resetDB()
+
+	completedAt := testTime.Add(1 * time.Minute)
+	job := &domain.Job{
+		Name:        "job_name",
+		TaskName:    "test_task",
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Timeout:       3,
+		Status:        domain.Failed,
+		FailureReason: "some failure reason",
+		RunAt:         &testTime,
+		ScheduledAt:   &testTime,
+		CreatedAt:     &testTime,
+		StartedAt:     &testTime,
+		CompletedAt:   &completedAt,
+	}
+	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
+	job.ID = uuid
+
+	err := mysqlTest.CreateJob(job)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+
+	result := &domain.JobResult{
+		JobID:    job.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+
+	err = mysqlTest.CreateJobResult(result)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job result: %#v", err)
+	}
+
+	var metadataBytes []byte
+	dbResult := new(domain.JobResult)
+
+	var sql bytes.Buffer
+	sql.WriteString("SELECT UuidFromBin(job_id), metadata, error ")
+	sql.WriteString("FROM jobresult WHERE job_id=UuidToBin(?)")
+
+	err = db.QueryRow(sql.String(), result.JobID).Scan(
+		&dbResult.JobID, &metadataBytes, &dbResult.Error)
+	if err != nil {
+		t.Fatalf("unexpected error when selecting test job result: %#v", err)
+	}
+	err = json.Unmarshal(metadataBytes, &dbResult.Metadata)
+	if err != nil {
+		t.Fatalf("unexpected error when unmarshaling test job result metadata: %#v", err)
+	}
+
+	if !reflect.DeepEqual(result, dbResult) {
+		t.Fatalf("expected %#v got %#v instead", result, dbResult)
+	}
+}
+
+func TestMySQLGetJobResult(t *testing.T) {
+	defer resetDB()
+
+	completedAt := testTime.Add(1 * time.Minute)
+	job := &domain.Job{
+		Name:        "job_name",
+		TaskName:    "test_task",
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Timeout:       3,
+		Status:        domain.Failed,
+		FailureReason: "some failure reason",
+		RunAt:         &testTime,
+		ScheduledAt:   &testTime,
+		CreatedAt:     &testTime,
+		StartedAt:     &testTime,
+		CompletedAt:   &completedAt,
+	}
+	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
+	job.ID = uuid
+
+	notExistingJobID, _ := uuidGenerator.GenerateRandomUUIDString()
+
+	err := mysqlTest.CreateJob(job)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+
+	result := &domain.JobResult{
+		JobID:    job.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+
+	err = mysqlTest.CreateJobResult(result)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job result: %#v", err)
+	}
+
+	tests := []struct {
+		name   string
+		id     string
+		result *domain.JobResult
+		err    error
+	}{
+		{
+			"ok",
+			uuid,
+			result,
+			nil,
+		},
+		{
+			"not found",
+			notExistingJobID,
+			nil,
+			&apperrors.NotFoundErr{ID: notExistingJobID, ResourceName: "job result"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			dbJob, err := mysqlTest.GetJobResult(tt.id)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("GetJobResult returned wrong error: got %#v want %#v", err, tt.err)
+				}
+			} else {
+				if !reflect.DeepEqual(result, dbJob) {
+					t.Fatalf("expected %#v got %#v instead", job, dbJob)
+				}
+			}
+		})
+	}
+}
+
+func TestMySQLUpdateJobResult(t *testing.T) {
+	defer resetDB()
+
+	job := &domain.Job{
+		Name:        "job_name",
+		TaskName:    "test_task",
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Timeout:       3,
+		Status:        domain.Failed,
+		FailureReason: "some failure reason",
+		RunAt:         &testTime,
+		ScheduledAt:   &testTime,
+		CreatedAt:     &testTime,
+		StartedAt:     &testTime,
+	}
+	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
+	job.ID = uuid
+
+	err := mysqlTest.CreateJob(job)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+
+	result := &domain.JobResult{
+		JobID:    job.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+
+	err = mysqlTest.CreateJobResult(result)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job result: %#v", err)
+	}
+
+	result.Metadata = "updated_metadata"
+	result.Error = "updated_error"
+
+	err = mysqlTest.UpdateJobResult(result.JobID, result)
+	if err != nil {
+		t.Errorf("unexpected error when updating test job result: %#v", err)
+	}
+
+	var metadataBytes []byte
+	dbResult := new(domain.JobResult)
+
+	var sql bytes.Buffer
+	sql.WriteString("SELECT UuidFromBin(job_id), metadata, error ")
+	sql.WriteString("FROM jobresult WHERE job_id=UuidToBin(?)")
+
+	err = db.QueryRow(sql.String(), job.ID).Scan(
+		&dbResult.JobID, &metadataBytes, &dbResult.Error)
+	if err != nil {
+		t.Fatalf("unexpected error when selecting test job result: %#v", err)
+	}
+
+	err = json.Unmarshal(metadataBytes, &dbResult.Metadata)
+	if err != nil {
+		t.Fatalf("unexpected error when unmarshaling test job result metadata: %#v", err)
+	}
+
+	if !reflect.DeepEqual(result, dbResult) {
+		t.Fatalf("expected %#v got %#v instead", result, dbResult)
+	}
+}
+
+func TestMySQLDeleteJobResult(t *testing.T) {
+	defer resetDB()
+
+	completedAt := testTime.Add(1 * time.Minute)
+	job := &domain.Job{
+		Name:        "job_name",
+		TaskName:    "test_task",
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Timeout:       3,
+		Status:        domain.Failed,
+		FailureReason: "some failure reason",
+		RunAt:         &testTime,
+		ScheduledAt:   &testTime,
+		CreatedAt:     &testTime,
+		StartedAt:     &testTime,
+		CompletedAt:   &completedAt,
+	}
+	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
+	job.ID = uuid
+
+	err := mysqlTest.CreateJob(job)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+
+	result := &domain.JobResult{
+		JobID:    job.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+
+	err = mysqlTest.CreateJobResult(result)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job result: %#v", err)
+	}
+
+	err = mysqlTest.DeleteJobResult(result.JobID)
+	if err != nil {
+		t.Fatalf("unexpected error when deleting test job result: %#v", err)
+	}
+
+	var sql bytes.Buffer
+	sql.WriteString("SELECT * FROM jobresult WHERE job_id=UuidToBin(?)")
+	rows, err := db.Query(sql.String(), job.ID)
+	if err != nil {
+		t.Fatalf("unexpected error when selecting test job result: %#v", err)
+	}
+	if rows.Next() {
+		t.Fatal("expected the job row to be deleted, got some back")
 	}
 }

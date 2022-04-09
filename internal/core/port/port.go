@@ -28,10 +28,10 @@ type Storage interface {
 	CreateJobResult(result *domain.JobResult) error
 
 	// GetJobResult fetches a job result from the repository.
-	GetJobResult(id string) (*domain.JobResult, error)
+	GetJobResult(jobID string) (*domain.JobResult, error)
 
 	// DeleteJobResult deletes a job result from the repository.
-	DeleteJobResult(id string) error
+	DeleteJobResult(jobID string) error
 
 	// CheckHealth checks if the storage is alive.
 	CheckHealth() bool
