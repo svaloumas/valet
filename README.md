@@ -23,9 +23,6 @@ and an optional timeout interval. Jobs can be scheduled to run at a specified ti
 
 After the tasks have been executed, their results along with the errors (if any) are stored into a repository.
 
-The service exposes a JSON RestAPI providing CRUD endpoints for the job resource management. Configuration uses a single `yaml` file living under the root
-directory of the project.
-
 <a name="architecture"/>
 
 ## Architecture
@@ -70,7 +67,7 @@ docker-compose up --build -d
 
 ## Configuration
 
-All configuration is set through `config.yaml`, which lives in the project's root directory.
+All configuration is set through `config.yaml`, which lives under the project's root directory.
 
 ```yaml
 port: 8080
@@ -120,7 +117,7 @@ Available configuration options:
 
 ## Secrets
 
-Currently, the only secrets would be the MySQL DSN and RabbitMQ URI.
+Currently, the only secrets would be the MySQL DSN and the RabbitMQ URI.
 MySQL DSN can be provided as an environment variable named as `MYSQL_DSN`, or a Docker secret named as `valet-mysql-dsn`.
 RabbitMQ URI can be provided as an environment variable named as `RABBITMQ_URI`, or a Docker secret named as `valet-rabbitmq-uri`.
 
