@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -33,7 +34,8 @@ var (
 
 func main() {
 	cfg := new(config.Config)
-	if err := cfg.Load(); err != nil {
+	filepath, _ := filepath.Abs("config.yaml")
+	if err := cfg.Load(filepath); err != nil {
 		log.Fatalf("could not load config: %s", err)
 	}
 

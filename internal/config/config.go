@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"runtime"
 	"time"
 
@@ -77,21 +76,19 @@ type MySQL struct {
 }
 
 type Config struct {
-	Port                string     `yaml:"port"`
-	JobQueue            JobQueue   `yaml:"job_queue"`
-	WorkerPool          WorkerPool `yaml:"worker_pool"`
-	Scheduler           Scheduler  `yaml:"scheduler"`
-	Consumer            Consumer   `yaml:"consumer"`
-	Repository          Repository `yaml:"repository"`
-	TimeoutUnitOption   string     `yaml:"timeout_unit"`
-	LoggingFormatOption string     `yaml:"logging_format"`
-	TimeoutUnit         time.Duration
-	LoggingFormat       string
+	Port              string     `yaml:"port"`
+	JobQueue          JobQueue   `yaml:"job_queue"`
+	WorkerPool        WorkerPool `yaml:"worker_pool"`
+	Scheduler         Scheduler  `yaml:"scheduler"`
+	Consumer          Consumer   `yaml:"consumer"`
+	Repository        Repository `yaml:"repository"`
+	TimeoutUnitOption string     `yaml:"timeout_unit"`
+	LoggingFormat     string     `yaml:"logging_format"`
+	TimeoutUnit       time.Duration
 }
 
-func (cfg *Config) Load() error {
-	filename, _ := filepath.Abs("config.yaml")
-	yamlFile, err := ioutil.ReadFile(filename)
+func (cfg *Config) Load(filepath string) error {
+	yamlFile, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return err
 	}
@@ -181,10 +178,9 @@ func (cfg *Config) setConsumerConfig() {
 }
 
 func (cfg *Config) setLoggingFormatConfig() error {
-	if _, ok := validLoggingFormatOptions[cfg.LoggingFormatOption]; !ok {
-		return fmt.Errorf("%s is not a valid logging_format option, valid options: %v", cfg.LoggingFormatOption, validLoggingFormatOptions)
+	if _, ok := validLoggingFormatOptions[cfg.LoggingFormat]; !ok {
+		return fmt.Errorf("%s is not a valid logging_format option, valid options: %v", cfg.LoggingFormat, validLoggingFormatOptions)
 	}
-	cfg.LoggingFormat = cfg.LoggingFormatOption
 	return nil
 }
 
