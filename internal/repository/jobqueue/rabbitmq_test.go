@@ -1,18 +1,20 @@
 package jobqueue
 
 import (
-	"fmt"
+	"io/ioutil"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/sirupsen/logrus"
 
+	"valet/internal/config"
 	"valet/internal/core/domain"
 	"valet/mock"
 )
 
-func TestFIFOQueuePush(t *testing.T) {
+func TestRabbitMQPush(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -36,17 +38,19 @@ func TestFIFOQueuePush(t *testing.T) {
 		CreatedAt: &createdAt,
 	}
 
-	jobqueue := NewFIFOQueue(1)
+	cfg := config.RabbitMQ{
+		QueueName: "test",
+	}
+	jobqueue := NewRabbitMQ(cfg, "text")
+	defer jobqueue.Close()
+	jobqueue.logger = &logrus.Logger{Out: ioutil.Discard}
 
 	if ok := jobqueue.Push(job); !ok {
-		t.Errorf("fifoqueue could not push job to queue: got %#v want true", ok)
-	}
-	if ok := jobqueue.Push(job); ok {
-		t.Errorf("fifoqueue pushed job to queue: got %#v want false", ok)
+		t.Errorf("rabbitmq could not push job to queue: got %#v want true", ok)
 	}
 }
 
-func TestFIFOQueuePop(t *testing.T) {
+func TestRabbitMQPop(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -70,34 +74,29 @@ func TestFIFOQueuePop(t *testing.T) {
 		CreatedAt: &createdAt,
 	}
 
-	jobqueue := NewFIFOQueue(1)
+	cfg := config.RabbitMQ{
+		QueueName: "test",
+	}
+	jobqueue := NewRabbitMQ(cfg, "text")
+	defer jobqueue.Close()
+	jobqueue.logger = &logrus.Logger{Out: ioutil.Discard}
 
 	if ok := jobqueue.Push(expected); !ok {
-		t.Errorf("fifoqueue could not push job to queue: got %#v want true", ok)
+		t.Errorf("rabbitmq could not push job to queue: got %#v want true", ok)
 	}
+	// give some time for the AMQP call
+	time.Sleep(200 * time.Millisecond)
 	job := jobqueue.Pop()
 	if job == nil {
-		t.Errorf("fifoqueue pop did not return job: got nil want %#v", job)
+		t.Errorf("rabbitmq pop did not return job: got nil want %#v", job)
 	} else {
 		if eq := reflect.DeepEqual(job, expected); !eq {
-			t.Errorf("fifoqueue pop returned wrong job: got %#v want %#v", job, expected)
+			t.Errorf("rabbitmq pop returned wrong job: got %#v want %#v", job, expected)
 		}
 	}
 }
 
-func TestFIFOQueueClose(t *testing.T) {
-	defer func() {
-		if p := recover(); p == nil {
-			t.Error("fifoqueue push on closed channel did not panic")
-		} else {
-			expected := "send on closed channel"
-			panicMsg := fmt.Sprintf("%s", p)
-			if eq := reflect.DeepEqual(panicMsg, expected); !eq {
-				t.Errorf("fifoqueue close paniced with wrong message: got %#v want %#v", panicMsg, expected)
-			}
-		}
-	}()
-
+func TestRabbitMQClose(t *testing.T) {
 	expected := &domain.Job{
 		ID:          "auuid4",
 		Name:        "job_name",
@@ -109,8 +108,15 @@ func TestFIFOQueueClose(t *testing.T) {
 		Status: domain.Pending,
 	}
 
-	jobqueue := NewFIFOQueue(1)
+	cfg := config.RabbitMQ{
+		QueueName: "test",
+	}
+	jobqueue := NewRabbitMQ(cfg, "text")
+	defer jobqueue.Close()
+	jobqueue.logger = &logrus.Logger{Out: ioutil.Discard}
 
 	jobqueue.Close()
-	jobqueue.Push(expected)
+	if ok := jobqueue.Push(expected); ok {
+		t.Errorf("rabbitmq push was successful on closed queue: got %#v want false", ok)
+	}
 }

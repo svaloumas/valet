@@ -46,7 +46,7 @@ It provides the following interfaces and can be configured accordingly:
 #### Message queue
 
 * In memory job queue.
-* RabbitMQ (to be implemented)
+* RabbitMQ
 
 <a name="installation"/>
 
@@ -75,7 +75,15 @@ All configuration is set through `config.yaml`, which lives in the project's roo
 ```yaml
 port: 8080
 job_queue:
-  capacity: 100
+  option: rabbitmq
+  memory_job_queue:
+    capacity: 100
+  rabbitmq:
+    queue_name: job
+    durable: false
+    deleted_when_unused: false
+    exclusive: false
+    nowait: false
 worker_pool:
   concurrency:
   backlog:
@@ -84,7 +92,7 @@ scheduler:
 consumer:
   job_queue_polling_interval: 5
 repository:
-  option: mysql
+  option: memory
   mysql:
     connection_max_lifetime:
     max_idle_connections:
@@ -106,6 +114,7 @@ Available configuration options:
 | job_queue_polling_timeout   | integer  | 1 second            | The time interval in which the consumer will poll the queue for new jobs |
 | logging_format              | string   | -                   | The logging format of the service, text and JSON are supported |
 | repository - option         | string   | -                   | The repository of the jobs. Available options: memory & mysql |
+| job_queue - option          | string   | -                   | The job queue of your choice. Available options: memory & rabbitmq |
 
 <a name="secrets"/>
 

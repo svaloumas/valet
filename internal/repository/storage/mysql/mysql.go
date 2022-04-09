@@ -10,11 +10,14 @@ import (
 	"io/ioutil"
 	"time"
 	"valet/internal/core/domain"
+	"valet/internal/core/port"
 	"valet/pkg/apperrors"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
 )
+
+var _ port.Storage = &MySQL{}
 
 // MySQLOptions represents config parameters for the MySQL client.
 type MySQLOptions struct {

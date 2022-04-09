@@ -11,8 +11,10 @@ services:
       - "go mod download && make build && /valet/valetd"
     environment:
       - MYSQL_DSN=root:password@tcp(mysql:3306)/valetdb?parseTime=true&sql_mode=NO_ZERO_DATE
+      - RABBITMQ_URI=amqp://quest:password@rabbitmq:5672/
     depends_on:
       - mysql
+      - rabbitmq
     volumes:
       - ./:/valet
     ports:
@@ -28,6 +30,22 @@ services:
       - MYSQL_ROOT_PASSWORD=password
     volumes:
       - mysql-data:/var/lib/mysql/
+  
+  rabbitmq:
+    image: rabbitmq:3.9-management-alpine
+    ports:
+        # AMQP protocol port
+        - 5672:5672
+        # HTTP management UI
+        - 15672:15672
+    environment:
+            - RABBITMQ_DEFAULT_USER=quest
+            - RABBITMQ_DEFAULT_PASS=password
+    volumes:
+        - rabbitmq-data:/var/lib/rabbitmq/
+        - rabbitmq-log:/var/log/rabbitmq
 
 volumes:
   mysql-data:
+  rabbitmq-data:
+  rabbitmq-log:

@@ -26,10 +26,28 @@ var (
 		"memory": true,
 		"mysql":  true,
 	}
+	validJobQueueOptions = map[string]bool{
+		"memory":   true,
+		"rabbitmq": true,
+	}
 )
 
-type JobQueue struct {
+type MemoryJobQueue struct {
 	Capacity int `yaml:"capacity"`
+}
+
+type RabbitMQ struct {
+	QueueName         string `yaml:"queue_name"`
+	Durable           bool   `yaml:"durable"`
+	DeletedWhenUnused bool   `yaml:"deleted_when_unused"`
+	Exclusive         bool   `yaml:"exclusive"`
+	NoWait            bool   `yaml:"nowait"`
+}
+
+type JobQueue struct {
+	Option         string         `yaml:"option"`
+	MemoryJobQueue MemoryJobQueue `yaml:"memory_job_queue"`
+	RabbitMQ       RabbitMQ       `yaml:"rabbitmq"`
 }
 
 type WorkerPool struct {
@@ -88,8 +106,13 @@ func (cfg *Config) Load() error {
 	}
 
 	// Job queue config
-	if cfg.JobQueue.Capacity == 0 {
-		cfg.JobQueue.Capacity = 100
+	if _, ok := validJobQueueOptions[cfg.JobQueue.Option]; !ok {
+		return fmt.Errorf("%s is not a valid job queue option, valid options: %v", cfg.JobQueue.Option, validJobQueueOptions)
+	}
+	if cfg.JobQueue.Option == "memory" {
+		if cfg.JobQueue.MemoryJobQueue.Capacity == 0 {
+			cfg.JobQueue.MemoryJobQueue.Capacity = 100
+		}
 	}
 
 	// Workerpool config

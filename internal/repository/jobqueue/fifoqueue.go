@@ -40,7 +40,7 @@ func (q *fifoqueue) Pop() *domain.Job {
 	}
 }
 
-// Close closes tha job queue channel.
+// Close liberates the bound resources of the job queue.
 func (q *fifoqueue) Close() {
 	close(q.jobs)
 }

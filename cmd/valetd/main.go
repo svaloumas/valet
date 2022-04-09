@@ -17,7 +17,6 @@ import (
 	"valet/internal/core/service/schedulersrv"
 	"valet/internal/core/service/worksrv"
 	"valet/internal/factory"
-	"valet/internal/repository/jobqueue"
 	vlog "valet/pkg/log"
 	rtime "valet/pkg/time"
 	"valet/pkg/uuidgen"
@@ -43,7 +42,8 @@ func main() {
 	taskrepo := taskrepo.NewTaskRepository()
 	taskrepo.Register("dummytask", task.DummyTask)
 
-	jobQueue := jobqueue.NewFIFOQueue(cfg.JobQueue.Capacity)
+	jobQueue := factory.JobQueueFactory(cfg.JobQueue, cfg.LoggingFormat)
+	logger.Infof("initialized [%s] as a job queue", cfg.JobQueue.Option)
 
 	storage := factory.StorageFactory(cfg.Repository, cfg.LoggingFormat)
 	logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
