@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package job;
+
+import "internal/handler/jobhdl/proto/job_request.proto";
+import "internal/handler/jobhdl/proto/job_response.proto";
+
+option go_package = "valet/internal/handler/jobhdl/protobuf";
+
+// Interface exported by the service.
+service Job {
+    rpc Create(CreateJobRequest) returns (CreateJobResponse) {}
+    rpc Get(GetJobRequest) returns (GetJobResponse) {}
+    rpc Update(UpdateJobRequest) returns (UpdateJobResponse) {}
+    rpc Delete(DeleteJobRequest) returns (DeleteJobResponse) {}
+}

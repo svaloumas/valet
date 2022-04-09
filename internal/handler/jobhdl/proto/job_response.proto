@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package job;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+option go_package = "valet/internal/handler/jobhdl/protobuf";
+
+
+message CreateJobResponse {
+    string id = 1;
+    string name = 2;
+    string task_name = 3;
+    google.protobuf.Struct task_params = 4;
+    int32 timeout = 5;
+    string description = 6;
+    int32 status = 7;
+    string failure_reason = 8;
+    google.protobuf.Timestamp run_at = 9;
+    google.protobuf.Timestamp scheduled_at = 10;
+    google.protobuf.Timestamp created_at = 11;
+    google.protobuf.Timestamp started_at = 12;
+    google.protobuf.Timestamp completed_at = 13;
+    int64 duration = 14;
+}
+
+message GetJobResponse {
+    string id = 1;
+    string name = 2;
+    string task_name = 3;
+    google.protobuf.Struct task_params = 4;
+    int32 timeout = 5;
+    string description = 6;
+    int32 status = 7;
+    string failure_reason = 8;
+    google.protobuf.Timestamp run_at = 9;
+    google.protobuf.Timestamp scheduled_at = 10;
+    google.protobuf.Timestamp created_at = 11;
+    google.protobuf.Timestamp started_at = 12;
+    google.protobuf.Timestamp completed_at = 13;
+    int64 duration = 14;
+}
+
+// Empty response
+message UpdateJobResponse {}
+ 
+// Empty response
+message DeleteJobResponse {}
