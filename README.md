@@ -71,18 +71,40 @@ docker-compose up --build -d
 
 All configuration is set through `config.yaml`, which lives in the project's root directory.
 
+```yaml
+port: 8080
+job_queue:
+  capacity: 100
+worker_pool:
+  concurrency:
+  backlog:
+scheduler:
+  repository_polling_interval: 60
+consumer:
+  job_queue_polling_interval: 5
+repository:
+  option: mysql
+  mysql:
+    connection_max_lifetime:
+    max_idle_connections:
+    max_open_connections:
+timeout_unit: second
+logging_format: text
+```
+
 Available configuration options:
 
-| Parameter                  | Type     | Default             | Description |
-| -------------------------- | -------- | ------------------- | ----------- |
-| port                       | string   | 8080                | The port that the server should listen to |
-| job_queue_capacity         | integer  | 100                 | The capacity of the job queue (applies only for in-memory job queue)|
-| worker_pool_concurrency    | integer  | number of CPU cores | The number of go-routines responsible for executing the jobs concurrently |
-| worker_pool_backlog        | integer  | number of cores * 2 | The capacity of the worker pool work queue |
-| timeout_unit               | string   | -                   | The unit of time that will be used for the timeout interval specified for each job |
-| scheduler_polling_interval | integer  | 60 seconds          | The time interval in which the scheduler will poll for new events |
-| job_queue_polling_timeout  | integer  | 1 second            | The time interval in which the consumer will poll the queue for new jobs |
-| logging_format             | string   | -                   | The logging format of the service, text and JSON are supported |
+| Parameter                   | Type     | Default             | Description |
+| --------------------------- | -------- | ------------------- | ----------- |
+| port                        | string   | 8080                | The port that the server should listen to |
+| capacity                    | integer  | 100                 | The capacity of the job queue (applies only for in-memory job queue)|
+| concurrency                 | integer  | number of CPU cores | The number of go-routines responsible for executing the jobs concurrently |
+| backlog                     | integer  | number of cores * 2 | The capacity of the worker pool work queue |
+| timeout_unit                | string   | -                   | The unit of time that will be used for the timeout interval specified for each job |
+| repository_polling_interval | integer  | 60 seconds          | The time interval in which the scheduler will poll for new events |
+| job_queue_polling_timeout   | integer  | 1 second            | The time interval in which the consumer will poll the queue for new jobs |
+| logging_format              | string   | -                   | The logging format of the service, text and JSON are supported |
+| repository - option         | string   | -                   | The repository of the jobs. Available options: memory & mysql |
 
 <a name="usage"/>
 
