@@ -8,6 +8,7 @@ Stateless Go server responsible for executing tasks asynchronously and concurren
 * [Architecture](#architecture)
 * [Installation](#installation)
 * [Configuration](#configuration)
+* [Secrets](#secrets)
 * [Usage](#usage)
 * [Tests](#tests)
 
@@ -105,6 +106,13 @@ Available configuration options:
 | job_queue_polling_timeout   | integer  | 1 second            | The time interval in which the consumer will poll the queue for new jobs |
 | logging_format              | string   | -                   | The logging format of the service, text and JSON are supported |
 | repository - option         | string   | -                   | The repository of the jobs. Available options: memory & mysql |
+
+<a name="secrets"/>
+
+## Secrets
+
+Currently, the only secret would be the MySQL DSN.
+It can be provided as an environment variable named as `MYSQL_DSN`, or a Docker secret named as `valet-mysql-dsn`.
 
 <a name="usage"/>
 
