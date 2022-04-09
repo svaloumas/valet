@@ -110,9 +110,6 @@ func (storage *MySQL) CreateJob(j *domain.Job) error {
 	query.WriteString("VALUES (UuidToBin(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
 	var taskParams MapStringInterface = j.TaskParams
-	if err != nil {
-		return err
-	}
 	res, err := tx.Exec(query.String(), j.ID, j.Name, j.TaskName, taskParams,
 		j.Timeout, j.Description, j.Status, j.FailureReason, j.RunAt,
 		j.ScheduledAt, j.CreatedAt, j.StartedAt, j.CompletedAt)

@@ -47,6 +47,9 @@ type Job struct {
 
 	// CompletedAt is the UTC timestamp of the moment the job finished.
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
+
+	// Duration indicates how much the job took to complete.
+	Duration *time.Duration `json:"duration,omitempty"`
 }
 
 // NewJob initializes and returns a new Job instance.
@@ -57,7 +60,6 @@ func NewJob(
 	if runAt.IsZero() {
 		runAt = nil
 	}
-
 	return &Job{
 		ID:          uuid,
 		Name:        name,
@@ -97,6 +99,14 @@ func (j *Job) MarkFailed(failedAt *time.Time, reason string) {
 	j.Status = Failed
 	j.FailureReason = reason
 	j.CompletedAt = failedAt
+}
+
+// SetDuration sets the duration of the Job if it's completed of failed.
+func (j *Job) SetDuration() {
+	if j.Status == Completed || j.Status == Failed {
+		duration := j.CompletedAt.Sub(*j.StartedAt) / time.Millisecond
+		j.Duration = &duration
+	}
 }
 
 // Validate perfoms basic sanity checks on the job request payload.

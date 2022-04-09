@@ -86,6 +86,7 @@ func TestCheckHealth(t *testing.T) {
 func TestMySQLCreateJob(t *testing.T) {
 	defer resetDB()
 
+	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
 		Name:        "job_name",
 		TaskName:    "test_task",
@@ -100,7 +101,7 @@ func TestMySQLCreateJob(t *testing.T) {
 		ScheduledAt:   &testTime,
 		CreatedAt:     &testTime,
 		StartedAt:     &testTime,
-		CompletedAt:   &testTime,
+		CompletedAt:   &completedAt,
 	}
 	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
 	job.ID = uuid
@@ -137,6 +138,7 @@ func TestMySQLCreateJob(t *testing.T) {
 func TestMySQLGetJob(t *testing.T) {
 	defer resetDB()
 
+	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
 		Name:        "job_name",
 		TaskName:    "test_task",
@@ -151,7 +153,7 @@ func TestMySQLGetJob(t *testing.T) {
 		ScheduledAt:   &testTime,
 		CreatedAt:     &testTime,
 		StartedAt:     &testTime,
-		CompletedAt:   &testTime,
+		CompletedAt:   &completedAt,
 	}
 	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
 	job.ID = uuid
@@ -217,7 +219,6 @@ func TestMySQLUpdateJob(t *testing.T) {
 		ScheduledAt:   &testTime,
 		CreatedAt:     &testTime,
 		StartedAt:     &testTime,
-		CompletedAt:   &testTime,
 	}
 	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
 	job.ID = uuid
@@ -232,6 +233,8 @@ func TestMySQLUpdateJob(t *testing.T) {
 	job.TaskParams = map[string]interface{}{
 		"addr": ":8000",
 	}
+	completedAt := testTime.Add(1 * time.Minute)
+	job.CompletedAt = &completedAt
 
 	err = mysqlTest.UpdateJob(job.ID, job)
 	if err != nil {
@@ -265,6 +268,7 @@ func TestMySQLUpdateJob(t *testing.T) {
 func TestMySQLDeleteJob(t *testing.T) {
 	defer resetDB()
 
+	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
 		Name:        "job_name",
 		TaskName:    "test_task",
@@ -279,7 +283,7 @@ func TestMySQLDeleteJob(t *testing.T) {
 		ScheduledAt:   &testTime,
 		CreatedAt:     &testTime,
 		StartedAt:     &testTime,
-		CompletedAt:   &testTime,
+		CompletedAt:   &completedAt,
 	}
 	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
 	job.ID = uuid

@@ -8,12 +8,6 @@ import (
 	"valet/internal/core/domain/taskrepo"
 )
 
-var validTasks = map[string]taskrepo.TaskFunc{
-	"test_task": func(i interface{}) (interface{}, error) {
-		return "some metadata", errors.New("some task error")
-	},
-}
-
 func TestJobMarkStarted(t *testing.T) {
 	j := new(Job)
 	createdAt := time.Now()
@@ -94,6 +88,33 @@ func TestJobMarkFailed(t *testing.T) {
 	}
 	if *j.CompletedAt != failedAt {
 		t.Errorf("expected job completed_at %s, got %s instead", j.CompletedAt, failedAt)
+	}
+}
+
+func TestJobSetDuration(t *testing.T) {
+	j := &Job{
+		Name: "job_name",
+	}
+
+	startedAt := time.Now()
+	j.StartedAt = &startedAt
+
+	completedAt := startedAt.Add(10 * time.Second)
+	j.CompletedAt = &completedAt
+
+	duration := j.CompletedAt.Sub(*j.StartedAt) / time.Millisecond
+
+	j.Status = Failed
+	j.SetDuration()
+
+	if *j.Duration != duration {
+		t.Errorf("expected failed job duration %s, got %s instead", j.Duration, duration)
+	}
+
+	j.Status = Completed
+	j.SetDuration()
+	if *j.Duration != duration {
+		t.Errorf("expected completed job duration %s, got %s instead", j.Duration, duration)
 	}
 }
 

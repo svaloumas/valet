@@ -71,7 +71,12 @@ func (srv *jobservice) Create(
 
 // Get fetches a job.
 func (srv *jobservice) Get(id string) (*domain.Job, error) {
-	return srv.storage.GetJob(id)
+	j, err := srv.storage.GetJob(id)
+	if err != nil {
+		return nil, err
+	}
+	j.SetDuration()
+	return j, nil
 }
 
 // Update updates a job.

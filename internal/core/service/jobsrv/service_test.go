@@ -267,12 +267,12 @@ func TestGet(t *testing.T) {
 		EXPECT().
 		Now().
 		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
-		Times(1)
+		Times(2)
 
 	createdAt := freezed.Now()
-	expected := &domain.Job{
-		ID:       "auuid4",
-		Name:     "job_name",
+	pendingJob := &domain.Job{
+		ID:       "pending_job_id",
+		Name:     "pending_job_name",
 		TaskName: "test_task",
 		TaskParams: map[string]interface{}{
 			"url": "some-url.com",
@@ -282,6 +282,26 @@ func TestGet(t *testing.T) {
 		CreatedAt:   &createdAt,
 	}
 
+	startedAt := freezed.Now()
+	completedAt := startedAt.Add(10 * time.Minute)
+	failedJob := &domain.Job{
+		ID:       "failed_job_id",
+		Name:     "failed_job_name",
+		TaskName: "test_task",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Description:   "some description",
+		FailureReason: "some failure reason",
+		Status:        domain.Failed,
+		CreatedAt:     &createdAt,
+		StartedAt:     &startedAt,
+		CompletedAt:   &completedAt,
+	}
+	failedJobWithDuration := &domain.Job{}
+	*failedJobWithDuration = *failedJob
+	failedJobWithDuration.SetDuration()
+
 	storageErr := errors.New("some storage error")
 	invalidID := "invalid_id"
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
@@ -289,8 +309,13 @@ func TestGet(t *testing.T) {
 	storage := mock.NewMockStorage(ctrl)
 	storage.
 		EXPECT().
-		GetJob(expected.ID).
-		Return(expected, nil).
+		GetJob(pendingJob.ID).
+		Return(pendingJob, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJob(failedJob.ID).
+		Return(failedJob, nil).
 		Times(1)
 	storage.
 		EXPECT().
@@ -306,16 +331,25 @@ func TestGet(t *testing.T) {
 	tests := []struct {
 		name string
 		id   string
+		job  *domain.Job
 		err  error
 	}{
 		{
 			"ok",
-			expected.ID,
+			pendingJob.ID,
+			pendingJob,
+			nil,
+		},
+		{
+			"ok with duration",
+			failedJob.ID,
+			failedJobWithDuration,
 			nil,
 		},
 		{
 			"storage error",
 			invalidID,
+			nil,
 			storageErr,
 		},
 	}
@@ -328,8 +362,8 @@ func TestGet(t *testing.T) {
 					t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
 				}
 			} else {
-				if eq := reflect.DeepEqual(j, expected); !eq {
-					t.Errorf("service get returned wrong job: got %#v want %#v", j, expected)
+				if eq := reflect.DeepEqual(j, tt.job); !eq {
+					t.Errorf("service get returned wrong job: got %#v want %#v", j, tt.job)
 				}
 			}
 		})
