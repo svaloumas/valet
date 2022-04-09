@@ -55,7 +55,7 @@ func TestConsume(t *testing.T) {
 	consumerService.Consume(ctx, 8*time.Millisecond)
 
 	// give some time for the scheduler to consume the job
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(12 * time.Millisecond)
 }
 
 func TestConsumeJobJobInQueue(t *testing.T) {
@@ -77,8 +77,8 @@ func TestConsumeJobJobInQueue(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	consumerService.Consume(ctx, 5*time.Millisecond)
+	consumerService.Consume(ctx, 8*time.Millisecond)
 
 	// give some time for the scheduler to try to consume two jobs
-	time.Sleep(13 * time.Millisecond)
+	time.Sleep(20 * time.Millisecond)
 }

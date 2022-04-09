@@ -59,8 +59,8 @@ func (srv *jobservice) Create(
 		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}
 	}
 	if runAtTime.IsZero() {
-		if ok := srv.jobQueue.Push(j); !ok {
-			return nil, &apperrors.FullQueueErr{}
+		if err := srv.jobQueue.Push(j); err != nil {
+			return nil, err
 		}
 	}
 	if err := srv.storage.CreateJob(j); err != nil {

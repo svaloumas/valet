@@ -69,12 +69,12 @@ func TestCreateErrorCases(t *testing.T) {
 	jobQueue.
 		EXPECT().
 		Push(job).
-		Return(true).
+		Return(nil).
 		Times(1)
 	jobQueue.
 		EXPECT().
 		Push(job).
-		Return(false).
+		Return(jobQueueErr).
 		Times(1)
 
 	taskFunc := func(i interface{}) (interface{}, error) {
@@ -202,7 +202,7 @@ func TestCreate(t *testing.T) {
 	jobQueue.
 		EXPECT().
 		Push(jobWithoutSchedule).
-		Return(true).
+		Return(nil).
 		Times(1)
 
 	taskFunc := func(i interface{}) (interface{}, error) {

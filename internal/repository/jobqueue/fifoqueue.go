@@ -3,6 +3,7 @@ package jobqueue
 import (
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
+	"valet/pkg/apperrors"
 )
 
 var _ port.JobQueue = &fifoqueue{}
@@ -20,13 +21,13 @@ func NewFIFOQueue(capacity int) *fifoqueue {
 	}
 }
 
-// Push adds a job to the queue. Returns false if queue is full.
-func (q *fifoqueue) Push(j *domain.Job) bool {
+// Push adds a job to the queue.
+func (q *fifoqueue) Push(j *domain.Job) error {
 	select {
 	case q.jobs <- j:
-		return true
+		return nil
 	default:
-		return false
+		return &apperrors.FullQueueErr{}
 	}
 }
 

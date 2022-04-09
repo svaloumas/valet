@@ -39,8 +39,8 @@ type Storage interface {
 
 // JobQueue represents a driven actor queue interface.
 type JobQueue interface {
-	// Push adds a job to the queue. Returns false if queue is full.
-	Push(j *domain.Job) bool
+	// Push adds a job to the queue.
+	Push(j *domain.Job) error
 
 	// Pop removes and returns the head job from the queue.
 	Pop() *domain.Job

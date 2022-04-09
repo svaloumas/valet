@@ -93,17 +93,17 @@ func (mr *MockStorageMockRecorder) DeleteJob(id interface{}) *gomock.Call {
 }
 
 // DeleteJobResult mocks base method.
-func (m *MockStorage) DeleteJobResult(id string) error {
+func (m *MockStorage) DeleteJobResult(jobID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteJobResult", id)
+	ret := m.ctrl.Call(m, "DeleteJobResult", jobID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteJobResult indicates an expected call of DeleteJobResult.
-func (mr *MockStorageMockRecorder) DeleteJobResult(id interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) DeleteJobResult(jobID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJobResult", reflect.TypeOf((*MockStorage)(nil).DeleteJobResult), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJobResult", reflect.TypeOf((*MockStorage)(nil).DeleteJobResult), jobID)
 }
 
 // GetDueJobs mocks base method.
@@ -137,18 +137,18 @@ func (mr *MockStorageMockRecorder) GetJob(id interface{}) *gomock.Call {
 }
 
 // GetJobResult mocks base method.
-func (m *MockStorage) GetJobResult(id string) (*domain.JobResult, error) {
+func (m *MockStorage) GetJobResult(jobID string) (*domain.JobResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetJobResult", id)
+	ret := m.ctrl.Call(m, "GetJobResult", jobID)
 	ret0, _ := ret[0].(*domain.JobResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetJobResult indicates an expected call of GetJobResult.
-func (mr *MockStorageMockRecorder) GetJobResult(id interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) GetJobResult(jobID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobResult", reflect.TypeOf((*MockStorage)(nil).GetJobResult), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobResult", reflect.TypeOf((*MockStorage)(nil).GetJobResult), jobID)
 }
 
 // UpdateJob mocks base method.
@@ -215,10 +215,10 @@ func (mr *MockJobQueueMockRecorder) Pop() *gomock.Call {
 }
 
 // Push mocks base method.
-func (m *MockJobQueue) Push(j *domain.Job) bool {
+func (m *MockJobQueue) Push(j *domain.Job) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Push", j)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 

@@ -38,11 +38,11 @@ func TestFIFOQueuePush(t *testing.T) {
 
 	jobqueue := NewFIFOQueue(1)
 
-	if ok := jobqueue.Push(job); !ok {
-		t.Errorf("fifoqueue could not push job to queue: got %#v want true", ok)
+	if err := jobqueue.Push(job); err != nil {
+		t.Errorf("fifoqueue could not push job to queue: got %#v want nil", err)
 	}
-	if ok := jobqueue.Push(job); ok {
-		t.Errorf("fifoqueue pushed job to queue: got %#v want false", ok)
+	if err := jobqueue.Push(job); err == nil {
+		t.Errorf("fifoqueue pushed job to queue: got %#v want some err", err)
 	}
 }
 
@@ -72,8 +72,8 @@ func TestFIFOQueuePop(t *testing.T) {
 
 	jobqueue := NewFIFOQueue(1)
 
-	if ok := jobqueue.Push(expected); !ok {
-		t.Errorf("fifoqueue could not push job to queue: got %#v want true", ok)
+	if err := jobqueue.Push(expected); err != nil {
+		t.Errorf("fifoqueue could not push job to queue: got %#v want nil", err)
 	}
 	job := jobqueue.Pop()
 	if job == nil {

@@ -71,12 +71,11 @@ func NewRabbitMQ(cfg config.RabbitMQ, loggingFormat string) *rabbitmq {
 	return rabbitmq
 }
 
-// Push adds a job to the queue. Returns false if queue is full.
-func (q *rabbitmq) Push(j *domain.Job) bool {
+// Push adds a job to the queue.
+func (q *rabbitmq) Push(j *domain.Job) error {
 	body, err := json.Marshal(j)
 	if err != nil {
-		q.logger.Errorf("failed to push job to queue due to error while marshaling job: %s", err)
-		return false
+		return err
 	}
 	err = q.channel.Publish(
 		"",           // exchange
@@ -88,10 +87,9 @@ func (q *rabbitmq) Push(j *domain.Job) bool {
 			Body:        []byte(body),
 		})
 	if err != nil {
-		q.logger.Errorf("failed to push job to queue due to error while publishing message: %s", err)
-		return false
+		return err
 	}
-	return true
+	return nil
 }
 
 // Pop removes and returns the head job from the queue.

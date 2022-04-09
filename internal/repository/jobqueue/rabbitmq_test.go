@@ -45,8 +45,8 @@ func TestRabbitMQPush(t *testing.T) {
 	defer jobqueue.Close()
 	jobqueue.logger = &logrus.Logger{Out: ioutil.Discard}
 
-	if ok := jobqueue.Push(job); !ok {
-		t.Errorf("rabbitmq could not push job to queue: got %#v want true", ok)
+	if err := jobqueue.Push(job); err != nil {
+		t.Errorf("rabbitmq could not push job to queue: got %#v want nil", err)
 	}
 }
 
@@ -81,8 +81,8 @@ func TestRabbitMQPop(t *testing.T) {
 	defer jobqueue.Close()
 	jobqueue.logger = &logrus.Logger{Out: ioutil.Discard}
 
-	if ok := jobqueue.Push(expected); !ok {
-		t.Errorf("rabbitmq could not push job to queue: got %#v want true", ok)
+	if err := jobqueue.Push(expected); err != nil {
+		t.Errorf("rabbitmq could not push job to queue: got %#v want nil", err)
 	}
 	// give some time for the AMQP call
 	time.Sleep(200 * time.Millisecond)
@@ -116,7 +116,7 @@ func TestRabbitMQClose(t *testing.T) {
 	jobqueue.logger = &logrus.Logger{Out: ioutil.Discard}
 
 	jobqueue.Close()
-	if ok := jobqueue.Push(expected); ok {
-		t.Errorf("rabbitmq push was successful on closed queue: got %#v want false", ok)
+	if err := jobqueue.Push(expected); err == nil {
+		t.Errorf("rabbitmq pushed  on closed queue: got %#v want some err", err)
 	}
 }
