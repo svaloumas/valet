@@ -36,7 +36,7 @@ func NewRouter(
 		}
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}))
-	// CORS: Allow all origins - Revisit in production
+	// CORS: Allow all origins - Revisit this.
 	r.Use(cors.Default())
 
 	r.GET("/api/status", HandleStatus(storage))
