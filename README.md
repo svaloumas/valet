@@ -40,7 +40,7 @@ It provides the following interfaces and can be configured accordingly:
 #### Repository
 
 * In memory key-value storage.
-* MySQL (to be implemented)
+* MySQL (implementation in progress)
 
 #### Message queue
 
