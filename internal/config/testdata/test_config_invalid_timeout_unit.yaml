@@ -1,0 +1,26 @@
+port: 8080
+job_queue:
+  option: rabbitmq
+  memory_job_queue:
+    capacity: 100
+  rabbitmq:
+    queue_name: test
+    durable: true
+    deleted_when_unused: true
+    exclusive: true
+    nowait: false
+worker_pool:
+  concurrency: 4
+  backlog: 8
+scheduler:
+  repository_polling_interval: 70
+consumer:
+  job_queue_polling_interval: 2
+repository:
+  option: mysql
+  mysql:
+    connection_max_lifetime: 1000
+    max_idle_connections: 8
+    max_open_connections: 8
+timeout_unit: year
+logging_format: text

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -9,7 +10,6 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	os.Setenv("MYSQL_DSN", "test_dsn")
 	memoryJobQueue := MemoryJobQueue{
 		Capacity: 100,
 	}
@@ -59,20 +59,58 @@ func TestLoad(t *testing.T) {
 	}
 	tests := []struct {
 		name     string
+		dsn      string
 		filepath string
 		expected *Config
 		err      error
 	}{
 		{
 			"full",
+			"test_dsn",
 			"./testdata/test_config.yaml",
 			config,
 			nil,
+		},
+		{
+			"no dsn",
+			"",
+			"./testdata/test_config.yaml",
+			nil,
+			errors.New("MySQL DSN not provided"),
+		},
+		{
+			"wrong logging format",
+			"test_dsn",
+			"./testdata/test_config_invalid_logging_format.yaml",
+			nil,
+			errors.New("binary is not a valid logging_format option, valid options: map[json:true text:true]"),
+		},
+		{
+			"wrong repository option",
+			"test_dsn",
+			"./testdata/test_config_invalid_repository_option.yaml",
+			nil,
+			errors.New("storage is not a valid repository option, valid options: map[memory:true mysql:true]"),
+		},
+		{
+			"wrong timeout unit",
+			"test_dsn",
+			"./testdata/test_config_invalid_timeout_unit.yaml",
+			nil,
+			errors.New("year is not a valid timeout_unit option, valid options: map[millisecond:1ms second:1s]"),
+		},
+		{
+			"wrong job queue option",
+			"test_dsn",
+			"./testdata/test_config_invalid_job_queue_option.yaml",
+			nil,
+			errors.New("queueX is not a valid job queue option, valid options: map[memory:true rabbitmq:true]"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			os.Setenv("MYSQL_DSN", tt.dsn)
 			filepath, _ := filepath.Abs(tt.filepath)
 			cfg := new(Config)
 			err := cfg.Load(filepath)
