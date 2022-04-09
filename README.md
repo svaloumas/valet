@@ -120,8 +120,9 @@ Available configuration options:
 
 ## Secrets
 
-Currently, the only secret would be the MySQL DSN.
-It can be provided as an environment variable named as `MYSQL_DSN`, or a Docker secret named as `valet-mysql-dsn`.
+Currently, the only secrets would be the MySQL DSN and RabbitMQ URI.
+MySQL DSN can be provided as an environment variable named as `MYSQL_DSN`, or a Docker secret named as `valet-mysql-dsn`.
+RabbitMQ URI can be provided as an environment variable named as `RABBITMQ_URI`, or a Docker secret named as `valet-rabbitmq-uri`.
 
 <a name="usage"/>
 
