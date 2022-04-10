@@ -16,6 +16,7 @@ test: generate
 	go test `go list ./...` -v -cover -count=1
 
 report: generate
+	MYSQL_DSN=$(MYSQL_TEST_DSN)	RABBITMQ_URI=$(RABBITMQ_TEST_URI) \
 	go test -v ./... -covermode=count -coverprofile=coverage.out
 	go tool cover -func=coverage.out -o=coverage.out
 
