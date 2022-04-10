@@ -10,7 +10,7 @@ services:
       - "-c"
       - "go mod download && make build && /valet/valetd"
     environment:
-      - MYSQL_DSN=root:password@tcp(mysql:3306)/valetdb?parseTime=true&sql_mode=NO_ZERO_DATE
+      - MYSQL_DSN=root:password@tcp(mysql:3306)/valetdb?parseTime=true
       - RABBITMQ_URI=amqp://quest:password@rabbitmq:5672/
     depends_on:
       - mysql

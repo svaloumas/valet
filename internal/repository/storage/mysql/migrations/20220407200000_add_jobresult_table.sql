@@ -1,4 +1,3 @@
-SET SESSION sql_mode = 'NO_ZERO_DATE';
 CREATE TABLE jobresult (
   job_id binary(16) NOT NULL,
   metadata JSON NOT NULL,

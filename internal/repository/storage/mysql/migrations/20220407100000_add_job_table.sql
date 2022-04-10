@@ -1,4 +1,3 @@
-SET SESSION sql_mode = 'NO_ZERO_DATE';
 CREATE TABLE job (
   id binary(16) NOT NULL,
   name varchar(255) NOT NULL,
