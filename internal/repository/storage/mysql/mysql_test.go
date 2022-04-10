@@ -2,8 +2,8 @@ package mysql
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
@@ -12,15 +12,12 @@ import (
 	"valet/internal/core/domain"
 	"valet/pkg/apperrors"
 	"valet/pkg/uuidgen"
-)
 
-const (
-	migrationsPath = "./migrations/*.sql"
+	"github.com/go-sql-driver/mysql"
 )
 
 var (
 	mysqlTest     *MySQL
-	db            *sql.DB
 	uuidGenerator uuidgen.UUIDGenerator
 
 	testTime   = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
@@ -29,30 +26,25 @@ var (
 
 func TestMain(m *testing.M) {
 	mysqlDSN := os.Getenv("MYSQL_DSN")
-	mysqlTest = New(mysqlDSN, "", migrationsPath, &MySQLOptions{}, nil)
+	mysqlTest = New(mysqlDSN, "", &MySQLOptions{})
 	uuidGenerator = new(uuidgen.UUIDGen)
 
-	var err error
-	db, err = sql.Open("mysql", mysqlTest.Config.FormatDSN())
+	config, err := mysql.ParseDSN(mysqlDSN)
 	if err != nil {
 		panic(err)
 	}
-
+	createDB(config.FormatDSN(), config.DBName)
 	defer func() {
+		dropTestDB()
 		mysqlTest.DB.Close()
-		db.Close()
-		err := mysqlTest.dropDB()
-		if err != nil {
-			panic(err)
-		}
 	}()
 	m.Run()
 }
 
-func resetDB() {
+func resetTestDB() {
 	var sql bytes.Buffer
 
-	tx, err := db.Begin()
+	tx, err := mysqlTest.DB.Begin()
 	if err != nil {
 		panic(err)
 	}
@@ -77,6 +69,26 @@ func resetDB() {
 	}
 }
 
+func dropTestDB() {
+	var sql bytes.Buffer
+
+	tx, err := mysqlTest.DB.Begin()
+	if err != nil {
+		panic(err)
+	}
+
+	sql.WriteString(fmt.Sprintf("DROP DATABASE %s", mysqlTest.Config.DBName))
+	_, err = tx.Exec(sql.String())
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		panic(err)
+	}
+}
+
 func TestCheckHealth(t *testing.T) {
 	result := mysqlTest.CheckHealth()
 	if result != true {
@@ -85,7 +97,7 @@ func TestCheckHealth(t *testing.T) {
 }
 
 func TestMySQLCreateJob(t *testing.T) {
-	defer resetDB()
+	defer resetTestDB()
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -121,7 +133,7 @@ func TestMySQLCreateJob(t *testing.T) {
 	sql.WriteString("scheduled_at, created_at, started_at, completed_at ")
 	sql.WriteString("FROM job WHERE id=UuidToBin(?)")
 
-	err = db.QueryRow(sql.String(), job.ID).Scan(
+	err = mysqlTest.DB.QueryRow(sql.String(), job.ID).Scan(
 		&dbJob.ID, &dbJob.Name, &dbJob.TaskName, &taskParams, &dbJob.Timeout,
 		&dbJob.Description, &dbJob.Status, &dbJob.FailureReason, &dbJob.RunAt,
 		&dbJob.ScheduledAt, &dbJob.CreatedAt, &dbJob.StartedAt, &dbJob.CompletedAt)
@@ -137,7 +149,7 @@ func TestMySQLCreateJob(t *testing.T) {
 }
 
 func TestMySQLGetJob(t *testing.T) {
-	defer resetDB()
+	defer resetTestDB()
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -204,7 +216,7 @@ func TestMySQLGetJob(t *testing.T) {
 }
 
 func TestMySQLUpdateJob(t *testing.T) {
-	defer resetDB()
+	defer resetTestDB()
 
 	job := &domain.Job{
 		Name:        "job_name",
@@ -251,7 +263,7 @@ func TestMySQLUpdateJob(t *testing.T) {
 	sql.WriteString("scheduled_at, created_at, started_at, completed_at ")
 	sql.WriteString("FROM job WHERE id=UuidToBin(?)")
 
-	err = db.QueryRow(sql.String(), job.ID).Scan(
+	err = mysqlTest.DB.QueryRow(sql.String(), job.ID).Scan(
 		&dbJob.ID, &dbJob.Name, &dbJob.TaskName, &taskParams, &dbJob.Timeout,
 		&dbJob.Description, &dbJob.Status, &dbJob.FailureReason, &dbJob.RunAt,
 		&dbJob.ScheduledAt, &dbJob.CreatedAt, &dbJob.StartedAt, &dbJob.CompletedAt)
@@ -267,7 +279,7 @@ func TestMySQLUpdateJob(t *testing.T) {
 }
 
 func TestMySQLDeleteJob(t *testing.T) {
-	defer resetDB()
+	defer resetTestDB()
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -312,7 +324,7 @@ func TestMySQLDeleteJob(t *testing.T) {
 
 	var sql bytes.Buffer
 	sql.WriteString("SELECT * FROM job WHERE id=UuidToBin(?)")
-	rows, err := db.Query(sql.String(), job.ID)
+	rows, err := mysqlTest.DB.Query(sql.String(), job.ID)
 	if err != nil {
 		t.Fatalf("unexpected error when selecting test job: %#v", err)
 	}
@@ -322,7 +334,7 @@ func TestMySQLDeleteJob(t *testing.T) {
 	// Should CASCADE
 	sql.Reset()
 	sql.WriteString("SELECT * FROM jobresult WHERE job_id=UuidToBin(?)")
-	rows, err = db.Query(sql.String(), job.ID)
+	rows, err = mysqlTest.DB.Query(sql.String(), job.ID)
 	if err != nil {
 		t.Fatalf("unexpected error when selecting test job result: %#v", err)
 	}
@@ -332,7 +344,7 @@ func TestMySQLDeleteJob(t *testing.T) {
 }
 
 func TestMySQLGetDueJobs(t *testing.T) {
-	defer resetDB()
+	defer resetTestDB()
 
 	duejob1 := &domain.Job{
 		Name:        "due_job_1",
@@ -445,7 +457,7 @@ func TestMySQLGetDueJobs(t *testing.T) {
 }
 
 func TestMySQLCreateJobResult(t *testing.T) {
-	defer resetDB()
+	defer resetTestDB()
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -490,7 +502,7 @@ func TestMySQLCreateJobResult(t *testing.T) {
 	sql.WriteString("SELECT UuidFromBin(job_id), metadata, error ")
 	sql.WriteString("FROM jobresult WHERE job_id=UuidToBin(?)")
 
-	err = db.QueryRow(sql.String(), result.JobID).Scan(
+	err = mysqlTest.DB.QueryRow(sql.String(), result.JobID).Scan(
 		&dbResult.JobID, &metadataBytes, &dbResult.Error)
 	if err != nil {
 		t.Fatalf("unexpected error when selecting test job result: %#v", err)
@@ -506,7 +518,7 @@ func TestMySQLCreateJobResult(t *testing.T) {
 }
 
 func TestMySQLGetJobResult(t *testing.T) {
-	defer resetDB()
+	defer resetTestDB()
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -584,7 +596,7 @@ func TestMySQLGetJobResult(t *testing.T) {
 }
 
 func TestMySQLUpdateJobResult(t *testing.T) {
-	defer resetDB()
+	defer resetTestDB()
 
 	job := &domain.Job{
 		Name:        "job_name",
@@ -635,7 +647,7 @@ func TestMySQLUpdateJobResult(t *testing.T) {
 	sql.WriteString("SELECT UuidFromBin(job_id), metadata, error ")
 	sql.WriteString("FROM jobresult WHERE job_id=UuidToBin(?)")
 
-	err = db.QueryRow(sql.String(), job.ID).Scan(
+	err = mysqlTest.DB.QueryRow(sql.String(), job.ID).Scan(
 		&dbResult.JobID, &metadataBytes, &dbResult.Error)
 	if err != nil {
 		t.Fatalf("unexpected error when selecting test job result: %#v", err)
@@ -652,7 +664,7 @@ func TestMySQLUpdateJobResult(t *testing.T) {
 }
 
 func TestMySQLDeleteJobResult(t *testing.T) {
-	defer resetDB()
+	defer resetTestDB()
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -697,7 +709,7 @@ func TestMySQLDeleteJobResult(t *testing.T) {
 
 	var sql bytes.Buffer
 	sql.WriteString("SELECT * FROM jobresult WHERE job_id=UuidToBin(?)")
-	rows, err := db.Query(sql.String(), job.ID)
+	rows, err := mysqlTest.DB.Query(sql.String(), job.ID)
 	if err != nil {
 		t.Fatalf("unexpected error when selecting test job result: %#v", err)
 	}

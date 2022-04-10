@@ -57,10 +57,17 @@ git clone https://github.com/svaloumas/valet.git
 
 2. Download and install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
 
-3. Build and run the `valet` container.
+3. Build and run the `valet` executable.
 
 ```bash
-docker-compose up --build -d
+make build
+./valet
+```
+
+To run it as a container, type use the following command.
+
+```bash
+docker-compose up -d --build
 ```
 
 <a name="configuration"/>
@@ -195,5 +202,6 @@ To schedule a new job to run at a specific time in the future, add `run_at` fiel
 Run the complete test suite.
 
 ```bash
-docker-compose run --rm valet make test
+docker-compose up -d mysql rabbitmq
+make test
 ```

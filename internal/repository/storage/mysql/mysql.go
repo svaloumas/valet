@@ -8,13 +8,65 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 	"valet/internal/core/domain"
 	"valet/internal/core/port"
 	"valet/pkg/apperrors"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/sirupsen/logrus"
+)
+
+const (
+	createJobTableMigration = `
+		CREATE TABLE IF NOT EXISTS job (
+		id binary(16) NOT NULL,
+		name varchar(255) NOT NULL,
+		task_name varchar(255) NOT NULL,
+		task_params JSON NOT NULL,
+		timeout INT NOT NULL,
+		description varchar(255) NOT NULL DEFAULT '',
+		status VARCHAR (50) NOT NULL DEFAULT '',
+		failure_reason TEXT NOT NULL,
+		run_at timestamp NULL ,
+		scheduled_at timestamp NULL,
+		created_at timestamp NOT NULL DEFAULT current_timestamp(),
+		started_at timestamp NULL,
+		completed_at timestamp NULL,
+		PRIMARY KEY (` + "`id`" + `)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+	`
+	createJobResultTableMigration = `
+		CREATE TABLE IF NOT EXISTS jobresult (
+		job_id binary(16) NOT NULL,
+		metadata JSON NOT NULL,
+		error TEXT NOT NULL,
+		PRIMARY KEY (` + "`job_id`" + `),
+		CONSTRAINT ` + "`fk_job_id` FOREIGN KEY (`job_id`) REFERENCES `job` (`id`) " + `
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+	`
+	createUuidFromBinFunction = `
+		CREATE FUNCTION ` + "`UuidFromBin`" + `(b BINARY(16)) RETURNS CHAR(36)
+		   DETERMINISTIC
+		BEGIN
+   			DECLARE hexStr CHAR(32);
+   			SET hexStr = HEX(b);
+   			RETURN LOWER(CONCAT(
+				SUBSTR(hexStr, 1, 8), '-',
+				SUBSTR(hexStr, 9, 4), '-',
+				SUBSTR(hexStr, 13, 4), '-',
+				SUBSTR(hexStr, 17, 4), '-',
+				SUBSTR(hexStr, 21)
+    		));
+		END
+	`
+	createUuidToBinFunction = `
+		CREATE FUNCTION ` + "`UuidToBin`" + `(uuid CHAR(36)) RETURNS BINARY(16)
+ 		  DETERMINISTIC
+		BEGIN
+   			RETURN UNHEX(REPLACE(uuid, '-', ''));
+		END
+	`
 )
 
 var _ port.Storage = &MySQL{}
@@ -30,25 +82,16 @@ type MySQLOptions struct {
 type MySQL struct {
 	DB        *sql.DB
 	Config    *mysql.Config
-	Log       *logrus.Logger
 	CaPemFile string
 }
 
 // New initializes and returns a MySQL client.
 func New(
 	dsn,
-	caPemFile,
-	migrationsPath string,
-	options *MySQLOptions,
-	logger *logrus.Logger) *MySQL {
+	caPemFile string,
+	options *MySQLOptions) *MySQL {
 
 	mySQL := new(MySQL)
-
-	if logger == nil {
-		mySQL.Log = &logrus.Logger{Out: ioutil.Discard}
-	} else {
-		mySQL.Log = logger
-	}
 
 	config, err := mysql.ParseDSN(dsn)
 	if err != nil {
@@ -67,6 +110,8 @@ func New(
 		mySQL.CaPemFile = caPemFile
 	}
 
+	createDB(config.FormatDSN(), config.DBName)
+
 	mySQL.DB, err = sql.Open("mysql", config.FormatDSN())
 	if err != nil {
 		panic(err)
@@ -74,17 +119,6 @@ func New(
 	mySQL.DB.SetConnMaxLifetime(time.Duration(options.ConnectionMaxLifetime) * time.Millisecond)
 	mySQL.DB.SetMaxIdleConns(options.MaxIdleConnections)
 	mySQL.DB.SetMaxOpenConns(options.MaxOpenConnections)
-
-	err = mySQL.CreateDBIfNotExists()
-	if err != nil {
-		panic(err)
-	}
-
-	err = mySQL.Migrate(migrationsPath)
-	if err != nil {
-		panic(err)
-	}
-
 	return mySQL
 }
 
@@ -352,4 +386,90 @@ func (storage *MySQL) DeleteJobResult(jobID string) error {
 		return err
 	}
 	return nil
+}
+
+func createDB(parsedDSN, dbName string) {
+	dsnWithoutDBName := strings.Replace(parsedDSN, dbName, "", 1)
+
+	db, err := sql.Open("mysql", dsnWithoutDBName)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	var sql bytes.Buffer
+	sql.WriteString(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", dbName))
+	_, err = db.Exec(sql.String())
+	if err != nil {
+		panic(err)
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		panic(err)
+	}
+
+	sql.Reset()
+	sql.WriteString(fmt.Sprintf("USE %s", dbName))
+	_, err = tx.Exec(sql.String())
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+	// Create job table
+	sql.Reset()
+	sql.WriteString(createJobTableMigration)
+	_, err = tx.Exec(sql.String())
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+	// Create jobresult table
+	sql.Reset()
+	sql.WriteString(createJobResultTableMigration)
+	_, err = tx.Exec(sql.String())
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+	// Drop UUID helper functions if exist
+	sql.Reset()
+	sql.WriteString("DROP FUNCTION IF EXISTS `UuidFromBin`")
+	_, err = tx.Exec(sql.String())
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+	sql.Reset()
+	sql.WriteString("DROP FUNCTION IF EXISTS `UuidToBin`")
+	_, err = tx.Exec(sql.String())
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+	// Create UUID helper functions
+	sql.Reset()
+	sql.WriteString(createUuidFromBinFunction)
+	_, err = tx.Exec(sql.String())
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+	sql.Reset()
+	sql.WriteString(createUuidToBinFunction)
+	_, err = tx.Exec(sql.String())
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		panic(err)
+	}
 }

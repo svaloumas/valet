@@ -35,6 +35,9 @@ type Storage interface {
 
 	// CheckHealth checks if the storage is alive.
 	CheckHealth() bool
+
+	// Close terminates any store connections gracefully.
+	Close() error
 }
 
 // JobQueue represents a driven actor queue interface.

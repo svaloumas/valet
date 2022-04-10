@@ -47,7 +47,7 @@ func main() {
 	jobQueue := factory.JobQueueFactory(cfg.JobQueue, cfg.LoggingFormat)
 	logger.Infof("initialized [%s] as a job queue", cfg.JobQueue.Option)
 
-	storage := factory.StorageFactory(cfg.Repository, cfg.LoggingFormat)
+	storage := factory.StorageFactory(cfg.Repository)
 	logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
 
 	jobService := jobsrv.New(storage, jobQueue, taskrepo, uuidgen.New(), rtime.New())
@@ -95,4 +95,5 @@ func main() {
 
 	jobQueue.Close()
 	workService.Stop()
+	storage.Close()
 }

@@ -14,10 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17'
+
       - name: Build and spawn the containers
-        run: docker-compose up -d --build
+        run: docker-compose up -d mysql rabbitmq
       - name: Test
-        run: docker-compose run --rm valet make test
+        run: make test
 
   coverage:
     runs-on: ubuntu-latest
@@ -40,9 +45,9 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Build and spawn the containers
-        run: docker-compose up -d --build
+        run: docker-compose up -d mysql rabbitmq
       - name: Run report
-        run: docker-compose run --rm valet make report
+        run: make report
 
       - name: Go coverage badge
         uses: tj-actions/coverage-badge-go@v1.1

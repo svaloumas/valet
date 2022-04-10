@@ -125,6 +125,12 @@ func (storage *memorydb) DeleteJobResult(id string) error {
 	return nil
 }
 
+// CheckHealth checks if the storage is alive.
 func (storage *memorydb) CheckHealth() bool {
 	return storage.jobdb != nil && storage.jobresultdb != nil
+}
+
+// Close terminates any store connections gracefully.
+func (storage *memorydb) Close() error {
+	return nil
 }
