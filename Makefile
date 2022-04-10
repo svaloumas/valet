@@ -4,7 +4,7 @@ BUILDCMD=env GOOS=linux GOARCH=amd64 go build -v
 BUILD_TIME=`TZ=UTC date +%FT%T%z`
 COMMIT=`git rev-parse --short HEAD`
 LDFLAGS=-ldflags "-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.commit=$(COMMIT)"
-MYSQL_TEST_DSN="root:password@tcp(mysql:3306)/test?parseTime=true&sql_mode=NO_ZERO_DATE"
+MYSQL_TEST_DSN="root:password@tcp(mysql:3306)/test?parseTime=true"
 RABBITMQ_TEST_URI="amqp://quest:password@rabbitmq:5672/"
 VERSION=0.8.0
 
