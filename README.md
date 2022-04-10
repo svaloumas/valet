@@ -70,48 +70,33 @@ docker-compose up --build -d
 All configuration is set through `config.yaml`, which lives under the project's root directory.
 
 ```yaml
-port: 8080
+port: 8080                          # string
 job_queue:
-  option: rabbitmq
+  option: rabbitmq                  # string - options: memory, rabbitmq
   memory_job_queue:
-    capacity: 100
+    capacity: 100                   # int
   rabbitmq:
-    queue_name: job
-    durable: false
-    deleted_when_unused: false
-    exclusive: false
-    nowait: false
+    queue_name: job                 # string
+    durable: false                  # boolean
+    deleted_when_unused: false      # boolean
+    exclusive: false                # boolean
+    nowait: false                   # boolean
 worker_pool:
-  concurrency:
-  backlog:
+  concurrency:                      # int
+  backlog:                          # int
 scheduler:
-  repository_polling_interval: 60
+  repository_polling_interval: 60   # int
 consumer:
-  job_queue_polling_interval: 5
+  job_queue_polling_interval: 5     # int
 repository:
-  option: memory
+  option: memory                    # string - options:  memory, mysql
   mysql:
-    connection_max_lifetime:
-    max_idle_connections:
-    max_open_connections:
-timeout_unit: second
-logging_format: text
+    connection_max_lifetime:        # int
+    max_idle_connections:           # int
+    max_open_connections:           # int
+timeout_unit: second                # string - options: millisecond, second
+logging_format: text                # string - options: text, json
 ```
-
-Available configuration options:
-
-| Parameter                   | Type     | Default             | Description |
-| --------------------------- | -------- | ------------------- | ----------- |
-| port                        | string   | 8080                | The port that the server should listen to |
-| capacity                    | integer  | 100                 | The capacity of the job queue (applies only for in-memory job queue)|
-| concurrency                 | integer  | number of CPU cores | The number of go-routines responsible for executing the jobs concurrently |
-| backlog                     | integer  | number of cores * 2 | The capacity of the worker pool work queue |
-| timeout_unit                | string   | -                   | The unit of time that will be used for the timeout interval specified for each job |
-| repository_polling_interval | integer  | 60 seconds          | The time interval in which the scheduler will poll for new events |
-| job_queue_polling_timeout   | integer  | 1 second            | The time interval in which the consumer will poll the queue for new jobs |
-| logging_format              | string   | -                   | The logging format of the service, text and JSON are supported |
-| repository - option         | string   | -                   | The repository of the jobs. Available options: memory & mysql |
-| job_queue - option          | string   | -                   | The job queue of your choice. Available options: memory & rabbitmq |
 
 <a name="secrets"/>
 
