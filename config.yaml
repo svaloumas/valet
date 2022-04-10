@@ -4,11 +4,23 @@ job_queue:
   memory_job_queue:
     capacity: 100
   rabbitmq:
-    queue_name: job
-    durable: false
-    deleted_when_unused: false
-    exclusive: false
-    nowait: false
+    queue_params:
+      name: job
+      durable: false
+      deleted_when_unused: false
+      exclusive: false
+      no_wait: false
+    consume_params:
+      name: rabbitmq-consumer
+      auto_ack: true
+      exclusive: false
+      no_local: false
+      no_wait: false
+    publish_params:
+      exchange: 
+      routing_key: job
+      mandatory: false
+      immediate: false
 worker_pool:
   concurrency:
   backlog:

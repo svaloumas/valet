@@ -79,11 +79,23 @@ job_queue:
   memory_job_queue:
     capacity: 100                   # int
   rabbitmq:
-    queue_name: job                 # string
-    durable: false                  # boolean
-    deleted_when_unused: false      # boolean
-    exclusive: false                # boolean
-    nowait: false                   # boolean
+    queue_params:
+      queue_name: job               # string
+      durable: false                # boolean
+      deleted_when_unused: false    # boolean
+      exclusive: false              # boolean
+      no_wait: false                # boolean
+    consume_params:
+      name: rabbitmq-consumer       # string
+      auto_ack: true                # boolean
+      exclusive: false              # boolean
+      no_local: false               # boolean
+      no_wait: false                # boolean
+    publish_params:
+      exchange:                     # string
+      routing_key: job              # string
+      mandatory: false              # boolean
+      immediate: false              # boolean
 # Workerpool config section
 worker_pool:
   concurrency:                      # int

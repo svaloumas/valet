@@ -39,12 +39,33 @@ type MemoryJobQueue struct {
 	Capacity int `yaml:"capacity"`
 }
 
-type RabbitMQ struct {
-	QueueName         string `yaml:"queue_name"`
+type QueueParams struct {
+	Name              string `yaml:"name"`
 	Durable           bool   `yaml:"durable"`
 	DeletedWhenUnused bool   `yaml:"deleted_when_unused"`
 	Exclusive         bool   `yaml:"exclusive"`
-	NoWait            bool   `yaml:"nowait"`
+	NoWait            bool   `yaml:"no_wait"`
+}
+
+type ConsumeParams struct {
+	Name      string `yaml:"name"`
+	AutoACK   bool   `yaml:"auto_ack"`
+	Exclusive bool   `yaml:"exclusive"`
+	NoLocal   bool   `yaml:"no_local"`
+	NoWait    bool   `yaml:"no_wait"`
+}
+
+type PublishParams struct {
+	Exchange   string `yaml:"exchange"`
+	RoutingKey string `yaml:"routing_key"`
+	Mandatory  bool   `yaml:"mandatory"`
+	Immediate  bool   `yaml:"immediate"`
+}
+
+type RabbitMQ struct {
+	QueueParams   QueueParams   `yaml:"queue_params"`
+	ConsumeParams ConsumeParams `yaml:"consume_params"`
+	PublishParams PublishParams `yaml:"publish_params"`
 }
 
 type JobQueue struct {

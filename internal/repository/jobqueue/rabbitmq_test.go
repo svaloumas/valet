@@ -39,7 +39,12 @@ func TestRabbitMQPush(t *testing.T) {
 	}
 
 	cfg := config.RabbitMQ{
-		QueueName: "test",
+		QueueParams: config.QueueParams{
+			Name: "test",
+		},
+		PublishParams: config.PublishParams{
+			RoutingKey: "test",
+		},
 	}
 	jobqueue := NewRabbitMQ(cfg, "text")
 	defer jobqueue.Close()
@@ -75,7 +80,12 @@ func TestRabbitMQPop(t *testing.T) {
 	}
 
 	cfg := config.RabbitMQ{
-		QueueName: "test",
+		QueueParams: config.QueueParams{
+			Name: "test",
+		},
+		PublishParams: config.PublishParams{
+			RoutingKey: "test",
+		},
 	}
 	jobqueue := NewRabbitMQ(cfg, "text")
 	defer jobqueue.Close()
@@ -109,7 +119,12 @@ func TestRabbitMQClose(t *testing.T) {
 	}
 
 	cfg := config.RabbitMQ{
-		QueueName: "test",
+		QueueParams: config.QueueParams{
+			Name: "test",
+		},
+		PublishParams: config.PublishParams{
+			RoutingKey: "test",
+		},
 	}
 	jobqueue := NewRabbitMQ(cfg, "text")
 	defer jobqueue.Close()

@@ -16,12 +16,13 @@ import (
 var _ port.JobQueue = &rabbitmq{}
 
 type rabbitmq struct {
-	URI      string
-	conn     *amqp.Connection
-	channel  *amqp.Channel
-	queue    amqp.Queue
-	delivery <-chan amqp.Delivery
-	logger   *logrus.Logger
+	URI           string
+	conn          *amqp.Connection
+	channel       *amqp.Channel
+	queue         amqp.Queue
+	delivery      <-chan amqp.Delivery
+	publishParams config.PublishParams
+	logger        *logrus.Logger
 }
 
 // NewRabbitMQ creates and returns a new fifoqueue instance.
@@ -38,35 +39,36 @@ func NewRabbitMQ(cfg config.RabbitMQ, loggingFormat string) *rabbitmq {
 		panic(fmt.Sprintf("could not open channel to RabbitMQ: %s", err))
 	}
 	queue, err := channel.QueueDeclare(
-		cfg.QueueName,         // name
-		cfg.Durable,           // durable
-		cfg.DeletedWhenUnused, // delete when unused
-		cfg.Exclusive,         // exclusive
-		cfg.NoWait,            // no-wait
-		nil,                   // arguments
+		cfg.QueueParams.Name,              // name
+		cfg.QueueParams.Durable,           // durable
+		cfg.QueueParams.DeletedWhenUnused, // delete when unused
+		cfg.QueueParams.Exclusive,         // exclusive
+		cfg.QueueParams.NoWait,            // no-wait
+		nil,                               // arguments
 	)
 	if err != nil {
 		panic(fmt.Sprintf("could not declare queue to RabbitMQ: %s", err))
 	}
 	delivery, err := channel.Consume(
-		cfg.QueueName,       // queue
-		"rabbitmq-consumer", // consumer
-		true,                // auto-ack
-		false,               // exclusive
-		false,               // no-local
-		false,               // no-wait
-		nil,                 // args
+		cfg.QueueParams.Name,        // queue
+		cfg.ConsumeParams.Name,      // consumer
+		cfg.ConsumeParams.AutoACK,   // auto-ack
+		cfg.ConsumeParams.Exclusive, // exclusive
+		cfg.ConsumeParams.NoLocal,   // no-local
+		cfg.ConsumeParams.NoWait,    // no-wait
+		nil,                         // args
 	)
 	if err != nil {
 		panic(fmt.Sprintf("failed to init RabbitMQ queue consumer: %s", err))
 	}
 	rabbitmq := &rabbitmq{
-		URI:      rabbitmqURI,
-		conn:     conn,
-		channel:  channel,
-		queue:    queue,
-		delivery: delivery,
-		logger:   logger,
+		URI:           rabbitmqURI,
+		conn:          conn,
+		channel:       channel,
+		queue:         queue,
+		delivery:      delivery,
+		publishParams: cfg.PublishParams,
+		logger:        logger,
 	}
 	return rabbitmq
 }
@@ -78,10 +80,10 @@ func (q *rabbitmq) Push(j *domain.Job) error {
 		return err
 	}
 	err = q.channel.Publish(
-		"",           // exchange
-		q.queue.Name, // routing key
-		false,        // mandatory
-		false,        // immediate
+		q.publishParams.Exchange,   // exchange
+		q.publishParams.RoutingKey, // routing key
+		q.publishParams.Mandatory,  // mandatory
+		q.publishParams.Immediate,  // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte(body),

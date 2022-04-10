@@ -16,12 +16,30 @@ func TestLoad(t *testing.T) {
 	memoryJobQueue := MemoryJobQueue{
 		Capacity: 100,
 	}
-	rabbitMQ := RabbitMQ{
-		QueueName:         "test",
-		Durable:           true,
-		DeletedWhenUnused: true,
-		Exclusive:         true,
+	queueParams := QueueParams{
+		Name:              "test",
+		Durable:           false,
+		DeletedWhenUnused: false,
+		Exclusive:         false,
 		NoWait:            false,
+	}
+	consumeParams := ConsumeParams{
+		Name:      "rabbitmq-consumer",
+		AutoACK:   true,
+		Exclusive: false,
+		NoLocal:   false,
+		NoWait:    false,
+	}
+	publishParams := PublishParams{
+		Exchange:   "",
+		RoutingKey: "test",
+		Mandatory:  false,
+		Immediate:  false,
+	}
+	rabbitMQ := RabbitMQ{
+		QueueParams:   queueParams,
+		ConsumeParams: consumeParams,
+		PublishParams: publishParams,
 	}
 	jobqueue := JobQueue{
 		Option:         "rabbitmq",
