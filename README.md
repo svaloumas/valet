@@ -70,7 +70,10 @@ docker-compose up --build -d
 All configuration is set through `config.yaml`, which lives under the project's root directory.
 
 ```yaml
-port: 8080                          # string
+# Server config section
+server:
+  http_port: 8080                   # string
+# Job queue config section
 job_queue:
   option: rabbitmq                  # string - options: memory, rabbitmq
   memory_job_queue:
@@ -81,19 +84,24 @@ job_queue:
     deleted_when_unused: false      # boolean
     exclusive: false                # boolean
     nowait: false                   # boolean
+# Workerpool config section
 worker_pool:
   concurrency:                      # int
   backlog:                          # int
+# Scheduler config section
 scheduler:
   repository_polling_interval: 60   # int
+# Consumer config section
 consumer:
   job_queue_polling_interval: 5     # int
+# Repository config section
 repository:
   option: memory                    # string - options:  memory, mysql
   mysql:
     connection_max_lifetime:        # int
     max_idle_connections:           # int
     max_open_connections:           # int
+# Global config section
 timeout_unit: second                # string - options: millisecond, second
 logging_format: text                # string - options: text, json
 ```

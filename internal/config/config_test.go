@@ -10,6 +10,9 @@ import (
 )
 
 func TestLoad(t *testing.T) {
+	server := Server{
+		HTTPPort: "8080",
+	}
 	memoryJobQueue := MemoryJobQueue{
 		Capacity: 100,
 	}
@@ -47,7 +50,7 @@ func TestLoad(t *testing.T) {
 		MySQL:  mysql,
 	}
 	config := &Config{
-		Port:              "8080",
+		Server:            server,
 		JobQueue:          jobqueue,
 		WorkerPool:        wp,
 		Scheduler:         scheduler,

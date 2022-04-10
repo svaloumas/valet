@@ -31,6 +31,10 @@ var (
 	}
 )
 
+type Server struct {
+	HTTPPort string `json:"http_port"`
+}
+
 type MemoryJobQueue struct {
 	Capacity int `yaml:"capacity"`
 }
@@ -76,7 +80,7 @@ type MySQL struct {
 }
 
 type Config struct {
-	Port              string     `yaml:"port"`
+	Server            Server     `yaml:"server"`
 	JobQueue          JobQueue   `yaml:"job_queue"`
 	WorkerPool        WorkerPool `yaml:"worker_pool"`
 	Scheduler         Scheduler  `yaml:"scheduler"`
@@ -120,8 +124,8 @@ func (cfg *Config) Load(filepath string) error {
 }
 
 func (cfg *Config) setServerConfig() {
-	if cfg.Port == "" {
-		cfg.Port = "8080"
+	if cfg.Server.HTTPPort == "" {
+		cfg.Server.HTTPPort = "8080"
 	}
 }
 

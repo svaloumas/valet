@@ -1,4 +1,5 @@
-port: 8080
+server:
+  http_port: 8080
 job_queue:
   option: rabbitmq
   memory_job_queue:

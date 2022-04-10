@@ -71,7 +71,7 @@ func main() {
 	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
 
 	srv := http.Server{
-		Addr:    ":" + cfg.Port,
+		Addr:    ":" + cfg.Server.HTTPPort,
 		Handler: NewRouter(jobService, resultService, storage, cfg.LoggingFormat),
 	}
 

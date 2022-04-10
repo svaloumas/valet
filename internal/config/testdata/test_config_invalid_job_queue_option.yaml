@@ -1,4 +1,5 @@
-port: 8080
+server:
+  http_port: 8080
 job_queue:
   option: queueX
   memory_job_queue:
