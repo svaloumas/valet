@@ -6,6 +6,7 @@ import (
 	"testing"
 	"valet/internal/core/domain"
 	"valet/mock"
+	"valet/pkg/apperrors"
 
 	"github.com/golang/mock/gomock"
 )
@@ -80,14 +81,31 @@ func TestDelete(t *testing.T) {
 		Error:    "some task error",
 	}
 
+	notExistingID := "not_existing_id"
 	invalidJobID := "invalid_job_id"
+	notFoundErr := &apperrors.NotFoundErr{ID: invalidJobID, ResourceName: "job"}
 	storageErr := errors.New("some storage error")
 
 	storage := mock.NewMockStorage(ctrl)
 	storage.
 		EXPECT().
+		GetJobResult(expectedResult.JobID).
+		Return(expectedResult, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJobResult(notExistingID).
+		Return(nil, notFoundErr).
+		Times(1)
+	storage.
+		EXPECT().
 		DeleteJobResult(expectedResult.JobID).
 		Return(nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJobResult(invalidJobID).
+		Return(expectedResult, nil).
 		Times(1)
 	storage.
 		EXPECT().
@@ -106,6 +124,11 @@ func TestDelete(t *testing.T) {
 			"ok",
 			expectedResult.JobID,
 			nil,
+		},
+		{
+			"not found",
+			notExistingID,
+			notFoundErr,
 		},
 		{
 			"storage error",

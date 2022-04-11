@@ -92,5 +92,9 @@ func (srv *jobservice) Update(id, name, description string) error {
 
 // Delete deletes a job.
 func (srv *jobservice) Delete(id string) error {
+	_, err := srv.storage.GetJob(id)
+	if err != nil {
+		return err
+	}
 	return srv.storage.DeleteJob(id)
 }

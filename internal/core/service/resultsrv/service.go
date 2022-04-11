@@ -25,5 +25,9 @@ func (srv *resultservice) Get(id string) (*domain.JobResult, error) {
 
 // Delete deletes a job result.
 func (srv *resultservice) Delete(id string) error {
+	_, err := srv.storage.GetJobResult(id)
+	if err != nil {
+		return err
+	}
 	return srv.storage.DeleteJobResult(id)
 }

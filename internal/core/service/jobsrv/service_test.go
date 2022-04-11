@@ -492,14 +492,31 @@ func TestDelete(t *testing.T) {
 	}
 
 	invalidID := "invalid_id"
+	notExistingID := "not_existing_id"
+	notFoundErr := &apperrors.NotFoundErr{ID: invalidID, ResourceName: "job"}
 	storageErr := errors.New("some storage error")
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 
 	storage := mock.NewMockStorage(ctrl)
 	storage.
 		EXPECT().
+		GetJob(expectedJob.ID).
+		Return(expectedJob, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJob(notExistingID).
+		Return(nil, notFoundErr).
+		Times(1)
+	storage.
+		EXPECT().
 		DeleteJob(expectedJob.ID).
 		Return(nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJob(invalidID).
+		Return(expectedJob, nil).
 		Times(1)
 	storage.
 		EXPECT().
@@ -521,6 +538,11 @@ func TestDelete(t *testing.T) {
 			"ok",
 			expectedJob.ID,
 			nil,
+		},
+		{
+			"not found",
+			notExistingID,
+			notFoundErr,
 		},
 		{
 			"storage error",
