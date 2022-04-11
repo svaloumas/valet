@@ -16,9 +16,7 @@ import (
 )
 
 var (
-	buildTime = "undefined"
-	commit    = "undefined"
-	version   = "undefined"
+	version = "0.8.0"
 )
 
 // NewRouter initializes and returns a new gin.Engine instance.
@@ -65,6 +63,7 @@ func HandleStatus(storage port.Storage) gin.HandlerFunc {
 		res := map[string]interface{}{
 			"storage_healthy": storage.CheckHealth(),
 			"time":            now,
+			"version":         version,
 		}
 		c.JSON(http.StatusOK, res)
 	}
