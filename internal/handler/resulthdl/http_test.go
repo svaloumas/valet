@@ -17,7 +17,7 @@ import (
 	"valet/pkg/apperrors"
 )
 
-func TestGetJobResult(t *testing.T) {
+func TestHTTPGetJobResult(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	gin.SetMode(gin.ReleaseMode)
@@ -101,7 +101,7 @@ func TestGetJobResult(t *testing.T) {
 	}
 }
 
-func TestDeleteJobResult(t *testing.T) {
+func TestHTTPDeleteJobResult(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

@@ -21,7 +21,7 @@ import (
 
 var testTime = "1985-05-04T04:32:53.651387234Z"
 
-func TestPostJobs(t *testing.T) {
+func TestHTTPPostJobs(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	gin.SetMode(gin.ReleaseMode)
@@ -227,7 +227,7 @@ func TestPostJobs(t *testing.T) {
 	}
 }
 
-func TestGetJob(t *testing.T) {
+func TestHTTPGetJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -330,7 +330,7 @@ func TestGetJob(t *testing.T) {
 	}
 }
 
-func TestPatchJob(t *testing.T) {
+func TestHTTPPatchJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -432,7 +432,7 @@ func TestPatchJob(t *testing.T) {
 	}
 }
 
-func TestDeleteJob(t *testing.T) {
+func TestHTTPDeleteJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
