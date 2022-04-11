@@ -57,14 +57,7 @@ git clone https://github.com/svaloumas/valet.git
 
 2. Download and install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
 
-3. Build and run the `valet` executable.
-
-```bash
-make build
-./valet
-```
-
-To run it as a container, type use the following command.
+3. Build and run the containers.
 
 ```bash
 docker-compose up -d --build
