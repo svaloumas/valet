@@ -1,5 +1,9 @@
 server:
-  http_port: 8080
+  protocol: http
+  http:
+    port: 8080
+  grpc:
+    port: 50051
 job_queue:
   option: rabbitmq
   memory_job_queue:

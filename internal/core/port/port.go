@@ -106,3 +106,11 @@ type Scheduler interface {
 	// Schedule polls the repository in given interval and schedules due jobs for execution.
 	Schedule(ctx context.Context, duration time.Duration)
 }
+
+// Server represents a driver actor service interface.
+type Server interface {
+	// StartServe start the server.
+	StartServe()
+	// GracefullyStop gracefully stops the server.
+	GracefullyStop()
+}

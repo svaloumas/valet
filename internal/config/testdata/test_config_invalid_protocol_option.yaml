@@ -1,11 +1,11 @@
 server:
-  protocol: http
+  protocol: websockets
   http:
     port: 8080
   grpc:
     port: 50051
 job_queue:
-  option: queueX
+  option: rabbitmq
   memory_job_queue:
     capacity: 100
   rabbitmq:

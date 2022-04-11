@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -13,6 +13,12 @@ import (
 	"valet/internal/core/port"
 	"valet/internal/handler/jobhdl"
 	"valet/internal/handler/resulthdl"
+)
+
+var (
+	buildTime = "undefined"
+	commit    = "undefined"
+	version   = "undefined"
 )
 
 // NewRouter initializes and returns a new gin.Engine instance.
@@ -57,10 +63,8 @@ func HandleStatus(storage port.Storage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		now := time.Now().UTC()
 		res := map[string]interface{}{
-			"build_time": buildTime,
-			"commit":     commit,
-			"time":       now,
-			"version":    version,
+			"storage_healthy": storage.CheckHealth(),
+			"time":            now,
 		}
 		c.JSON(http.StatusOK, res)
 	}

@@ -10,8 +10,16 @@ import (
 )
 
 func TestLoad(t *testing.T) {
+	http := HTTP{
+		Port: "8080",
+	}
+	grpc := GRPC{
+		Port: "50051",
+	}
 	server := Server{
-		HTTPPort: "8080",
+		Protocol: "http",
+		HTTP:     http,
+		GRPC:     grpc,
 	}
 	memoryJobQueue := MemoryJobQueue{
 		Capacity: 100,
@@ -126,6 +134,13 @@ func TestLoad(t *testing.T) {
 			"./testdata/test_config_invalid_job_queue_option.yaml",
 			nil,
 			errors.New("queueX is not a valid job queue option, valid options: map[memory:true rabbitmq:true]"),
+		},
+		{
+			"wrong protovol option",
+			"test_dsn",
+			"./testdata/test_config_invalid_protocol_option.yaml",
+			nil,
+			errors.New("websockets is not a valid protocol option, valid options: map[grpc:true http:true]"),
 		},
 	}
 

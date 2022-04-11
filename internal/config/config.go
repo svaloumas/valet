@@ -29,10 +29,24 @@ var (
 		"memory":   true,
 		"rabbitmq": true,
 	}
+	validProtocolOptions = map[string]bool{
+		"http": true,
+		"grpc": true,
+	}
 )
 
+type HTTP struct {
+	Port string `yaml:"port"`
+}
+
+type GRPC struct {
+	Port string `yaml:"port"`
+}
+
 type Server struct {
-	HTTPPort string `json:"http_port"`
+	Protocol string `yaml:"protocol"`
+	HTTP     HTTP   `yaml:"http"`
+	GRPC     GRPC   `yaml:"grpc"`
 }
 
 type MemoryJobQueue struct {
@@ -121,7 +135,10 @@ func (cfg *Config) Load(filepath string) error {
 	if err != nil {
 		return err
 	}
-	cfg.setServerConfig()
+	err = cfg.setServerConfig()
+	if err != nil {
+		return err
+	}
 	err = cfg.setJobQueueConfig()
 	if err != nil {
 		return err
@@ -144,10 +161,17 @@ func (cfg *Config) Load(filepath string) error {
 	return nil
 }
 
-func (cfg *Config) setServerConfig() {
-	if cfg.Server.HTTPPort == "" {
-		cfg.Server.HTTPPort = "8080"
+func (cfg *Config) setServerConfig() error {
+	if _, ok := validProtocolOptions[cfg.Server.Protocol]; !ok {
+		return fmt.Errorf("%s is not a valid protocol option, valid options: %v", cfg.Server.Protocol, validProtocolOptions)
 	}
+	if cfg.Server.HTTP.Port == "" {
+		cfg.Server.HTTP.Port = "8080"
+	}
+	if cfg.Server.GRPC.Port == "" {
+		cfg.Server.GRPC.Port = "50051"
+	}
+	return nil
 }
 
 func (cfg *Config) setJobQueueConfig() error {

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -24,12 +23,6 @@ import (
 	"valet/task"
 
 	_ "valet/doc/swagger"
-)
-
-var (
-	buildTime = "undefined"
-	commit    = "undefined"
-	version   = "undefined"
 )
 
 func main() {
@@ -70,28 +63,15 @@ func main() {
 	schedulerService := schedulersrv.New(storage, workService, rtime.New(), schedulerLogger)
 	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
 
-	srv := http.Server{
-		Addr:    ":" + cfg.Server.HTTPPort,
-		Handler: NewRouter(jobService, resultService, storage, cfg.LoggingFormat),
-	}
-
-	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			logger.Printf("%s", err)
-		}
-	}()
+	server := factory.ServerFactory(cfg.Server, jobService, resultService, storage, cfg.LoggingFormat, logger)
+	server.StartServe()
+	logger.Infof("initialized [%s] server", cfg.Server.Protocol)
 
 	gracefulTerm := make(chan os.Signal, 1)
 	signal.Notify(gracefulTerm, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-gracefulTerm
 	logger.Printf("server notified %+v", sig)
-
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		logger.Fatal("failed to properly shutdown the server:", err)
-	}
-	logger.Println("server exiting...")
+	server.GracefullyStop()
 
 	jobQueue.Close()
 	workService.Stop()

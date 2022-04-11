@@ -33,7 +33,7 @@ It provides the following interfaces and can be configured accordingly:
 #### API
 
 * HTTP
-* gRPC (to be implemented)
+* gRPC
 
 #### Repository
 
@@ -79,7 +79,11 @@ All configuration is set through `config.yaml`, which lives under the project's 
 ```yaml
 # Server config section
 server:
-  http_port: 8080                   # string
+  protocol: grpc                    # string - options: http, grpc
+  http:
+    port: 8080                      # string
+  grpc:
+    port: 50051                     # string
 # Job queue config section
 job_queue:
   option: rabbitmq                  # string - options: memory, rabbitmq
