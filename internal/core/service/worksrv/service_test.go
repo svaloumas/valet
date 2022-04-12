@@ -15,6 +15,7 @@ import (
 
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/taskrepo"
+	"valet/internal/core/service/worksrv/work"
 	"valet/mock"
 )
 
@@ -29,7 +30,7 @@ func TestSend(t *testing.T) {
 	j.ID = "job_id"
 	j.TaskName = "test_task"
 
-	work := domain.Work{Job: j, Result: make(chan domain.JobResult, 1)}
+	work := work.Work{Job: j, Result: make(chan domain.JobResult, 1)}
 
 	result := domain.JobResult{
 		JobID:    j.ID,
@@ -70,12 +71,12 @@ func TestSendBacklogLimit(t *testing.T) {
 	j := new(domain.Job)
 	j.TaskName = "test_task"
 
-	work := domain.Work{Job: j}
+	w := work.Work{Job: j}
 
 	jDeemedToBlock := new(domain.Job)
 	jDeemedToBlock.TaskName = "test_task"
 
-	workDeemedToBlock := domain.Work{Job: jDeemedToBlock}
+	workDeemedToBlock := work.Work{Job: jDeemedToBlock}
 
 	freezed := mock.NewMockTime(ctrl)
 	taskrepo := taskrepo.NewTaskRepository()
@@ -86,7 +87,7 @@ func TestSendBacklogLimit(t *testing.T) {
 	workservice.Start()
 	defer workservice.Stop()
 
-	workservice.Send(work)
+	workservice.Send(w)
 
 	if len(workservice.queue) != 1 {
 		t.Errorf("work service send did not increase the queue length: got %v want 1", len(workservice.queue))
@@ -166,7 +167,7 @@ func TestExecCompletedJob(t *testing.T) {
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
-	workWithNoError := domain.Work{
+	workWithNoError := work.Work{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    taskFunc,
@@ -252,7 +253,7 @@ func TestExecFailedJob(t *testing.T) {
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
-	workWithError := domain.Work{
+	workWithError := work.Work{
 		Job:         expectedJob,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    taskFuncReturnsErr,
@@ -336,7 +337,7 @@ func TestExecPanicJob(t *testing.T) {
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
-	workWithError := domain.Work{
+	workWithError := work.Work{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    taskFuncReturnsErr,
@@ -425,7 +426,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
-	w := domain.Work{
+	w := work.Work{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    taskFunc,
@@ -434,7 +435,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 
 	tests := []struct {
 		name string
-		work domain.Work
+		work work.Work
 		err  error
 	}{
 		{
@@ -528,7 +529,7 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
-	workWithError := domain.Work{
+	workWithError := work.Work{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TaskFunc:    taskFuncReturnsErr,

@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"valet/internal/core/domain"
+	"valet/internal/core/service/worksrv/work"
 	"valet/mock"
 )
 
@@ -23,7 +24,7 @@ func TestConsume(t *testing.T) {
 	j.Status = domain.Pending
 	j.RunAt = nil
 
-	w := domain.Work{
+	w := work.Work{
 		Job:         j,
 		TimeoutUnit: time.Millisecond,
 	}

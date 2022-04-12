@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"valet/internal/core/domain"
+	"valet/internal/core/service/worksrv/work"
 	"valet/mock"
 )
 
@@ -25,7 +26,7 @@ func TestSchedule(t *testing.T) {
 		TaskName: "some task",
 	}
 
-	w := domain.Work{
+	w := work.Work{
 		Job:         j,
 		TimeoutUnit: time.Millisecond,
 	}
@@ -81,7 +82,7 @@ func TestScheduleErrorCases(t *testing.T) {
 		TaskName: "some task",
 	}
 
-	w := domain.Work{
+	w := work.Work{
 		Job:         j,
 		TimeoutUnit: time.Millisecond,
 	}

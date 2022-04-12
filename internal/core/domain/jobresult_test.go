@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestFutureResultWait(t *testing.T) {
+func TestFutureJobResultWait(t *testing.T) {
 	expected := JobResult{
 		JobID:    "job_id",
 		Metadata: "some metadata",

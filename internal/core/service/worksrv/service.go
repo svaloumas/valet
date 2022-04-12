@@ -11,6 +11,7 @@ import (
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/taskrepo"
 	"valet/internal/core/port"
+	"valet/internal/core/service/worksrv/work"
 	rtime "valet/pkg/time"
 )
 
@@ -29,7 +30,7 @@ type workservice struct {
 	storage  port.Storage
 	taskrepo *taskrepo.TaskRepository
 	time     rtime.Time
-	queue    chan domain.Work
+	queue    chan work.Work
 	wg       sync.WaitGroup
 	logger   *logrus.Logger
 }
@@ -47,7 +48,7 @@ func New(
 		concurrency: concurrency,
 		backlog:     backlog,
 		timeoutUnit: timeoutUnit,
-		queue:       make(chan domain.Work, backlog),
+		queue:       make(chan work.Work, backlog),
 		time:        time,
 		logger:      logger,
 	}
@@ -63,7 +64,7 @@ func (srv *workservice) Start() {
 }
 
 // Send sends a work to the worker pool.
-func (srv *workservice) Send(w domain.Work) {
+func (srv *workservice) Send(w work.Work) {
 	srv.queue <- w
 	go func() {
 		futureResult := domain.FutureJobResult{Result: w.Result}
@@ -76,11 +77,11 @@ func (srv *workservice) Send(w domain.Work) {
 }
 
 // CreateWork creates and return a new Work instance.
-func (srv *workservice) CreateWork(j *domain.Job) domain.Work {
+func (srv *workservice) CreateWork(j *domain.Job) work.Work {
 	// Should be already validated.
 	taskFunc, _ := srv.taskrepo.GetTaskFunc(j.TaskName)
 	resultChan := make(chan domain.JobResult, 1)
-	return domain.NewWork(j, resultChan, taskFunc, srv.timeoutUnit)
+	return work.NewWork(j, resultChan, taskFunc, srv.timeoutUnit)
 }
 
 // Stop signals the workers to stop working gracefully.
@@ -91,7 +92,7 @@ func (srv *workservice) Stop() {
 }
 
 // Exec executes the work.
-func (srv *workservice) Exec(ctx context.Context, w domain.Work) error {
+func (srv *workservice) Exec(ctx context.Context, w work.Work) error {
 	startedAt := srv.time.Now()
 	w.Job.MarkStarted(&startedAt)
 	if err := srv.storage.UpdateJob(w.Job.ID, w.Job); err != nil {
@@ -162,7 +163,7 @@ func (srv *workservice) Exec(ctx context.Context, w domain.Work) error {
 	return nil
 }
 
-func (srv *workservice) work(id int, queue <-chan domain.Work, wg *sync.WaitGroup) {
+func (srv *workservice) work(id int, queue <-chan work.Work, wg *sync.WaitGroup) {
 	defer wg.Done()
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for work := range queue {

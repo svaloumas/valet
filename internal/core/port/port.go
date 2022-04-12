@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"valet/internal/core/domain"
+	"valet/internal/core/service/worksrv/work"
 )
 
 // Storage represents a driven actor repository interface.
@@ -85,13 +86,13 @@ type WorkService interface {
 	Stop()
 
 	// Send sends a work to the worker pool.
-	Send(w domain.Work)
+	Send(w work.Work)
 
 	// CreateWork creates and return a new Work instance.
-	CreateWork(j *domain.Job) domain.Work
+	CreateWork(j *domain.Job) work.Work
 
 	// Exec executes a work.
-	Exec(ctx context.Context, w domain.Work) error
+	Exec(ctx context.Context, w work.Work) error
 }
 
 // Consumer represents a domain event listener.
@@ -109,8 +110,8 @@ type Scheduler interface {
 
 // Server represents a driver actor service interface.
 type Server interface {
-	// StartServe start the server.
-	StartServe()
+	// Serve start the server.
+	Serve()
 	// GracefullyStop gracefully stops the server.
 	GracefullyStop()
 }

@@ -64,7 +64,7 @@ func main() {
 	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
 
 	server := factory.ServerFactory(cfg.Server, jobService, resultService, storage, cfg.LoggingFormat, logger)
-	server.StartServe()
+	server.Serve()
 	logger.Infof("initialized [%s] server", cfg.Server.Protocol)
 
 	gracefulTerm := make(chan os.Signal, 1)

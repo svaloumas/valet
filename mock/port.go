@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 	time "time"
 	domain "valet/internal/core/domain"
+	work "valet/internal/core/service/worksrv/work"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -399,10 +400,10 @@ func (m *MockWorkService) EXPECT() *MockWorkServiceMockRecorder {
 }
 
 // CreateWork mocks base method.
-func (m *MockWorkService) CreateWork(j *domain.Job) domain.Work {
+func (m *MockWorkService) CreateWork(j *domain.Job) work.Work {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateWork", j)
-	ret0, _ := ret[0].(domain.Work)
+	ret0, _ := ret[0].(work.Work)
 	return ret0
 }
 
@@ -413,7 +414,7 @@ func (mr *MockWorkServiceMockRecorder) CreateWork(j interface{}) *gomock.Call {
 }
 
 // Exec mocks base method.
-func (m *MockWorkService) Exec(ctx context.Context, w domain.Work) error {
+func (m *MockWorkService) Exec(ctx context.Context, w work.Work) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Exec", ctx, w)
 	ret0, _ := ret[0].(error)
@@ -427,7 +428,7 @@ func (mr *MockWorkServiceMockRecorder) Exec(ctx, w interface{}) *gomock.Call {
 }
 
 // Send mocks base method.
-func (m *MockWorkService) Send(w domain.Work) {
+func (m *MockWorkService) Send(w work.Work) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Send", w)
 }
@@ -530,4 +531,51 @@ func (m *MockScheduler) Schedule(ctx context.Context, duration time.Duration) {
 func (mr *MockSchedulerMockRecorder) Schedule(ctx, duration interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Schedule", reflect.TypeOf((*MockScheduler)(nil).Schedule), ctx, duration)
+}
+
+// MockServer is a mock of Server interface.
+type MockServer struct {
+	ctrl     *gomock.Controller
+	recorder *MockServerMockRecorder
+}
+
+// MockServerMockRecorder is the mock recorder for MockServer.
+type MockServerMockRecorder struct {
+	mock *MockServer
+}
+
+// NewMockServer creates a new mock instance.
+func NewMockServer(ctrl *gomock.Controller) *MockServer {
+	mock := &MockServer{ctrl: ctrl}
+	mock.recorder = &MockServerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockServer) EXPECT() *MockServerMockRecorder {
+	return m.recorder
+}
+
+// GracefullyStop mocks base method.
+func (m *MockServer) GracefullyStop() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "GracefullyStop")
+}
+
+// GracefullyStop indicates an expected call of GracefullyStop.
+func (mr *MockServerMockRecorder) GracefullyStop() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GracefullyStop", reflect.TypeOf((*MockServer)(nil).GracefullyStop))
+}
+
+// Serve mocks base method.
+func (m *MockServer) Serve() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Serve")
+}
+
+// Serve indicates an expected call of Serve.
+func (mr *MockServerMockRecorder) Serve() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Serve", reflect.TypeOf((*MockServer)(nil).Serve))
 }

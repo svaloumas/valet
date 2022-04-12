@@ -40,8 +40,8 @@ func NewGRPCServer(srv *grpc.Server, listener net.Listener, logger *logrus.Logge
 	}
 }
 
-// StartServe start the server.
-func (s *HTTPServer) StartServe() {
+// Serve starts the server.
+func (s *HTTPServer) Serve() {
 	go func() {
 		if err := s.srv.ListenAndServe(); err != nil {
 			s.logger.Printf("failed to serve HTTP: %s", err)
@@ -59,8 +59,8 @@ func (s *HTTPServer) GracefullyStop() {
 	}
 }
 
-// StartServe start the server.
-func (s *GRPCServer) StartServe() {
+// Serve starts the server.
+func (s *GRPCServer) Serve() {
 	go func() {
 		go func() {
 			s.logger.Printf("listening gRPC at: %s", s.listener.Addr().String())
