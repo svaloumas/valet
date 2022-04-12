@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package job;
 
-import "internal/handler/jobhdl/proto/job_request.proto";
-import "internal/handler/jobhdl/proto/job_response.proto";
+import "internal/handler/jobhdl/protos/job_request.proto";
+import "internal/handler/jobhdl/protos/job_response.proto";
 
-option go_package = "valet/internal/handler/jobhdl/protobuf";
+option go_package = "valet/internal/handler/jobhdl/protobuf;pb";
 
 // Interface exported by the service.
 service Job {

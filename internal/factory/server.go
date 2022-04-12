@@ -6,6 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"valet/internal/config"
 	"valet/internal/core/port"
@@ -46,6 +47,7 @@ func ServerFactory(
 	resultgRPCHandler := resulthdl.NewResultgRPCHandler(resultService)
 	jobpb.RegisterJobServer(s, jobgRPCHandler)
 	resultpb.RegisterJobResultServer(s, resultgRPCHandler)
+	reflection.Register(s)
 
 	grpcsrv := server.NewGRPCServer(s, listener, logger)
 	return grpcsrv

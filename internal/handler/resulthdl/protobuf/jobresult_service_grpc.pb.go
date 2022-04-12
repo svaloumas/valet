@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.19.4
-// source: internal/handler/resulthdl/proto/jobresult_service.proto
+// source: internal/handler/resulthdl/protos/jobresult_service.proto
 
-package protobuf
+package pb
 
 import (
 	context "context"
@@ -137,5 +137,5 @@ var JobResult_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/handler/resulthdl/proto/jobresult_service.proto",
+	Metadata: "internal/handler/resulthdl/protos/jobresult_service.proto",
 }
