@@ -69,7 +69,7 @@ func newGetJobResultResponse(result *domain.JobResult) (*pb.GetJobResultResponse
 	}
 	res := &pb.GetJobResultResponse{
 		JobId:    result.JobID,
-		Metadata: metadataValue.GetStructValue(),
+		Metadata: metadataValue,
 		Error:    result.Error,
 	}
 	return res, nil

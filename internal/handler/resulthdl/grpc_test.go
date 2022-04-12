@@ -97,7 +97,7 @@ func TestGRPCGetJobResult(t *testing.T) {
 			&pb.GetJobResultRequest{JobId: result.JobID},
 			&pb.GetJobResultResponse{
 				JobId:    result.JobID,
-				Metadata: metadataValue.GetStructValue(),
+				Metadata: metadataValue,
 				Error:    result.Error,
 			},
 			codes.OK,
