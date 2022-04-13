@@ -47,28 +47,6 @@ const (
 		CONSTRAINT ` + "`fk_job_id` FOREIGN KEY (`job_id`) REFERENCES `job` (`id`) " + `
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 	`
-	createUuidFromBinFunction = `
-		CREATE FUNCTION ` + "`UuidFromBin`" + `(b BINARY(16)) RETURNS CHAR(36)
-		   DETERMINISTIC
-		BEGIN
-   			DECLARE hexStr CHAR(32);
-   			SET hexStr = HEX(b);
-   			RETURN LOWER(CONCAT(
-				SUBSTR(hexStr, 1, 8), '-',
-				SUBSTR(hexStr, 9, 4), '-',
-				SUBSTR(hexStr, 13, 4), '-',
-				SUBSTR(hexStr, 17, 4), '-',
-				SUBSTR(hexStr, 21)
-    		));
-		END
-	`
-	createUuidToBinFunction = `
-		CREATE FUNCTION ` + "`UuidToBin`" + `(uuid CHAR(36)) RETURNS BINARY(16)
- 		  DETERMINISTIC
-		BEGIN
-   			RETURN UNHEX(REPLACE(uuid, '-', ''));
-		END
-	`
 )
 
 var _ port.Storage = &MySQL{}
@@ -135,7 +113,7 @@ func (mySQL *MySQL) CreateJob(j *domain.Job) error {
 	query.WriteString("INSERT INTO job (id, name, task_name, task_params, ")
 	query.WriteString("timeout, description, status, failure_reason, run_at, ")
 	query.WriteString("scheduled_at, created_at, started_at, completed_at) ")
-	query.WriteString("VALUES (UuidToBin(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	query.WriteString("VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
 	var taskParams relational.MapStringInterface = j.TaskParams
 	res, err := tx.Exec(query.String(), j.ID, j.Name, j.TaskName, taskParams,
@@ -158,10 +136,10 @@ func (mySQL *MySQL) CreateJob(j *domain.Job) error {
 // GetJob fetches a job from the repository.
 func (mySQL *MySQL) GetJob(id string) (*domain.Job, error) {
 	var query bytes.Buffer
-	query.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")
+	query.WriteString("SELECT BIN_TO_UUID(id), name, task_name, task_params, ")
 	query.WriteString("timeout, description, status, failure_reason, run_at, ")
 	query.WriteString("scheduled_at, created_at, started_at, completed_at ")
-	query.WriteString("FROM job WHERE id=UuidToBin(?)")
+	query.WriteString("FROM job WHERE id=UUID_TO_BIN(?)")
 
 	var taskParams relational.MapStringInterface
 	job := new(domain.Job)
@@ -192,7 +170,7 @@ func (mySQL *MySQL) UpdateJob(id string, j *domain.Job) error {
 	query.WriteString("UPDATE job SET name=?, task_name=?, task_params=?, timeout=?, ")
 	query.WriteString("description=?, status=?, failure_reason=?, run_at=?, ")
 	query.WriteString("scheduled_at=?, created_at=?, started_at=?, completed_at=? ")
-	query.WriteString("WHERE id=UuidToBin(?)")
+	query.WriteString("WHERE id=UUID_TO_BIN(?)")
 
 	res, err := tx.Exec(query.String(), j.Name, j.TaskName, taskParams,
 		j.Timeout, j.Description, j.Status, j.FailureReason, j.RunAt,
@@ -220,14 +198,14 @@ func (mySQL *MySQL) DeleteJob(id string) error {
 
 	// CASCADE
 	var query bytes.Buffer
-	query.WriteString("DELETE FROM jobresult WHERE job_id=UuidToBin(?)")
+	query.WriteString("DELETE FROM jobresult WHERE job_id=UUID_TO_BIN(?)")
 	if _, err = tx.Exec(query.String(), id); err != nil {
 		tx.Rollback()
 		return err
 	}
 
 	query.Reset()
-	query.WriteString("DELETE FROM job WHERE id=UuidToBin(?)")
+	query.WriteString("DELETE FROM job WHERE id=UUID_TO_BIN(?)")
 	if _, err = tx.Exec(query.String(), id); err != nil {
 		tx.Rollback()
 		return err
@@ -243,7 +221,7 @@ func (mySQL *MySQL) DeleteJob(id string) error {
 func (mySQL *MySQL) GetDueJobs() ([]*domain.Job, error) {
 
 	var query bytes.Buffer
-	query.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")
+	query.WriteString("SELECT BIN_TO_UUID(id), name, task_name, task_params, ")
 	query.WriteString("timeout, description, status, failure_reason, run_at, ")
 	query.WriteString("scheduled_at, created_at, started_at, completed_at ")
 	query.WriteString("FROM job WHERE run_at IS NOT NULL AND run_at < ? ")
@@ -288,7 +266,7 @@ func (mySQL *MySQL) CreateJobResult(result *domain.JobResult) error {
 
 	var query bytes.Buffer
 	query.WriteString("INSERT INTO jobresult (job_id, metadata, error) ")
-	query.WriteString("VALUES (UuidToBin(?), ?, ?)")
+	query.WriteString("VALUES (UUID_TO_BIN(?), ?, ?)")
 
 	res, err := tx.Exec(query.String(), result.JobID, metadataBytes, result.Error)
 	if err != nil {
@@ -308,8 +286,8 @@ func (mySQL *MySQL) CreateJobResult(result *domain.JobResult) error {
 // GetJobResult fetches a job result from the repository.
 func (mySQL *MySQL) GetJobResult(jobID string) (*domain.JobResult, error) {
 	var query bytes.Buffer
-	query.WriteString("SELECT UuidFromBin(job_id), metadata, error ")
-	query.WriteString("FROM jobresult WHERE job_id=UuidToBin(?)")
+	query.WriteString("SELECT BIN_TO_UUID(job_id), metadata, error ")
+	query.WriteString("FROM jobresult WHERE job_id=UUID_TO_BIN(?)")
 
 	var metadataBytes []byte
 	result := new(domain.JobResult)
@@ -341,7 +319,7 @@ func (mySQL *MySQL) UpdateJobResult(jobID string, result *domain.JobResult) erro
 
 	var query bytes.Buffer
 	query.WriteString("UPDATE jobresult SET metadata=?, error=? ")
-	query.WriteString("WHERE job_id=UuidToBin(?)")
+	query.WriteString("WHERE job_id=UUID_TO_BIN(?)")
 
 	res, err := tx.Exec(query.String(), metadataBytes, result.Error, jobID)
 	if err != nil {
@@ -366,7 +344,7 @@ func (mySQL *MySQL) DeleteJobResult(jobID string) error {
 	}
 
 	var query bytes.Buffer
-	query.WriteString("DELETE FROM jobresult WHERE job_id=UuidToBin(?)")
+	query.WriteString("DELETE FROM jobresult WHERE job_id=UUID_TO_BIN(?)")
 	if _, err = tx.Exec(query.String(), jobID); err != nil {
 		tx.Rollback()
 		return err
@@ -419,40 +397,6 @@ func createDB(parsedDSN, dbName string) {
 	// Create jobresult table
 	sql.Reset()
 	sql.WriteString(createJobResultTableMigration)
-	_, err = tx.Exec(sql.String())
-	if err != nil {
-		tx.Rollback()
-		panic(err)
-	}
-
-	// Drop UUID helper functions if exist
-	sql.Reset()
-	sql.WriteString("DROP FUNCTION IF EXISTS `UuidFromBin`")
-	_, err = tx.Exec(sql.String())
-	if err != nil {
-		tx.Rollback()
-		panic(err)
-	}
-
-	sql.Reset()
-	sql.WriteString("DROP FUNCTION IF EXISTS `UuidToBin`")
-	_, err = tx.Exec(sql.String())
-	if err != nil {
-		tx.Rollback()
-		panic(err)
-	}
-
-	// Create UUID helper functions
-	sql.Reset()
-	sql.WriteString(createUuidFromBinFunction)
-	_, err = tx.Exec(sql.String())
-	if err != nil {
-		tx.Rollback()
-		panic(err)
-	}
-
-	sql.Reset()
-	sql.WriteString(createUuidToBinFunction)
 	_, err = tx.Exec(sql.String())
 	if err != nil {
 		tx.Rollback()
