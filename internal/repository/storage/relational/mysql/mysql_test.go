@@ -129,10 +129,10 @@ func TestMySQLCreateJob(t *testing.T) {
 	var taskParams relational.MapStringInterface
 
 	var sql bytes.Buffer
-	sql.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")
+	sql.WriteString("SELECT BIN_TO_UUID(id), name, task_name, task_params, ")
 	sql.WriteString("timeout, description, status, failure_reason, run_at, ")
 	sql.WriteString("scheduled_at, created_at, started_at, completed_at ")
-	sql.WriteString("FROM job WHERE id=UuidToBin(?)")
+	sql.WriteString("FROM job WHERE id=UUID_TO_BIN(?)")
 
 	err = mysqlTest.DB.QueryRow(sql.String(), job.ID).Scan(
 		&dbJob.ID, &dbJob.Name, &dbJob.TaskName, &taskParams, &dbJob.Timeout,
@@ -259,10 +259,10 @@ func TestMySQLUpdateJob(t *testing.T) {
 	var taskParams relational.MapStringInterface
 
 	var sql bytes.Buffer
-	sql.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")
+	sql.WriteString("SELECT BIN_TO_UUID(id), name, task_name, task_params, ")
 	sql.WriteString("timeout, description, status, failure_reason, run_at, ")
 	sql.WriteString("scheduled_at, created_at, started_at, completed_at ")
-	sql.WriteString("FROM job WHERE id=UuidToBin(?)")
+	sql.WriteString("FROM job WHERE id=UUID_TO_BIN(?)")
 
 	err = mysqlTest.DB.QueryRow(sql.String(), job.ID).Scan(
 		&dbJob.ID, &dbJob.Name, &dbJob.TaskName, &taskParams, &dbJob.Timeout,
@@ -324,7 +324,7 @@ func TestMySQLDeleteJob(t *testing.T) {
 	}
 
 	var sql bytes.Buffer
-	sql.WriteString("SELECT * FROM job WHERE id=UuidToBin(?)")
+	sql.WriteString("SELECT * FROM job WHERE id=UUID_TO_BIN(?)")
 	rows, err := mysqlTest.DB.Query(sql.String(), job.ID)
 	if err != nil {
 		t.Fatalf("unexpected error when selecting test job: %#v", err)
@@ -334,7 +334,7 @@ func TestMySQLDeleteJob(t *testing.T) {
 	}
 	// Should CASCADE
 	sql.Reset()
-	sql.WriteString("SELECT * FROM jobresult WHERE job_id=UuidToBin(?)")
+	sql.WriteString("SELECT * FROM jobresult WHERE job_id=UUID_TO_BIN(?)")
 	rows, err = mysqlTest.DB.Query(sql.String(), job.ID)
 	if err != nil {
 		t.Fatalf("unexpected error when selecting test job result: %#v", err)
@@ -412,10 +412,12 @@ func TestMySQLGetDueJobs(t *testing.T) {
 	uuid2, _ := uuidGenerator.GenerateRandomUUIDString()
 	uuid3, _ := uuidGenerator.GenerateRandomUUIDString()
 	uuid4, _ := uuidGenerator.GenerateRandomUUIDString()
+	uuid5, _ := uuidGenerator.GenerateRandomUUIDString()
 	duejob1.ID = uuid1
 	duejob2.ID = uuid2
 	alreadyScheduledJob.ID = uuid3
 	noScheduleJob.ID = uuid4
+	notDueJob.ID = uuid5
 
 	// ORDER BY run_at ASC
 	dueJobs := []*domain.Job{duejob1, duejob2}
@@ -500,8 +502,8 @@ func TestMySQLCreateJobResult(t *testing.T) {
 	dbResult := new(domain.JobResult)
 
 	var sql bytes.Buffer
-	sql.WriteString("SELECT UuidFromBin(job_id), metadata, error ")
-	sql.WriteString("FROM jobresult WHERE job_id=UuidToBin(?)")
+	sql.WriteString("SELECT BIN_TO_UUID(job_id), metadata, error ")
+	sql.WriteString("FROM jobresult WHERE job_id=UUID_TO_BIN(?)")
 
 	err = mysqlTest.DB.QueryRow(sql.String(), result.JobID).Scan(
 		&dbResult.JobID, &metadataBytes, &dbResult.Error)
@@ -645,8 +647,8 @@ func TestMySQLUpdateJobResult(t *testing.T) {
 	dbResult := new(domain.JobResult)
 
 	var sql bytes.Buffer
-	sql.WriteString("SELECT UuidFromBin(job_id), metadata, error ")
-	sql.WriteString("FROM jobresult WHERE job_id=UuidToBin(?)")
+	sql.WriteString("SELECT BIN_TO_UUID(job_id), metadata, error ")
+	sql.WriteString("FROM jobresult WHERE job_id=UUID_TO_BIN(?)")
 
 	err = mysqlTest.DB.QueryRow(sql.String(), job.ID).Scan(
 		&dbResult.JobID, &metadataBytes, &dbResult.Error)
@@ -709,7 +711,7 @@ func TestMySQLDeleteJobResult(t *testing.T) {
 	}
 
 	var sql bytes.Buffer
-	sql.WriteString("SELECT * FROM jobresult WHERE job_id=UuidToBin(?)")
+	sql.WriteString("SELECT * FROM jobresult WHERE job_id=UUID_TO_BIN(?)")
 	rows, err := mysqlTest.DB.Query(sql.String(), job.ID)
 	if err != nil {
 		t.Fatalf("unexpected error when selecting test job result: %#v", err)
