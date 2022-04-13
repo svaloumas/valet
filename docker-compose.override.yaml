@@ -12,13 +12,17 @@ services:
     environment:
       - MYSQL_DSN=root:password@tcp(mysql:3306)/valetdb?parseTime=true
       - RABBITMQ_URI=amqp://quest:password@rabbitmq:5672/
+      - REDIS_URL=redis://redis
     depends_on:
       - mysql
       - rabbitmq
+      - redis
     volumes:
       - ./:/valet
     ports:
+      # HTTP port
       - 8080:8080
+      # gRPC port
       - 50051:50051
   
   mysql:
@@ -37,18 +41,30 @@ services:
   rabbitmq:
     image: rabbitmq:3.9-management-alpine
     ports:
-        # AMQP protocol port
-        - 5672:5672
-        # HTTP management UI
-        - 15672:15672
+      # AMQP protocol port
+      - 5672:5672
+      # HTTP management UI
+      - 15672:15672
     environment:
-            - RABBITMQ_DEFAULT_USER=quest
-            - RABBITMQ_DEFAULT_PASS=password
+       - RABBITMQ_DEFAULT_USER=quest
+       - RABBITMQ_DEFAULT_PASS=password
     volumes:
-        - rabbitmq-data:/var/lib/rabbitmq/
-        - rabbitmq-log:/var/log/rabbitmq
+      - rabbitmq-data:/var/lib/rabbitmq/
+      - rabbitmq-log:/var/log/rabbitmq
+
+  redis:
+    image: redis:3.2-alpine
+    command:
+      - redis-server
+      - --appendonly yes
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+
 
 volumes:
   mysql-data:
   rabbitmq-data:
   rabbitmq-log:
+  redis-data:

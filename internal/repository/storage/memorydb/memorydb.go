@@ -2,6 +2,7 @@ package memorydb
 
 import (
 	"encoding/json"
+	"sort"
 	"time"
 
 	"valet/internal/core/domain"
@@ -24,7 +25,7 @@ func NewMemoryDB() *memorydb {
 	}
 }
 
-// CreateJob adds new job to the repository.
+// CreateJob adds a new job to the repository.
 func (storage *memorydb) CreateJob(j *domain.Job) error {
 	serializedJob, err := json.Marshal(j)
 	if err != nil {
@@ -82,6 +83,10 @@ func (storage *memorydb) GetDueJobs() ([]*domain.Job, error) {
 			}
 		}
 	}
+	// ORDER BY run_at ASC
+	sort.Slice(dueJobs, func(i, j int) bool {
+		return dueJobs[i].RunAt.Before(*dueJobs[j].RunAt)
+	})
 	return dueJobs, nil
 }
 
@@ -130,7 +135,7 @@ func (storage *memorydb) CheckHealth() bool {
 	return storage.jobdb != nil && storage.jobresultdb != nil
 }
 
-// Close terminates any store connections gracefully.
+// Close terminates any storage connections gracefully.
 func (storage *memorydb) Close() error {
 	return nil
 }

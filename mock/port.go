@@ -180,6 +180,20 @@ func (mr *MockStorageMockRecorder) UpdateJob(id, j interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateJob", reflect.TypeOf((*MockStorage)(nil).UpdateJob), id, j)
 }
 
+// UpdateJobResult mocks base method.
+func (m *MockStorage) UpdateJobResult(jobID string, result *domain.JobResult) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateJobResult", jobID, result)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateJobResult indicates an expected call of UpdateJobResult.
+func (mr *MockStorageMockRecorder) UpdateJobResult(jobID, result interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateJobResult", reflect.TypeOf((*MockStorage)(nil).UpdateJobResult), jobID, result)
+}
+
 // MockJobQueue is a mock of JobQueue interface.
 type MockJobQueue struct {
 	ctrl     *gomock.Controller

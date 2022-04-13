@@ -24,6 +24,7 @@ var (
 	validRepositoryOptions = map[string]bool{
 		"memory": true,
 		"mysql":  true,
+		"redis":  true,
 	}
 	validJobQueueOptions = map[string]bool{
 		"memory":   true,
@@ -104,6 +105,7 @@ type Consumer struct {
 type Repository struct {
 	Option string `yaml:"option"`
 	MySQL  MySQL  `yaml:"mysql"`
+	Redis  Redis  `yaml:"redis"`
 }
 
 type MySQL struct {
@@ -112,6 +114,13 @@ type MySQL struct {
 	ConnectionMaxLifetime int `yaml:"connection_max_lifetime"`
 	MaxIdleConnections    int `yaml:"max_idle_connections"`
 	MaxOpenConnections    int `yaml:"max_open_connections"`
+}
+
+type Redis struct {
+	URL          string
+	KeyPrefix    string `yaml:"key_prefix"`
+	PoolSize     int    `yaml:"pool_size"`
+	MinIdleConns int    `yaml:"min_idle_conns"`
 }
 
 type Config struct {
@@ -254,6 +263,20 @@ func (cfg *Config) setRepositoryConfig() error {
 		}
 		if cfg.Repository.MySQL.MaxOpenConnections == 0 {
 			cfg.Repository.MySQL.MaxOpenConnections = 8
+		}
+	}
+	if cfg.Repository.Option == "redis" {
+		url := env.LoadVar("REDIS_URL")
+		if url == "" {
+			return errors.New("Redis URL not provided")
+		}
+		cfg.Repository.Redis.URL = url
+
+		if cfg.Repository.Redis.PoolSize == 0 {
+			cfg.Repository.Redis.PoolSize = 10
+		}
+		if cfg.Repository.Redis.MinIdleConns == 0 {
+			cfg.Repository.Redis.MinIdleConns = 10
 		}
 	}
 	return nil

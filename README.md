@@ -1,6 +1,6 @@
 # Valet
 [![CI](https://github.com/svaloumas/valet/actions/workflows/ci.yml/badge.svg)](https://github.com/svaloumas/valet/actions/workflows/ci.yml)
-![Coverage](https://img.shields.io/badge/Coverage-82.1%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-81.4%25-brightgreen)
 
 Stateless Go server responsible for executing tasks asynchronously and concurrently.
 
@@ -39,6 +39,7 @@ It provides the following interfaces and can be configured accordingly:
 
 * In memory key-value storage.
 * MySQL
+* Redis
 
 #### Message queue
 
@@ -117,6 +118,10 @@ repository:
     connection_max_lifetime:        # int
     max_idle_connections:           # int
     max_open_connections:           # int
+  redis:
+    key_prefix: valet               # string
+    min_idle_conns: 10              # int
+    pool_size: 10                   # int
 # Global config section
 timeout_unit: second                # string - options: millisecond, second
 logging_format: text                # string - options: text, json

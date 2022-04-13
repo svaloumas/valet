@@ -10,7 +10,7 @@ import (
 
 // Storage represents a driven actor repository interface.
 type Storage interface {
-	// CreateJob adds new job to the repository.
+	// CreateJob adds a new job to the repository.
 	CreateJob(j *domain.Job) error
 
 	// GetJob fetches a job from the repository.
@@ -30,6 +30,9 @@ type Storage interface {
 
 	// GetJobResult fetches a job result from the repository.
 	GetJobResult(jobID string) (*domain.JobResult, error)
+
+	// UpdateJobResult updates a job result to the repository.
+	UpdateJobResult(jobID string, result *domain.JobResult) error
 
 	// DeleteJobResult deletes a job result from the repository.
 	DeleteJobResult(jobID string) error

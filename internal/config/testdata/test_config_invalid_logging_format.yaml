@@ -39,5 +39,9 @@ repository:
     connection_max_lifetime: 1000
     max_idle_connections: 8
     max_open_connections: 8
+  redis:
+    key_prefix: valet
+    min_idle_conns: 10
+    pool_size: 10
 timeout_unit: second
 logging_format: binary
