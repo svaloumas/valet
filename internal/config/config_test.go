@@ -71,9 +71,15 @@ func TestLoad(t *testing.T) {
 		MaxIdleConnections:    8,
 		MaxOpenConnections:    8,
 	}
+	redis := Redis{
+		KeyPrefix:    "somekey",
+		PoolSize:     20,
+		MinIdleConns: 20,
+	}
 	repository := Repository{
 		Option: "mysql",
 		MySQL:  mysql,
+		Redis:  redis,
 	}
 	config := &Config{
 		Server:            server,
@@ -88,7 +94,8 @@ func TestLoad(t *testing.T) {
 	}
 	tests := []struct {
 		name     string
-		dsn      string
+		mysqlDSN string
+		redisURL string
 		filepath string
 		expected *Config
 		err      error
@@ -96,20 +103,31 @@ func TestLoad(t *testing.T) {
 		{
 			"full",
 			"test_dsn",
+			"test_url",
 			"./testdata/test_config.yaml",
 			config,
 			nil,
 		},
 		{
-			"no dsn",
+			"no mysql dsn",
 			"",
+			"test_url",
 			"./testdata/test_config.yaml",
 			nil,
 			errors.New("MySQL DSN not provided"),
 		},
 		{
+			"no redis url",
+			"test_dsn",
+			"",
+			"./testdata/test_config_redis.yaml",
+			nil,
+			errors.New("Redis URL not provided"),
+		},
+		{
 			"wrong logging format",
 			"test_dsn",
+			"test_url",
 			"./testdata/test_config_invalid_logging_format.yaml",
 			nil,
 			errors.New("binary is not a valid logging_format option, valid options: map[json:true text:true]"),
@@ -117,13 +135,15 @@ func TestLoad(t *testing.T) {
 		{
 			"wrong repository option",
 			"test_dsn",
+			"test_url",
 			"./testdata/test_config_invalid_repository_option.yaml",
 			nil,
-			errors.New("storage is not a valid repository option, valid options: map[memory:true mysql:true]"),
+			errors.New("storage is not a valid repository option, valid options: map[memory:true mysql:true redis:true]"),
 		},
 		{
 			"wrong timeout unit",
 			"test_dsn",
+			"test_url",
 			"./testdata/test_config_invalid_timeout_unit.yaml",
 			nil,
 			errors.New("year is not a valid timeout_unit option, valid options: map[millisecond:1ms second:1s]"),
@@ -131,6 +151,7 @@ func TestLoad(t *testing.T) {
 		{
 			"wrong job queue option",
 			"test_dsn",
+			"test_url",
 			"./testdata/test_config_invalid_job_queue_option.yaml",
 			nil,
 			errors.New("queueX is not a valid job queue option, valid options: map[memory:true rabbitmq:true]"),
@@ -138,6 +159,7 @@ func TestLoad(t *testing.T) {
 		{
 			"wrong protovol option",
 			"test_dsn",
+			"test_url",
 			"./testdata/test_config_invalid_protocol_option.yaml",
 			nil,
 			errors.New("websockets is not a valid protocol option, valid options: map[grpc:true http:true]"),
@@ -146,7 +168,8 @@ func TestLoad(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Setenv("MYSQL_DSN", tt.dsn)
+			os.Setenv("MYSQL_DSN", tt.mysqlDSN)
+			os.Setenv("REDIS_URL", tt.redisURL)
 			filepath, _ := filepath.Abs(tt.filepath)
 			cfg := new(Config)
 			err := cfg.Load(filepath)

@@ -129,12 +129,12 @@ func (mySQL *MySQL) CheckHealth() bool {
 	return err == nil
 }
 
-// Close terminates any store connections gracefully.
+// Close terminates any storage connections gracefully.
 func (mySQL *MySQL) Close() error {
 	return mySQL.DB.Close()
 }
 
-// CreateJob adds new job to the repository.
+// CreateJob adds a new job to the repository.
 func (storage *MySQL) CreateJob(j *domain.Job) error {
 	tx, err := storage.DB.Begin()
 	if err != nil {

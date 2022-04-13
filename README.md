@@ -39,6 +39,7 @@ It provides the following interfaces and can be configured accordingly:
 
 * In memory key-value storage.
 * MySQL
+* Redis
 
 #### Message queue
 
@@ -117,6 +118,10 @@ repository:
     connection_max_lifetime:        # int
     max_idle_connections:           # int
     max_open_connections:           # int
+  redis:
+    key_prefix: valet               # string
+    min_idle_conns: 10              # int
+    pool_size: 10                   # int
 # Global config section
 timeout_unit: second                # string - options: millisecond, second
 logging_format: text                # string - options: text, json

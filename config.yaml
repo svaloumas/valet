@@ -1,5 +1,5 @@
 server:
-  protocol: grpc
+  protocol: http
   http:
     port: 8080
   grpc:
@@ -34,10 +34,14 @@ scheduler:
 consumer:
   job_queue_polling_interval: 5
 repository:
-  option: mysql
+  option: redis
   mysql:
     connection_max_lifetime:
     max_idle_connections:
     max_open_connections:
+  redis:
+    key_prefix: valet
+    min_idle_conns: 10
+    pool_size: 10
 timeout_unit: second
 logging_format: text
