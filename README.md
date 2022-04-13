@@ -39,6 +39,7 @@ It provides the following interfaces and can be configured accordingly:
 
 * In memory key-value storage.
 * MySQL
+* PostgreSQL
 * Redis
 
 #### Message queue
@@ -115,6 +116,10 @@ consumer:
 repository:
   option: memory                    # string - options:  memory, mysql
   mysql:
+    connection_max_lifetime:        # int
+    max_idle_connections:           # int
+    max_open_connections:           # int
+  postgres:
     connection_max_lifetime:        # int
     max_idle_connections:           # int
     max_open_connections:           # int
