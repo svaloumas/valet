@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"valet/internal/core/domain"
+	"valet/internal/repository/storage/relational"
 	"valet/pkg/apperrors"
 	"valet/pkg/uuidgen"
 
@@ -26,7 +27,7 @@ var (
 
 func TestMain(m *testing.M) {
 	mysqlDSN := os.Getenv("MYSQL_DSN")
-	mysqlTest = New(mysqlDSN, "", &MySQLOptions{})
+	mysqlTest = New(mysqlDSN, "", &relational.DBOptions{})
 	uuidGenerator = new(uuidgen.UUIDGen)
 
 	config, err := mysql.ParseDSN(mysqlDSN)
@@ -125,7 +126,7 @@ func TestMySQLCreateJob(t *testing.T) {
 	}
 
 	dbJob := new(domain.Job)
-	var taskParams MapStringInterface
+	var taskParams relational.MapStringInterface
 
 	var sql bytes.Buffer
 	sql.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")
@@ -255,7 +256,7 @@ func TestMySQLUpdateJob(t *testing.T) {
 	}
 
 	dbJob := new(domain.Job)
-	var taskParams MapStringInterface
+	var taskParams relational.MapStringInterface
 
 	var sql bytes.Buffer
 	sql.WriteString("SELECT UuidFromBin(id), name, task_name, task_params, ")

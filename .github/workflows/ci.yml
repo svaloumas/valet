@@ -20,7 +20,7 @@ jobs:
           go-version: '1.17'
 
       - name: Build and spawn the containers
-        run: docker-compose up -d mysql rabbitmq redis
+        run: docker-compose up -d mysql postgres rabbitmq redis
       - name: Test
         run: make test
 
@@ -45,7 +45,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Build and spawn the containers
-        run: docker-compose up -d mysql rabbitmq redis
+        run: docker-compose up -d mysql postgres rabbitmq redis
       - name: Run report
         run: make report
 

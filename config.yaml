@@ -39,6 +39,10 @@ repository:
     connection_max_lifetime:
     max_idle_connections:
     max_open_connections:
+  postgres:
+    connection_max_lifetime:
+    max_idle_connections:
+    max_open_connections:
   redis:
     key_prefix: valet
     min_idle_conns: 10

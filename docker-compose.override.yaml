@@ -13,8 +13,10 @@ services:
       - MYSQL_DSN=root:password@tcp(mysql:3306)/valetdb?parseTime=true
       - RABBITMQ_URI=amqp://quest:password@rabbitmq:5672/
       - REDIS_URL=redis://redis
+      - POSTGRES_DSN=postgres://postgres:postgres@postgres:5432/valetdb?sslmode=disable
     depends_on:
       - mysql
+      - postgres
       - rabbitmq
       - redis
     volumes:
@@ -62,9 +64,26 @@ services:
     volumes:
       - redis-data:/data
 
+  postgres:
+    image: postgres:14.1-alpine
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "root" ]
+      timeout: 45s
+      interval: 10s
+      retries: 3
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+    volumes: 
+      # - ./internal/repository/storage/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres-data:/var/lib/postgresql/data
 
 volumes:
   mysql-data:
   rabbitmq-data:
   rabbitmq-log:
   redis-data:
+  postgres-data:

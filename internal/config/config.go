@@ -22,9 +22,10 @@ var (
 		"json": true,
 	}
 	validRepositoryOptions = map[string]bool{
-		"memory": true,
-		"mysql":  true,
-		"redis":  true,
+		"memory":   true,
+		"mysql":    true,
+		"redis":    true,
+		"postgres": true,
 	}
 	validJobQueueOptions = map[string]bool{
 		"memory":   true,
@@ -103,14 +104,22 @@ type Consumer struct {
 }
 
 type Repository struct {
-	Option string `yaml:"option"`
-	MySQL  MySQL  `yaml:"mysql"`
-	Redis  Redis  `yaml:"redis"`
+	Option   string   `yaml:"option"`
+	MySQL    MySQL    `yaml:"mysql"`
+	Postgres Postgres `yaml:"postgres"`
+	Redis    Redis    `yaml:"redis"`
 }
 
 type MySQL struct {
 	DSN                   string
 	CaPemFile             string
+	ConnectionMaxLifetime int `yaml:"connection_max_lifetime"`
+	MaxIdleConnections    int `yaml:"max_idle_connections"`
+	MaxOpenConnections    int `yaml:"max_open_connections"`
+}
+
+type Postgres struct {
+	DSN                   string
 	ConnectionMaxLifetime int `yaml:"connection_max_lifetime"`
 	MaxIdleConnections    int `yaml:"max_idle_connections"`
 	MaxOpenConnections    int `yaml:"max_open_connections"`
@@ -263,6 +272,23 @@ func (cfg *Config) setRepositoryConfig() error {
 		}
 		if cfg.Repository.MySQL.MaxOpenConnections == 0 {
 			cfg.Repository.MySQL.MaxOpenConnections = 8
+		}
+	}
+	if cfg.Repository.Option == "postgres" {
+		dsn := env.LoadVar("POSTGRES_DSN")
+		if dsn == "" {
+			return errors.New("PostgreSQL DSN not provided")
+		}
+		cfg.Repository.Postgres.DSN = dsn
+
+		if cfg.Repository.Postgres.ConnectionMaxLifetime == 0 {
+			cfg.Repository.Postgres.ConnectionMaxLifetime = 3000
+		}
+		if cfg.Repository.Postgres.MaxIdleConnections == 0 {
+			cfg.Repository.Postgres.MaxIdleConnections = 8
+		}
+		if cfg.Repository.Postgres.MaxOpenConnections == 0 {
+			cfg.Repository.Postgres.MaxOpenConnections = 8
 		}
 	}
 	if cfg.Repository.Option == "redis" {

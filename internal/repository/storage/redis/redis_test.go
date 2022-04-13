@@ -24,7 +24,7 @@ var (
 
 func TestMain(m *testing.M) {
 	redisURL := os.Getenv("REDIS_URL")
-	redisTest = NewRedis(redisURL, 1, 5, "")
+	redisTest = New(redisURL, 1, 5, "")
 	uuidGenerator = new(uuidgen.UUIDGen)
 
 	m.Run()

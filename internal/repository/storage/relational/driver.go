@@ -1,4 +1,4 @@
-package mysql
+package relational
 
 import (
 	"database/sql/driver"

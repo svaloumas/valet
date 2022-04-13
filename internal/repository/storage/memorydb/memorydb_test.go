@@ -37,7 +37,7 @@ func TestMemoryDBCreateJob(t *testing.T) {
 		CreatedAt: &createdAt,
 	}
 
-	memorydb := NewMemoryDB()
+	memorydb := New()
 	err := memorydb.CreateJob(job)
 	if err != nil {
 		t.Errorf("CreateJob returned error: got %#v want nil", err)
@@ -80,7 +80,7 @@ func TestMemoryDBGetJob(t *testing.T) {
 	}
 	invalidID := "invalid_id"
 
-	memorydb := NewMemoryDB()
+	memorydb := New()
 	serializedJob, err := json.Marshal(expected)
 	if err != nil {
 		t.Errorf("json marshal returned error: got %#v want nil", err)
@@ -145,7 +145,7 @@ func TestMemoryDBUpdateJob(t *testing.T) {
 		CreatedAt: &createdAt,
 	}
 
-	memorydb := NewMemoryDB()
+	memorydb := New()
 	serializedJob, err := json.Marshal(job)
 	if err != nil {
 		t.Errorf("json marshal returned error: got %#v want nil", err)
@@ -188,7 +188,7 @@ func TestMemoryDBDeleteJob(t *testing.T) {
 	}
 	invalidID := "invalid_id"
 
-	memorydb := NewMemoryDB()
+	memorydb := New()
 	serializedJob, err := json.Marshal(job)
 	if err != nil {
 		t.Errorf("json marshal returned error: got %#v want nil", err)
@@ -272,7 +272,7 @@ func TestMemoryDBGetDueJobs(t *testing.T) {
 
 	expected := []*domain.Job{j1, j2}
 
-	memorydb := NewMemoryDB()
+	memorydb := New()
 	serializedJob1, err := json.Marshal(j1)
 	if err != nil {
 		t.Errorf("json marshal returned error: got %#v want nil", err)
@@ -327,7 +327,7 @@ func TestMemoryDBCreateJobResult(t *testing.T) {
 		Error:    "some task error",
 	}
 
-	memorydb := NewMemoryDB()
+	memorydb := New()
 	err := memorydb.CreateJobResult(result)
 	if err != nil {
 		t.Errorf("CreateJobResult returned error: got %#v want nil", err)
@@ -353,7 +353,7 @@ func TestMemoryDBGetJobResult(t *testing.T) {
 	}
 	invalidID := "invalid_id"
 
-	memorydb := NewMemoryDB()
+	memorydb := New()
 	serializedResult, err := json.Marshal(expected)
 	if err != nil {
 		t.Errorf("json marshal returned error: got %#v want nil", err)
@@ -401,7 +401,7 @@ func TestMemoryDBUpdateJobResult(t *testing.T) {
 		Error:    "some task error",
 	}
 
-	memorydb := NewMemoryDB()
+	memorydb := New()
 	serializedJob, err := json.Marshal(result)
 	if err != nil {
 		t.Errorf("json marshal returned error: got %#v want nil", err)
@@ -434,7 +434,7 @@ func TestMemoryDBDeleteJobResult(t *testing.T) {
 	}
 	invalidID := "invalid_id"
 
-	memorydb := NewMemoryDB()
+	memorydb := New()
 	serializedJob, err := json.Marshal(result)
 	if err != nil {
 		t.Errorf("json marshal returned error: got %#v want nil", err)
