@@ -9,6 +9,8 @@ services:
         target: mysql_dsn
       - source: rabbitmq-uri
         target: rabbitmq_uri
+      - source: redis-url
+        target: redis_url
     working_dir: /valet
     command: /valet/valetd
     healthcheck:
@@ -28,3 +30,6 @@ secrets:
   rabbitmq-uri:
     external:
       name: valet-rabbitmq-uri
+  redis-url:
+    external:
+      name: valet-redis-url
