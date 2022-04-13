@@ -16,6 +16,7 @@ services:
     depends_on:
       - mysql
       - rabbitmq
+      - redis
     volumes:
       - ./:/valet
     ports:
