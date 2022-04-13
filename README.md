@@ -136,8 +136,9 @@ logging_format: text                # string - options: text, json
 
 ## Secrets
 
-Currently, the only secrets would be the MySQL DSN and the RabbitMQ URI.
+Currently, the only secrets would be the MySQL DSN, PostgreSQL DSN and the RabbitMQ URI.
 MySQL DSN can be provided as an environment variable named as `MYSQL_DSN`, or a Docker secret named as `valet-mysql-dsn`.
+PostgreSQL DSN can be provided as an environment variable named as `POSTGRES_DSN`, or a Docker secret named as `valet-postgres-dsn`.
 RabbitMQ URI can be provided as an environment variable named as `RABBITMQ_URI`, or a Docker secret named as `valet-rabbitmq-uri`.
 
 <a name="usage"/>
