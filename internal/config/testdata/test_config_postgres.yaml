@@ -34,7 +34,7 @@ scheduler:
 consumer:
   job_queue_polling_interval: 2
 repository:
-  option: redis
+  option: postgres
   mysql:
     connection_max_lifetime: 1000
     max_idle_connections: 8

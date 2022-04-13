@@ -24,8 +24,8 @@ type Redis struct {
 	KeyPrefix string
 }
 
-// NewRedis returns a redis client.
-func NewRedis(url string, poolSize, minIdleConns int, keyPrefix string) *Redis {
+// New returns a redis client.
+func New(url string, poolSize, minIdleConns int, keyPrefix string) *Redis {
 	rs := new(Redis)
 
 	opt, err := redis.ParseURL(url)

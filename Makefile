@@ -2,18 +2,19 @@
 
 BUILDCMD=env GOOS=linux GOARCH=amd64 go build -v
 MYSQL_TEST_DSN="root:password@tcp(localhost:3306)/test?parseTime=true"
+POSTGRES_TEST_DSN="postgres://postgres:postgres@localhost:5432/test?sslmode=disable"
 RABBITMQ_TEST_URI="amqp://quest:password@localhost:5672/"
-REDIS_TEST_URL=redis://localhost/1
+REDIS_TEST_URL="redis://localhost/1"
 
 build: generate
 	$(BUILDCMD) -o valetd cmd/valetd/*.go
 
 test: generate
-	MYSQL_DSN=$(MYSQL_TEST_DSN)	RABBITMQ_URI=$(RABBITMQ_TEST_URI) \
+	MYSQL_DSN=$(MYSQL_TEST_DSN)	POSTGRES_DSN=$(POSTGRES_TEST_DSN) RABBITMQ_URI=$(RABBITMQ_TEST_URI) \
 	REDIS_URL=$(REDIS_TEST_URL) go test `go list ./...` -v -cover -count=1
 
 report: generate
-	MYSQL_DSN=$(MYSQL_TEST_DSN)	RABBITMQ_URI=$(RABBITMQ_TEST_URI) \
+	MYSQL_DSN=$(MYSQL_TEST_DSN)	POSTGRES_DSN=$(POSTGRES_TEST_DSN) RABBITMQ_URI=$(RABBITMQ_TEST_URI) \
 	REDIS_URL=$(REDIS_TEST_URL) go test -v ./... -covermode=count -coverprofile=coverage.out
 	go tool cover -func=coverage.out -o=coverage.out
 

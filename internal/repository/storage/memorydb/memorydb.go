@@ -18,7 +18,7 @@ type memorydb struct {
 }
 
 // NewMemoryDB creates a new memorydb instance.
-func NewMemoryDB() *memorydb {
+func New() *memorydb {
 	return &memorydb{
 		jobdb:       make(map[string][]byte),
 		jobresultdb: make(map[string][]byte),
@@ -26,18 +26,18 @@ func NewMemoryDB() *memorydb {
 }
 
 // CreateJob adds a new job to the repository.
-func (storage *memorydb) CreateJob(j *domain.Job) error {
+func (mem *memorydb) CreateJob(j *domain.Job) error {
 	serializedJob, err := json.Marshal(j)
 	if err != nil {
 		return err
 	}
-	storage.jobdb[j.ID] = serializedJob
+	mem.jobdb[j.ID] = serializedJob
 	return nil
 }
 
 // GetJob fetches a job from the repository.
-func (storage *memorydb) GetJob(id string) (*domain.Job, error) {
-	serializedJob, ok := storage.jobdb[id]
+func (mem *memorydb) GetJob(id string) (*domain.Job, error) {
+	serializedJob, ok := mem.jobdb[id]
 	if !ok {
 		return nil, &apperrors.NotFoundErr{ID: id, ResourceName: "job"}
 	}
@@ -49,30 +49,30 @@ func (storage *memorydb) GetJob(id string) (*domain.Job, error) {
 }
 
 // UpdateJob updates a job to the repository.
-func (storage *memorydb) UpdateJob(id string, j *domain.Job) error {
+func (mem *memorydb) UpdateJob(id string, j *domain.Job) error {
 	serializedJob, err := json.Marshal(j)
 	if err != nil {
 		return err
 	}
-	storage.jobdb[j.ID] = serializedJob
+	mem.jobdb[j.ID] = serializedJob
 	return nil
 }
 
 // DeleteJob deletes a job from the repository.
-func (storage *memorydb) DeleteJob(id string) error {
-	if _, ok := storage.jobdb[id]; !ok {
+func (mem *memorydb) DeleteJob(id string) error {
+	if _, ok := mem.jobdb[id]; !ok {
 		return &apperrors.NotFoundErr{ID: id, ResourceName: "job"}
 	}
-	delete(storage.jobdb, id)
+	delete(mem.jobdb, id)
 	// CASCADE
-	delete(storage.jobresultdb, id)
+	delete(mem.jobresultdb, id)
 	return nil
 }
 
 // GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
-func (storage *memorydb) GetDueJobs() ([]*domain.Job, error) {
+func (mem *memorydb) GetDueJobs() ([]*domain.Job, error) {
 	dueJobs := []*domain.Job{}
-	for _, serializedJob := range storage.jobdb {
+	for _, serializedJob := range mem.jobdb {
 		j := &domain.Job{}
 		if err := json.Unmarshal(serializedJob, j); err != nil {
 			return nil, err
@@ -91,18 +91,18 @@ func (storage *memorydb) GetDueJobs() ([]*domain.Job, error) {
 }
 
 // CreateJobResult adds new job result to the repository.
-func (storage *memorydb) CreateJobResult(result *domain.JobResult) error {
+func (mem *memorydb) CreateJobResult(result *domain.JobResult) error {
 	serializedJobResult, err := json.Marshal(result)
 	if err != nil {
 		return err
 	}
-	storage.jobresultdb[result.JobID] = serializedJobResult
+	mem.jobresultdb[result.JobID] = serializedJobResult
 	return nil
 }
 
 // GetJobResult fetches a job result from the repository.
-func (storage *memorydb) GetJobResult(jobID string) (*domain.JobResult, error) {
-	serializedJobResult, ok := storage.jobresultdb[jobID]
+func (mem *memorydb) GetJobResult(jobID string) (*domain.JobResult, error) {
+	serializedJobResult, ok := mem.jobresultdb[jobID]
 	if !ok {
 		return nil, &apperrors.NotFoundErr{ID: jobID, ResourceName: "job result"}
 	}
@@ -112,30 +112,30 @@ func (storage *memorydb) GetJobResult(jobID string) (*domain.JobResult, error) {
 }
 
 // UpdateJobResult updates a job result to the repository.
-func (storage *memorydb) UpdateJobResult(jobID string, result *domain.JobResult) error {
+func (mem *memorydb) UpdateJobResult(jobID string, result *domain.JobResult) error {
 	serializedJobResult, err := json.Marshal(result)
 	if err != nil {
 		return err
 	}
-	storage.jobresultdb[result.JobID] = serializedJobResult
+	mem.jobresultdb[result.JobID] = serializedJobResult
 	return nil
 }
 
 // DeleteJobResult deletes a job result from the repository.
-func (storage *memorydb) DeleteJobResult(id string) error {
-	if _, ok := storage.jobresultdb[id]; !ok {
+func (mem *memorydb) DeleteJobResult(id string) error {
+	if _, ok := mem.jobresultdb[id]; !ok {
 		return &apperrors.NotFoundErr{ID: id, ResourceName: "job result"}
 	}
-	delete(storage.jobresultdb, id)
+	delete(mem.jobresultdb, id)
 	return nil
 }
 
 // CheckHealth checks if the storage is alive.
-func (storage *memorydb) CheckHealth() bool {
-	return storage.jobdb != nil && storage.jobresultdb != nil
+func (mem *memorydb) CheckHealth() bool {
+	return mem.jobdb != nil && mem.jobresultdb != nil
 }
 
 // Close terminates any storage connections gracefully.
-func (storage *memorydb) Close() error {
+func (mem *memorydb) Close() error {
 	return nil
 }

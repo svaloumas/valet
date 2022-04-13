@@ -11,6 +11,8 @@ services:
         target: rabbitmq_uri
       - source: redis-url
         target: redis_url
+      - source: postgres-url
+        target: postgres_url
     working_dir: /valet
     command: /valet/valetd
     healthcheck:
@@ -33,3 +35,6 @@ secrets:
   redis-url:
     external:
       name: valet-redis-url
+  postgres-url:
+    external:
+      name: valet-postgres-url

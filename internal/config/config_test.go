@@ -71,15 +71,22 @@ func TestLoad(t *testing.T) {
 		MaxIdleConnections:    8,
 		MaxOpenConnections:    8,
 	}
+	postgres := Postgres{
+		DSN:                   "",
+		ConnectionMaxLifetime: 1000,
+		MaxIdleConnections:    8,
+		MaxOpenConnections:    8,
+	}
 	redis := Redis{
 		KeyPrefix:    "somekey",
-		PoolSize:     20,
-		MinIdleConns: 20,
+		PoolSize:     10,
+		MinIdleConns: 10,
 	}
 	repository := Repository{
-		Option: "mysql",
-		MySQL:  mysql,
-		Redis:  redis,
+		Option:   "mysql",
+		MySQL:    mysql,
+		Redis:    redis,
+		Postgres: postgres,
 	}
 	config := &Config{
 		Server:            server,
@@ -93,17 +100,19 @@ func TestLoad(t *testing.T) {
 		TimeoutUnit:       time.Second,
 	}
 	tests := []struct {
-		name     string
-		mysqlDSN string
-		redisURL string
-		filepath string
-		expected *Config
-		err      error
+		name        string
+		mysqlDSN    string
+		postgresDSN string
+		redisURL    string
+		filepath    string
+		expected    *Config
+		err         error
 	}{
 		{
 			"full",
 			"test_dsn",
-			"test_url",
+			"",
+			"",
 			"./testdata/test_config.yaml",
 			config,
 			nil,
@@ -111,13 +120,24 @@ func TestLoad(t *testing.T) {
 		{
 			"no mysql dsn",
 			"",
+			"test_dsn",
 			"test_url",
 			"./testdata/test_config.yaml",
 			nil,
 			errors.New("MySQL DSN not provided"),
 		},
 		{
+			"no postgres dsn",
+			"test_dsn",
+			"",
+			"test_url",
+			"./testdata/test_config_postgres.yaml",
+			nil,
+			errors.New("PostgreSQL DSN not provided"),
+		},
+		{
 			"no redis url",
+			"test_dsn",
 			"test_dsn",
 			"",
 			"./testdata/test_config_redis.yaml",
@@ -127,6 +147,7 @@ func TestLoad(t *testing.T) {
 		{
 			"wrong logging format",
 			"test_dsn",
+			"test_dsn",
 			"test_url",
 			"./testdata/test_config_invalid_logging_format.yaml",
 			nil,
@@ -135,13 +156,15 @@ func TestLoad(t *testing.T) {
 		{
 			"wrong repository option",
 			"test_dsn",
+			"test_dsn",
 			"test_url",
 			"./testdata/test_config_invalid_repository_option.yaml",
 			nil,
-			errors.New("storage is not a valid repository option, valid options: map[memory:true mysql:true redis:true]"),
+			errors.New("storage is not a valid repository option, valid options: map[memory:true mysql:true postgres:true redis:true]"),
 		},
 		{
 			"wrong timeout unit",
+			"test_dsn",
 			"test_dsn",
 			"test_url",
 			"./testdata/test_config_invalid_timeout_unit.yaml",
@@ -151,6 +174,7 @@ func TestLoad(t *testing.T) {
 		{
 			"wrong job queue option",
 			"test_dsn",
+			"test_dsn",
 			"test_url",
 			"./testdata/test_config_invalid_job_queue_option.yaml",
 			nil,
@@ -158,6 +182,7 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			"wrong protovol option",
+			"test_dsn",
 			"test_dsn",
 			"test_url",
 			"./testdata/test_config_invalid_protocol_option.yaml",
@@ -169,6 +194,7 @@ func TestLoad(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Setenv("MYSQL_DSN", tt.mysqlDSN)
+			os.Setenv("POSTGRES_DSN", tt.postgresDSN)
 			os.Setenv("REDIS_URL", tt.redisURL)
 			filepath, _ := filepath.Abs(tt.filepath)
 			cfg := new(Config)
