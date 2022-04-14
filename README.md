@@ -211,6 +211,6 @@ To schedule a new job to run at a specific time in the future, add `run_at` fiel
 Run the complete test suite.
 
 ```bash
-docker-compose up -d mysql rabbitmq
+docker-compose up -d
 make test
 ```
