@@ -50,7 +50,7 @@ type getJobsRequestParams struct {
 	Status string `json:"status"`
 }
 
-// swagger:route GET /jobs?status={status} jobs getJobs
+// swagger:route GET /jobs jobs getJobs
 // Returns all jobs, optionally filters them by status.
 // responses:
 //   200: getJobsResponse
@@ -61,7 +61,9 @@ type getJobsRequestParams struct {
 // swagger:response getJobsResponse
 type getJobsResponse struct {
 	// in:body
-	Body map[string][]domain.Job
+	Body struct {
+		Jobs []domain.Job `json:"jobs"`
+	}
 }
 
 // swagger:parameters getJobRequestParams getJob
