@@ -40,11 +40,36 @@ type getJobResponse struct {
 	Body domain.Job
 }
 
+// swagger:parameters getJobsRequestParams getJobs
+type getJobsRequestParams struct {
+	// The status of the jobs to be fetched..
+	//
+	// in:query
+	// type:string
+	// required:false
+	Status string `json:"status"`
+}
+
+// swagger:route GET /jobs?status={status} jobs getJobs
+// Returns all jobs, optionally filters them by status.
+// responses:
+//   200: getJobsResponse
+//   404: errorResponse
+//   500: errorResponse
+
+// The jobs metadata.
+// swagger:response getJobsResponse
+type getJobsResponse struct {
+	// in:body
+	Body map[string][]domain.Job
+}
+
 // swagger:parameters getJobRequestParams getJob
 type getJobRequestParams struct {
 	// The ID of the specified job.
 	//
 	// in:path
+	// type: string
 	ID string `json:"id"`
 }
 
@@ -60,6 +85,7 @@ type patchJobRequestParams struct {
 	// The ID of the specified job.
 	//
 	// in:path
+	// type: string
 	ID string `json:"id"`
 }
 
@@ -75,5 +101,6 @@ type deleteJobRequestParams struct {
 	// The ID of the specified job.
 	//
 	// in:path
+	// type: string
 	ID string `json:"id"`
 }

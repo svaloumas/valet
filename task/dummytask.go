@@ -1,8 +1,6 @@
 package task
 
 import (
-	"log"
-
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -16,7 +14,6 @@ func DummyTask(taskParams interface{}) (interface{}, error) {
 	params := &DummyParams{}
 	mapstructure.Decode(taskParams, params)
 
-	log.Println("Hello from dummy task")
 	params.URL = "http://www.test-url.com"
 	metadata, err := downloadContent(params.URL)
 	if err != nil {

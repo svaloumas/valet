@@ -190,9 +190,44 @@
           }
         }
       }
+    },
+    "/jobs?status={status}": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Returns all jobs, optionally filters them by status.",
+        "operationId": "getJobs",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Status",
+            "description": "The status of the jobs to be fetched..",
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getJobsResponse"
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "Duration": {
+      "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
+      "type": "integer",
+      "format": "int64",
+      "x-go-package": "time"
+    },
     "Job": {
       "type": "object",
       "title": "Job represents an async task.",
@@ -214,6 +249,9 @@
           "type": "string",
           "x-go-name": "Description"
         },
+        "duration": {
+          "$ref": "#/definitions/Duration"
+        },
         "failure_reason": {
           "description": "FailureReason holds the error message that led to the job failure, if any.",
           "type": "string",
@@ -224,15 +262,22 @@
           "type": "string",
           "x-go-name": "ID"
         },
-        "metadata": {
-          "description": "Metadata is the payload provided for the specific job.",
-          "type": "object",
-          "x-go-name": "Metadata"
-        },
         "name": {
           "description": "Name is the name of the job.",
           "type": "string",
           "x-go-name": "Name"
+        },
+        "run_at": {
+          "description": "RunAt is the UTC timestamp indicating the time for the job to run.",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "RunAt"
+        },
+        "scheduled_at": {
+          "description": "ScheduledAt is the UTC timestamp indicating the time that the job got scheduled.",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "ScheduledAt"
         },
         "started_at": {
           "description": "StartedAt is the UTC timestamp of the moment the job started.",
@@ -247,6 +292,14 @@
           "description": "TaskName is the name of the task to be executed.",
           "type": "string",
           "x-go-name": "TaskName"
+        },
+        "task_params": {
+          "description": "TaskParams are the required parameters for the task assigned to the specific job.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          },
+          "x-go-name": "TaskParams"
         },
         "timeout": {
           "description": "Timeout is the time in seconds after which the job task will be interrupted.",
@@ -290,17 +343,24 @@
           "type": "string",
           "x-go-name": "Description"
         },
-        "metadata": {
-          "type": "object",
-          "x-go-name": "Metadata"
-        },
         "name": {
           "type": "string",
           "x-go-name": "Name"
         },
+        "run_at": {
+          "type": "string",
+          "x-go-name": "RunAt"
+        },
         "task_name": {
           "type": "string",
           "x-go-name": "TaskName"
+        },
+        "task_params": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          },
+          "x-go-name": "TaskParams"
         },
         "timeout": {
           "type": "integer",
@@ -347,6 +407,18 @@
       "description": "Returns a specified job results.",
       "schema": {
         "$ref": "#/definitions/JobResult"
+      }
+    },
+    "getJobsResponse": {
+      "description": "The jobs metadata.",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Job"
+          }
+        }
       }
     },
     "postJobsResponse": {

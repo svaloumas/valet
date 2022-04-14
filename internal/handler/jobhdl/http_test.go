@@ -3,6 +3,7 @@ package jobhdl
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -89,7 +90,7 @@ func TestHTTPPostJobs(t *testing.T) {
 	tests := []struct {
 		name    string
 		payload string
-		status  int
+		code    int
 		message string
 	}{
 		{
@@ -196,8 +197,8 @@ func TestHTTPPostJobs(t *testing.T) {
 			var res map[string]interface{}
 			json.Unmarshal(b, &res)
 
-			if rr.Code != tt.status {
-				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
+			if rr.Code != tt.code {
+				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.code)
 			}
 
 			var expected map[string]interface{}
@@ -215,7 +216,7 @@ func TestHTTPPostJobs(t *testing.T) {
 			} else {
 				expected = map[string]interface{}{
 					"error":   true,
-					"code":    float64(tt.status),
+					"code":    float64(tt.code),
 					"message": tt.message,
 				}
 			}
@@ -277,7 +278,7 @@ func TestHTTPGetJob(t *testing.T) {
 	tests := []struct {
 		name    string
 		id      string
-		status  int
+		code    int
 		message string
 	}{
 		{"ok", job.ID, http.StatusOK, ""},
@@ -300,8 +301,8 @@ func TestHTTPGetJob(t *testing.T) {
 			var res map[string]interface{}
 			json.Unmarshal(b, &res)
 
-			if rr.Code != tt.status {
-				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
+			if rr.Code != tt.code {
+				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.code)
 			}
 
 			var expected map[string]interface{}
@@ -319,7 +320,7 @@ func TestHTTPGetJob(t *testing.T) {
 			} else {
 				expected = map[string]interface{}{
 					"error":   true,
-					"code":    float64(tt.status),
+					"code":    float64(tt.code),
 					"message": tt.message,
 				}
 			}
@@ -330,6 +331,211 @@ func TestHTTPGetJob(t *testing.T) {
 	}
 }
 
+func TestHTTPListJobs(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	testNow := freezed.Now()
+	pendingJob := &domain.Job{
+		ID:        "pending_job_id",
+		Name:      "pending_job",
+		TaskName:  "some task",
+		Status:    domain.Pending,
+		CreatedAt: &testNow,
+		RunAt:     &testNow,
+	}
+	scheduledJob := &domain.Job{
+		ID:        "scheduled_job_id",
+		Name:      "scheduled_job",
+		TaskName:  "some other task",
+		Status:    domain.Scheduled,
+		CreatedAt: &testNow,
+		RunAt:     &testNow,
+	}
+	inprogressJob := &domain.Job{
+		ID:        "inprogress_job_id",
+		Name:      "inprogress_job",
+		TaskName:  "some task",
+		Status:    domain.InProgress,
+		CreatedAt: &testNow,
+		RunAt:     &testNow,
+	}
+	completedJob := &domain.Job{
+		ID:        "completed_job_id",
+		Name:      "completed_job",
+		TaskName:  "some task",
+		Status:    domain.Completed,
+		CreatedAt: &testNow,
+		RunAt:     &testNow,
+	}
+	failedJob := &domain.Job{
+		ID:        "failed_job_id",
+		Name:      "failed_job",
+		TaskName:  "some task",
+		Status:    domain.Failed,
+		CreatedAt: &testNow,
+		RunAt:     &testNow,
+	}
+
+	pendingJobs := []*domain.Job{pendingJob}
+	scheduledJobs := []*domain.Job{scheduledJob}
+	inprogressJobs := []*domain.Job{inprogressJob}
+	completedJobs := []*domain.Job{completedJob}
+	failedJobs := []*domain.Job{failedJob}
+
+	jobStatusValidationErr := &apperrors.ResourceValidationErr{Message: "invalid job status: \"NOT_STARTED\""}
+	jobServiceErr := errors.New("some job service error")
+
+	jobService := mock.NewMockJobService(ctrl)
+	jobService.
+		EXPECT().
+		GetJobs("pending").
+		Return(pendingJobs, nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		GetJobs("scheduled").
+		Return(scheduledJobs, nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		GetJobs("in_progress").
+		Return(inprogressJobs, nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		GetJobs("completed").
+		Return(completedJobs, nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		GetJobs("failed").
+		Return(failedJobs, nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		GetJobs("failed").
+		Return(nil, jobServiceErr).
+		Times(1)
+	jobService.
+		EXPECT().
+		GetJobs("not_started").
+		Return(nil, jobStatusValidationErr).
+		Times(1)
+
+	hdl := NewJobHTTPHandler(jobService)
+
+	tests := []struct {
+		name    string
+		status  string
+		job     *domain.Job
+		code    int
+		message string
+	}{
+		{
+			"pending",
+			"pending",
+			pendingJob,
+			http.StatusOK,
+			"",
+		},
+		{
+			"scheduled",
+			"scheduled",
+			scheduledJob,
+			http.StatusOK,
+			"",
+		},
+		{
+			"in progress",
+			"in_progress",
+			inprogressJob,
+			http.StatusOK,
+			"",
+		},
+		{
+			"completed",
+			"completed",
+			completedJob,
+			http.StatusOK,
+			"",
+		},
+		{
+			"failed",
+			"failed",
+			failedJob,
+			http.StatusOK,
+			"",
+		},
+		{
+			"job status validation error",
+			"not_started",
+			nil,
+			http.StatusBadRequest,
+			"invalid job status: \"NOT_STARTED\"",
+		},
+		{
+			"internal server error",
+			"failed",
+			nil,
+			http.StatusInternalServerError,
+			"some job service error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			c, r := gin.CreateTestContext(rr)
+
+			r.GET("/api/jobs", hdl.GetJobs)
+			c.Request, _ = http.NewRequest(http.MethodGet, fmt.Sprintf("/api/jobs?status=%s", tt.status), nil)
+
+			r.ServeHTTP(rr, c.Request)
+
+			b, _ := ioutil.ReadAll(rr.Body)
+
+			var res map[string]interface{}
+			json.Unmarshal(b, &res)
+
+			if rr.Code != tt.code {
+				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.code)
+			}
+
+			var expected map[string]interface{}
+			if rr.Code == http.StatusOK {
+				expected = map[string]interface{}{
+					"jobs": []interface{}{
+						map[string]interface{}{
+							"id":         tt.job.ID,
+							"name":       tt.job.Name,
+							"task_name":  tt.job.TaskName,
+							"status":     tt.job.Status.String(),
+							"created_at": testTime,
+							"run_at":     testTime,
+						},
+					},
+				}
+			} else {
+				expected = map[string]interface{}{
+					"error":   true,
+					"code":    float64(tt.code),
+					"message": tt.message,
+				}
+			}
+			if eq := reflect.DeepEqual(res, expected); !eq {
+				t.Errorf("jobhdl get returned wrong body: got %v want %v", res, expected)
+			}
+		})
+	}
+}
 func TestHTTPPatchJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -361,7 +567,7 @@ func TestHTTPPatchJob(t *testing.T) {
 		name    string
 		id      string
 		payload string
-		status  int
+		code    int
 		message string
 	}{
 		{
@@ -412,15 +618,15 @@ func TestHTTPPatchJob(t *testing.T) {
 			var res map[string]interface{}
 			json.Unmarshal(b, &res)
 
-			if rr.Code != tt.status {
-				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
+			if rr.Code != tt.code {
+				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.code)
 			}
 
 			var expected map[string]interface{}
 			if rr.Code != http.StatusNoContent {
 				expected = map[string]interface{}{
 					"error":   true,
-					"code":    float64(tt.status),
+					"code":    float64(tt.code),
 					"message": tt.message,
 				}
 
@@ -463,7 +669,7 @@ func TestHTTPDeleteJob(t *testing.T) {
 	tests := []struct {
 		name    string
 		id      string
-		status  int
+		code    int
 		message string
 	}{
 		{"ok", jobID, http.StatusNoContent, ""},
@@ -486,15 +692,15 @@ func TestHTTPDeleteJob(t *testing.T) {
 			var res map[string]interface{}
 			json.Unmarshal(b, &res)
 
-			if rr.Code != tt.status {
-				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.status)
+			if rr.Code != tt.code {
+				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.code)
 			}
 
 			var expected map[string]interface{}
 			if rr.Code != http.StatusNoContent {
 				expected = map[string]interface{}{
 					"error":   true,
-					"code":    float64(tt.status),
+					"code":    float64(tt.code),
 					"message": tt.message,
 				}
 

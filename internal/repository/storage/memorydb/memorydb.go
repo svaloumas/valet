@@ -48,6 +48,25 @@ func (mem *memorydb) GetJob(id string) (*domain.Job, error) {
 	return j, nil
 }
 
+// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
+func (mem *memorydb) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
+	jobs := []*domain.Job{}
+	for _, serializedJob := range mem.jobdb {
+		j := &domain.Job{}
+		if err := json.Unmarshal(serializedJob, j); err != nil {
+			return nil, err
+		}
+		if status == domain.Undefined || j.Status == status {
+			jobs = append(jobs, j)
+		}
+	}
+	// ORDER BY created_at ASC
+	sort.Slice(jobs, func(i, j int) bool {
+		return jobs[i].CreatedAt.Before(*jobs[j].CreatedAt)
+	})
+	return jobs, nil
+}
+
 // UpdateJob updates a job to the repository.
 func (mem *memorydb) UpdateJob(id string, j *domain.Job) error {
 	serializedJob, err := json.Marshal(j)

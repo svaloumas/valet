@@ -37,6 +37,10 @@ message GetJobResponse {
     int64 duration = 14;
 }
 
+message GetJobsResponse {
+    repeated GetJobResponse jobs = 1;
+}
+
 // Empty response
 message UpdateJobResponse {}
  

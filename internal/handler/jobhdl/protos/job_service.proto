@@ -11,6 +11,7 @@ option go_package = "valet/internal/handler/jobhdl/protobuf;pb";
 service Job {
     rpc Create(CreateJobRequest) returns (CreateJobResponse) {}
     rpc Get(GetJobRequest) returns (GetJobResponse) {}
+    rpc GetJobs(GetJobsRequest) returns (GetJobsResponse) {}
     rpc Update(UpdateJobRequest) returns (UpdateJobResponse) {}
     rpc Delete(DeleteJobRequest) returns (DeleteJobResponse) {}
 }

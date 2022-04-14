@@ -46,6 +46,7 @@ func NewRouter(
 	r.GET("/api/status", HandleStatus(storage))
 
 	r.POST("/api/jobs", jobHandhler.Create)
+	r.GET("/api/jobs", jobHandhler.GetJobs)
 	r.GET("/api/jobs/:id", jobHandhler.Get)
 	r.PATCH("/api/jobs/:id", jobHandhler.Update)
 	r.DELETE("/api/jobs/:id", jobHandhler.Delete)

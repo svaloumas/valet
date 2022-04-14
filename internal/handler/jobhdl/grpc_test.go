@@ -378,16 +378,159 @@ func TestGRPCGetJob(t *testing.T) {
 				if err.Error() != tt.err.Error() {
 					if status, ok := status.FromError(err); ok {
 						if status.Code() != tt.code {
-							t.Errorf("job create returned wrong status code: got %v want %#v", status.Code(), tt.code)
+							t.Errorf("job get returned wrong status code: got %v want %#v", status.Code(), tt.code)
 						}
 					}
-					t.Errorf("job create returned wrong error: got %v want %#v", err.Error(), tt.err.Error())
+					t.Errorf("job get returned wrong error: got %v want %#v", err.Error(), tt.err.Error())
 				}
 			} else {
 				expectedSerialized, _ := json.Marshal(tt.res)
 				actualSerialized, _ := json.Marshal(res)
 				if eq := reflect.DeepEqual(actualSerialized, expectedSerialized); !eq {
-					t.Errorf("job create returned wrong response: got %v want %#v", res, tt.res)
+					t.Errorf("job get returned wrong response: got %v want %#v", res, tt.res)
+				}
+			}
+		})
+	}
+}
+
+func TestGRPCGetJobs(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	lis = bufconn.Listen(bufSize)
+	s := grpc.NewServer()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+	jobService := mock.NewMockJobService(ctrl)
+
+	handler := &JobgRPCHandler{
+		jobService: jobService,
+	}
+	pb.RegisterJobServer(s, handler)
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("Server exited with error: %v", err)
+		}
+	}()
+
+	ctx := context.Background()
+	conn, err := grpc.DialContext(ctx, "testnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Errorf("failed to dial testnet: %v", err)
+	}
+	defer conn.Close()
+
+	taskParams := map[string]interface{}{
+		"url": "some-url.com",
+	}
+	runAt, _ := time.Parse(time.RFC3339Nano, "2006-01-02T15:04:05.999999999Z")
+	createdAt := freezed.Now()
+	pendingJob := &domain.Job{
+		ID:          "auuid4",
+		Name:        "job_name",
+		TaskName:    "test_task",
+		Timeout:     10,
+		Description: "some description",
+		TaskParams:  taskParams,
+		Status:      domain.Pending,
+		RunAt:       &runAt,
+		CreatedAt:   &createdAt,
+	}
+
+	pendingJobs := []*domain.Job{pendingJob}
+	client := pb.NewJobClient(conn)
+
+	taskParamsStruct, err := structpb.NewStruct(taskParams)
+	if err != nil {
+		t.Errorf("failed to create task params struct: %v", err)
+	}
+
+	jobStatusValidationErr := &apperrors.ResourceValidationErr{Message: "invalid job status: \"NOT_STARTED\""}
+	jobServiceErr := errors.New("some job service error")
+
+	jobService.
+		EXPECT().
+		GetJobs("pending").
+		Return(pendingJobs, nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		GetJobs("not_started").
+		Return(nil, jobStatusValidationErr).
+		Times(1)
+	jobService.
+		EXPECT().
+		GetJobs("pending").
+		Return(nil, jobServiceErr).
+		Times(1)
+
+	tests := []struct {
+		name string
+		req  *pb.GetJobsRequest
+		res  *pb.GetJobsResponse
+		code codes.Code
+		err  error
+	}{
+		{
+			"ok",
+			&pb.GetJobsRequest{Status: "pending"},
+			&pb.GetJobsResponse{
+				Jobs: []*pb.GetJobResponse{
+					&pb.GetJobResponse{
+						Id:          pendingJob.ID,
+						Name:        pendingJob.Name,
+						TaskName:    pendingJob.TaskName,
+						TaskParams:  taskParamsStruct,
+						Timeout:     int32(pendingJob.Timeout),
+						Description: pendingJob.Description,
+						Status:      int32(pendingJob.Status),
+						RunAt:       timestamppb.New(*pendingJob.RunAt),
+						CreatedAt:   timestamppb.New(*pendingJob.CreatedAt),
+					},
+				},
+			},
+			codes.OK,
+			nil,
+		},
+		{
+			"job status validation error",
+			&pb.GetJobsRequest{Status: "not_started"},
+			nil,
+			codes.NotFound,
+			status.Error(codes.InvalidArgument, jobStatusValidationErr.Error()),
+		},
+		{
+			"internal error",
+			&pb.GetJobsRequest{Status: "pending"},
+			nil,
+			codes.Internal,
+			status.Error(codes.Internal, jobServiceErr.Error()),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res, err := client.GetJobs(ctx, tt.req)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					if status, ok := status.FromError(err); ok {
+						if status.Code() != tt.code {
+							t.Errorf("get jobs returned wrong status code: got %v want %#v", status.Code(), tt.code)
+						}
+					}
+					t.Errorf("get jobs returned wrong error: got %v want %#v", err.Error(), tt.err.Error())
+				}
+			} else {
+				expectedSerialized, _ := json.Marshal(tt.res)
+				actualSerialized, _ := json.Marshal(res)
+				if eq := reflect.DeepEqual(actualSerialized, expectedSerialized); !eq {
+					t.Errorf("get jobs returned wrong response: got %v want %#v", res, tt.res)
 				}
 			}
 		})
@@ -491,16 +634,16 @@ func TestGRPCUpdateJob(t *testing.T) {
 				if err.Error() != tt.err.Error() {
 					if status, ok := status.FromError(err); ok {
 						if status.Code() != tt.code {
-							t.Errorf("job create returned wrong status code: got %v want %#v", status.Code(), tt.code)
+							t.Errorf("job update returned wrong status code: got %v want %#v", status.Code(), tt.code)
 						}
 					}
-					t.Errorf("job create returned wrong error: got %v want %#v", err.Error(), tt.err.Error())
+					t.Errorf("job update returned wrong error: got %v want %#v", err.Error(), tt.err.Error())
 				}
 			} else {
 				expectedSerialized, _ := json.Marshal(tt.res)
 				actualSerialized, _ := json.Marshal(res)
 				if eq := reflect.DeepEqual(actualSerialized, expectedSerialized); !eq {
-					t.Errorf("job create returned wrong response: got %v want %#v", res, tt.res)
+					t.Errorf("job update returned wrong response: got %v want %#v", res, tt.res)
 				}
 			}
 		})
@@ -592,16 +735,16 @@ func TestGRPCDeleteJob(t *testing.T) {
 				if err.Error() != tt.err.Error() {
 					if status, ok := status.FromError(err); ok {
 						if status.Code() != tt.code {
-							t.Errorf("job create returned wrong status code: got %v want %#v", status.Code(), tt.code)
+							t.Errorf("job delete returned wrong status code: got %v want %#v", status.Code(), tt.code)
 						}
 					}
-					t.Errorf("job create returned wrong error: got %v want %#v", err.Error(), tt.err.Error())
+					t.Errorf("job delete returned wrong error: got %v want %#v", err.Error(), tt.err.Error())
 				}
 			} else {
 				expectedSerialized, _ := json.Marshal(tt.res)
 				actualSerialized, _ := json.Marshal(res)
 				if eq := reflect.DeepEqual(actualSerialized, expectedSerialized); !eq {
-					t.Errorf("job create returned wrong response: got %v want %#v", res, tt.res)
+					t.Errorf("job delete returned wrong response: got %v want %#v", res, tt.res)
 				}
 			}
 		})

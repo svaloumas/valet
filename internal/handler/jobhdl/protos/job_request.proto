@@ -20,6 +20,10 @@ message GetJobRequest {
     string id = 1;
 }
 
+message GetJobsRequest {
+    string status = 1;
+}
+
 message UpdateJobRequest {
     string id = 1;
     string name = 2;
