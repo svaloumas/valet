@@ -16,6 +16,9 @@ type Storage interface {
 	// GetJob fetches a job from the repository.
 	GetJob(id string) (*domain.Job, error)
 
+	// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
+	GetJobs(status domain.JobStatus) ([]*domain.Job, error)
+
 	// UpdateJob updates a job to the repository.
 	UpdateJob(id string, j *domain.Job) error
 
@@ -63,6 +66,9 @@ type JobService interface {
 
 	// Get fetches a job.
 	Get(id string) (*domain.Job, error)
+
+	// GetJobs fetches all jobs, optionally filters the jobs by status.
+	GetJobs(status string) ([]*domain.Job, error)
 
 	// Update updates a job.
 	Update(id, name, description string) error

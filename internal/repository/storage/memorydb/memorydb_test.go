@@ -121,6 +121,173 @@ func TestMemoryDBGetJob(t *testing.T) {
 	}
 }
 
+func TestMemoryDBGetJobs(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(5)
+
+	createdAt := freezed.Now()
+	runAt := freezed.Now()
+	pendingJob := &domain.Job{
+		ID:        "pending_job_id",
+		TaskName:  "some task",
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
+		RunAt:     &runAt,
+	}
+	createdAt2 := createdAt.Add(1 * time.Minute)
+	scheduledAt := freezed.Now()
+	scheduledJob := &domain.Job{
+		ID:          "scheduled_job_id",
+		TaskName:    "some other task",
+		Status:      domain.Scheduled,
+		CreatedAt:   &createdAt2,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+	createdAt3 := createdAt2.Add(1 * time.Minute)
+	completedAt := freezed.Now()
+	startedAt := freezed.Now()
+	inprogressJob := &domain.Job{
+		ID:          "inprogress_job_id",
+		TaskName:    "some task",
+		Status:      domain.InProgress,
+		CreatedAt:   &createdAt3,
+		StartedAt:   &startedAt,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+	createdAt4 := createdAt3.Add(1 * time.Minute)
+	completedJob := &domain.Job{
+		ID:          "completed_job_id",
+		TaskName:    "some task",
+		Status:      domain.Completed,
+		CreatedAt:   &createdAt4,
+		StartedAt:   &startedAt,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+		CompletedAt: &completedAt,
+	}
+	createdAt5 := createdAt4.Add(1 * time.Minute)
+	failedJob := &domain.Job{
+		ID:            "failed_job_id",
+		TaskName:      "some task",
+		Status:        domain.Failed,
+		FailureReason: "some failure reason",
+		CreatedAt:     &createdAt5,
+		StartedAt:     &startedAt,
+		RunAt:         &runAt,
+		ScheduledAt:   &scheduledAt,
+		CompletedAt:   &completedAt,
+	}
+
+	memorydb := New()
+	serializedPendingJob, err := json.Marshal(pendingJob)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	serializedScheduledJob, err := json.Marshal(scheduledJob)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	serializedInProgressJob, err := json.Marshal(inprogressJob)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	serializedCompletedJob, err := json.Marshal(completedJob)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	serializedFailedJob, err := json.Marshal(failedJob)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.jobdb[pendingJob.ID] = serializedPendingJob
+	memorydb.jobdb[scheduledJob.ID] = serializedScheduledJob
+	memorydb.jobdb[inprogressJob.ID] = serializedInProgressJob
+	memorydb.jobdb[completedJob.ID] = serializedCompletedJob
+	memorydb.jobdb[failedJob.ID] = serializedFailedJob
+
+	tests := []struct {
+		name     string
+		status   domain.JobStatus
+		expected []*domain.Job
+	}{
+		{
+			"all",
+			domain.Undefined,
+			[]*domain.Job{
+				pendingJob,
+				scheduledJob,
+				inprogressJob,
+				completedJob,
+				failedJob,
+			},
+		},
+		{
+			"pending",
+			domain.Pending,
+			[]*domain.Job{
+				pendingJob,
+			},
+		},
+		{
+			"scheduled",
+			domain.Scheduled,
+			[]*domain.Job{
+				scheduledJob,
+			},
+		},
+		{
+			"in progress",
+			domain.InProgress,
+			[]*domain.Job{
+				inprogressJob,
+			},
+		},
+		{
+			"completed",
+			domain.Completed,
+			[]*domain.Job{
+				completedJob,
+			},
+		},
+		{
+			"failed",
+			domain.Failed,
+			[]*domain.Job{
+				failedJob,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			jobs, err := memorydb.GetJobs(tt.status)
+			if err != nil {
+				t.Errorf("GetJobs returned unexpected error: got %#v want nil", err)
+			}
+
+			if len(tt.expected) != len(jobs) {
+				t.Fatalf("expected %#v accounts got %#v instead", len(tt.expected), len(jobs))
+			}
+
+			for i := range tt.expected {
+				if !reflect.DeepEqual(tt.expected[i], jobs[i]) {
+					t.Fatalf("expected %#v got %#v instead", tt.expected[i], jobs[i])
+				}
+			}
+		})
+	}
+}
+
 func TestMemoryDBUpdateJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -255,18 +422,20 @@ func TestMemoryDBGetDueJobs(t *testing.T) {
 		Status:   domain.Pending,
 		RunAt:    &runAt,
 	}
+	runAt2 := runAt.Add(1 * time.Minute)
 	j2 := &domain.Job{
 		ID:       "due_job2_id",
 		TaskName: "some other task",
 		Status:   domain.Pending,
-		RunAt:    &runAt,
+		RunAt:    &runAt2,
 	}
+	runAt3 := runAt2.Add(1 * time.Minute)
 	scheduledAt := freezed.Now()
 	scheduledJob := &domain.Job{
 		ID:          "scheduled_job_id",
 		TaskName:    "some third task",
 		Status:      domain.Scheduled,
-		RunAt:       &runAt,
+		RunAt:       &runAt3,
 		ScheduledAt: &scheduledAt,
 	}
 
@@ -293,30 +462,14 @@ func TestMemoryDBGetDueJobs(t *testing.T) {
 	if err != nil {
 		t.Errorf("GetDueJobs returned error: got %#v want nil", err)
 	}
-	if len(dueJobs) != 2 {
-		t.Errorf("GetDueJobs returned wrong number of due jobs: got %#v want 2", len(dueJobs))
+	if len(expected) != len(dueJobs) {
+		t.Fatalf("expected %#v accounts got %#v instead", len(expected), len(dueJobs))
 	}
-	dueJob1 := dueJobs[0]
-	found := false
-	for _, job := range expected {
-		if eq := reflect.DeepEqual(dueJob1, job); eq {
-			found = true
-			break
+
+	for i := range expected {
+		if !reflect.DeepEqual(expected[i], dueJobs[i]) {
+			t.Fatalf("expected %#v got %#v instead", expected[i], dueJobs[i])
 		}
-	}
-	if !found {
-		t.Errorf("GetDueJobs returned wrong due jobs: got %#v want %#v", dueJobs, expected)
-	}
-	dueJob2 := dueJobs[1]
-	found = false
-	for _, job := range expected {
-		if eq := reflect.DeepEqual(dueJob2, job); eq {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("GetDueJobs returned wrong due jobs: got %#v want %#v", dueJobs, expected)
 	}
 }
 

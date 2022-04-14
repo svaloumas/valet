@@ -8,10 +8,12 @@ import (
 	"testing"
 	"time"
 	"valet/internal/core/domain"
+	"valet/mock"
 	"valet/pkg/apperrors"
 	"valet/pkg/uuidgen"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/golang/mock/gomock"
 )
 
 var (
@@ -38,7 +40,7 @@ func TestCheckHealthRedis(t *testing.T) {
 }
 
 func TestRedisCreateJob(t *testing.T) {
-	redisTest.client.FlushDB(ctx)
+	defer redisTest.client.FlushDB(ctx)
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -83,7 +85,7 @@ func TestRedisCreateJob(t *testing.T) {
 }
 
 func TestRedisGetJob(t *testing.T) {
-	redisTest.client.FlushDB(ctx)
+	defer redisTest.client.FlushDB(ctx)
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -149,8 +151,171 @@ func TestRedisGetJob(t *testing.T) {
 	}
 }
 
+func TestRedisGetJobs(t *testing.T) {
+	defer redisTest.client.FlushDB(ctx)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(5)
+
+	createdAt := freezed.Now()
+	runAt := freezed.Now()
+	pendingJob := &domain.Job{
+		ID:        "pending_job_id",
+		TaskName:  "some task",
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
+		RunAt:     &runAt,
+	}
+	createdAt2 := createdAt.Add(1 * time.Minute)
+	scheduledAt := freezed.Now()
+	scheduledJob := &domain.Job{
+		ID:          "scheduled_job_id",
+		TaskName:    "some other task",
+		Status:      domain.Scheduled,
+		CreatedAt:   &createdAt2,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+	createdAt3 := createdAt2.Add(1 * time.Minute)
+	completedAt := freezed.Now()
+	startedAt := freezed.Now()
+	inprogressJob := &domain.Job{
+		ID:          "inprogress_job_id",
+		TaskName:    "some task",
+		Status:      domain.InProgress,
+		CreatedAt:   &createdAt3,
+		StartedAt:   &startedAt,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+	createdAt4 := createdAt3.Add(1 * time.Minute)
+	completedJob := &domain.Job{
+		ID:          "completed_job_id",
+		TaskName:    "some task",
+		Status:      domain.Completed,
+		CreatedAt:   &createdAt4,
+		StartedAt:   &startedAt,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+		CompletedAt: &completedAt,
+	}
+	createdAt5 := createdAt4.Add(1 * time.Minute)
+	failedJob := &domain.Job{
+		ID:            "failed_job_id",
+		TaskName:      "some task",
+		Status:        domain.Failed,
+		FailureReason: "some failure reason",
+		CreatedAt:     &createdAt5,
+		StartedAt:     &startedAt,
+		RunAt:         &runAt,
+		ScheduledAt:   &scheduledAt,
+		CompletedAt:   &completedAt,
+	}
+
+	err := redisTest.CreateJob(pendingJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+	err = redisTest.CreateJob(scheduledJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+	err = redisTest.CreateJob(inprogressJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+	err = redisTest.CreateJob(completedJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+	err = redisTest.CreateJob(failedJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+
+	tests := []struct {
+		name     string
+		status   domain.JobStatus
+		expected []*domain.Job
+	}{
+		{
+			"all",
+			domain.Undefined,
+			[]*domain.Job{
+				pendingJob,
+				scheduledJob,
+				inprogressJob,
+				completedJob,
+				failedJob,
+			},
+		},
+		{
+			"pending",
+			domain.Pending,
+			[]*domain.Job{
+				pendingJob,
+			},
+		},
+		{
+			"scheduled",
+			domain.Scheduled,
+			[]*domain.Job{
+				scheduledJob,
+			},
+		},
+		{
+			"in progress",
+			domain.InProgress,
+			[]*domain.Job{
+				inprogressJob,
+			},
+		},
+		{
+			"completed",
+			domain.Completed,
+			[]*domain.Job{
+				completedJob,
+			},
+		},
+		{
+			"failed",
+			domain.Failed,
+			[]*domain.Job{
+				failedJob,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			jobs, err := redisTest.GetJobs(tt.status)
+			if err != nil {
+				t.Errorf("GetJobs returned unexpected error: got %#v want nil", err)
+			}
+
+			if len(tt.expected) != len(jobs) {
+				t.Fatalf("expected %#v accounts got %#v instead", len(tt.expected), len(jobs))
+			}
+
+			for i := range tt.expected {
+				if !reflect.DeepEqual(tt.expected[i], jobs[i]) {
+					t.Fatalf("expected %#v got %#v instead", tt.expected[i], jobs[i])
+				}
+			}
+		})
+	}
+}
+
 func TestRedisUpdateJob(t *testing.T) {
-	redisTest.client.FlushDB(ctx)
+	defer redisTest.client.FlushDB(ctx)
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -204,7 +369,7 @@ func TestRedisUpdateJob(t *testing.T) {
 }
 
 func TestRedisDeleteJob(t *testing.T) {
-	redisTest.client.FlushDB(ctx)
+	defer redisTest.client.FlushDB(ctx)
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -249,7 +414,7 @@ func TestRedisDeleteJob(t *testing.T) {
 }
 
 func TestRedisGetDueJobs(t *testing.T) {
-	redisTest.client.FlushDB(ctx)
+	defer redisTest.client.FlushDB(ctx)
 
 	duejob1 := &domain.Job{
 		Name:        "due_job_1",
@@ -362,7 +527,7 @@ func TestRedisGetDueJobs(t *testing.T) {
 }
 
 func TestRedisCreateJobResult(t *testing.T) {
-	redisTest.client.FlushDB(ctx)
+	defer redisTest.client.FlushDB(ctx)
 
 	result := &domain.JobResult{
 		Metadata: "some metadata",
@@ -394,7 +559,7 @@ func TestRedisCreateJobResult(t *testing.T) {
 }
 
 func TestRedisGetJobResult(t *testing.T) {
-	redisTest.client.FlushDB(ctx)
+	defer redisTest.client.FlushDB(ctx)
 
 	result := &domain.JobResult{
 		Metadata: "some metadata",
@@ -448,7 +613,7 @@ func TestRedisGetJobResult(t *testing.T) {
 }
 
 func TestRedisUpdateJobResult(t *testing.T) {
-	redisTest.client.FlushDB(ctx)
+	defer redisTest.client.FlushDB(ctx)
 
 	result := &domain.JobResult{
 		Metadata: "some metadata",
@@ -488,7 +653,7 @@ func TestRedisUpdateJobResult(t *testing.T) {
 }
 
 func TestRedisDeleteJobResult(t *testing.T) {
-	redisTest.client.FlushDB(ctx)
+	defer redisTest.client.FlushDB(ctx)
 
 	result := &domain.JobResult{
 		Metadata: "some metadata",

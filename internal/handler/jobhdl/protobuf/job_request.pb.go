@@ -155,6 +155,53 @@ func (x *GetJobRequest) GetId() string {
 	return ""
 }
 
+type GetJobsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status string `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+}
+
+func (x *GetJobsRequest) Reset() {
+	*x = GetJobsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetJobsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJobsRequest) ProtoMessage() {}
+
+func (x *GetJobsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJobsRequest.ProtoReflect.Descriptor instead.
+func (*GetJobsRequest) Descriptor() ([]byte, []int) {
+	return file_internal_handler_jobhdl_protos_job_request_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetJobsRequest) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
 type UpdateJobRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -168,7 +215,7 @@ type UpdateJobRequest struct {
 func (x *UpdateJobRequest) Reset() {
 	*x = UpdateJobRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[2]
+		mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -181,7 +228,7 @@ func (x *UpdateJobRequest) String() string {
 func (*UpdateJobRequest) ProtoMessage() {}
 
 func (x *UpdateJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[2]
+	mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -194,7 +241,7 @@ func (x *UpdateJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateJobRequest.ProtoReflect.Descriptor instead.
 func (*UpdateJobRequest) Descriptor() ([]byte, []int) {
-	return file_internal_handler_jobhdl_protos_job_request_proto_rawDescGZIP(), []int{2}
+	return file_internal_handler_jobhdl_protos_job_request_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *UpdateJobRequest) GetId() string {
@@ -229,7 +276,7 @@ type DeleteJobRequest struct {
 func (x *DeleteJobRequest) Reset() {
 	*x = DeleteJobRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[3]
+		mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -242,7 +289,7 @@ func (x *DeleteJobRequest) String() string {
 func (*DeleteJobRequest) ProtoMessage() {}
 
 func (x *DeleteJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[3]
+	mi := &file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -255,7 +302,7 @@ func (x *DeleteJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteJobRequest.ProtoReflect.Descriptor instead.
 func (*DeleteJobRequest) Descriptor() ([]byte, []int) {
-	return file_internal_handler_jobhdl_protos_job_request_proto_rawDescGZIP(), []int{3}
+	return file_internal_handler_jobhdl_protos_job_request_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DeleteJobRequest) GetId() string {
@@ -288,18 +335,21 @@ var file_internal_handler_jobhdl_protos_job_request_proto_rawDesc = []byte{
 	0x73, 0x12, 0x15, 0x0a, 0x06, 0x72, 0x75, 0x6e, 0x5f, 0x61, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x05, 0x72, 0x75, 0x6e, 0x41, 0x74, 0x22, 0x1f, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x4a,
 	0x6f, 0x62, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22, 0x58, 0x0a, 0x10, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x4a, 0x6f, 0x62, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a,
-	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a,
-	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
-	0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74,
-	0x69, 0x6f, 0x6e, 0x22, 0x22, 0x0a, 0x10, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x4a, 0x6f, 0x62,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22, 0x28, 0x0a, 0x0e, 0x47, 0x65, 0x74,
+	0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x73,
+	0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x74, 0x61,
+	0x74, 0x75, 0x73, 0x22, 0x58, 0x0a, 0x10, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4a, 0x6f, 0x62,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x42, 0x2b, 0x5a, 0x29, 0x76, 0x61, 0x6c, 0x65, 0x74,
-	0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65,
-	0x72, 0x2f, 0x6a, 0x6f, 0x62, 0x68, 0x64, 0x6c, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
-	0x66, 0x3b, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64,
+	0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x22, 0x0a,
+	0x10, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x4a, 0x6f, 0x62, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69,
+	0x64, 0x42, 0x2b, 0x5a, 0x29, 0x76, 0x61, 0x6c, 0x65, 0x74, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72,
+	0x6e, 0x61, 0x6c, 0x2f, 0x68, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x2f, 0x6a, 0x6f, 0x62, 0x68,
+	0x64, 0x6c, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x3b, 0x70, 0x62, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -314,16 +364,17 @@ func file_internal_handler_jobhdl_protos_job_request_proto_rawDescGZIP() []byte 
 	return file_internal_handler_jobhdl_protos_job_request_proto_rawDescData
 }
 
-var file_internal_handler_jobhdl_protos_job_request_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_internal_handler_jobhdl_protos_job_request_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_internal_handler_jobhdl_protos_job_request_proto_goTypes = []interface{}{
 	(*CreateJobRequest)(nil), // 0: job.CreateJobRequest
 	(*GetJobRequest)(nil),    // 1: job.GetJobRequest
-	(*UpdateJobRequest)(nil), // 2: job.UpdateJobRequest
-	(*DeleteJobRequest)(nil), // 3: job.DeleteJobRequest
-	(*structpb.Struct)(nil),  // 4: google.protobuf.Struct
+	(*GetJobsRequest)(nil),   // 2: job.GetJobsRequest
+	(*UpdateJobRequest)(nil), // 3: job.UpdateJobRequest
+	(*DeleteJobRequest)(nil), // 4: job.DeleteJobRequest
+	(*structpb.Struct)(nil),  // 5: google.protobuf.Struct
 }
 var file_internal_handler_jobhdl_protos_job_request_proto_depIdxs = []int32{
-	4, // 0: job.CreateJobRequest.task_params:type_name -> google.protobuf.Struct
+	5, // 0: job.CreateJobRequest.task_params:type_name -> google.protobuf.Struct
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -362,7 +413,7 @@ func file_internal_handler_jobhdl_protos_job_request_proto_init() {
 			}
 		}
 		file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateJobRequest); i {
+			switch v := v.(*GetJobsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -374,6 +425,18 @@ func file_internal_handler_jobhdl_protos_job_request_proto_init() {
 			}
 		}
 		file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateJobRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_handler_jobhdl_protos_job_request_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteJobRequest); i {
 			case 0:
 				return &v.state
@@ -392,7 +455,7 @@ func file_internal_handler_jobhdl_protos_job_request_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_internal_handler_jobhdl_protos_job_request_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

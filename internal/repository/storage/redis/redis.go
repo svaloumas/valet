@@ -113,6 +113,40 @@ func (rs *Redis) GetJob(id string) (*domain.Job, error) {
 	return j, nil
 }
 
+// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
+func (rs *Redis) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
+	var keys []string
+	key := rs.getRedisPrefixedKey("job:*")
+	iter := rs.client.Scan(ctx, 0, key, 0).Iterator()
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
+	}
+
+	jobs := []*domain.Job{}
+	for _, key := range keys {
+		value, err := rs.client.Get(ctx, key).Bytes()
+		if err != nil {
+			return nil, err
+		}
+		j := &domain.Job{}
+		if err := json.Unmarshal(value, j); err != nil {
+			return nil, err
+		}
+		if status == domain.Undefined || j.Status == status {
+			jobs = append(jobs, j)
+		}
+	}
+
+	// ORDER BY created_at ASC
+	sort.Slice(jobs, func(i, j int) bool {
+		return jobs[i].CreatedAt.Before(*jobs[j].CreatedAt)
+	})
+	return jobs, nil
+}
+
 // UpdateJob adds a new job to the repository.
 func (rs *Redis) UpdateJob(id string, j *domain.Job) error {
 	key := rs.getRedisKeyForJob(id)
@@ -141,7 +175,8 @@ func (rs *Redis) DeleteJob(id string) error {
 // GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
 func (rs *Redis) GetDueJobs() ([]*domain.Job, error) {
 	var keys []string
-	iter := rs.client.Scan(ctx, 0, "job:*", 0).Iterator()
+	key := rs.getRedisPrefixedKey("job:*")
+	iter := rs.client.Scan(ctx, 0, key, 0).Iterator()
 	for iter.Next(ctx) {
 		keys = append(keys, iter.Val())
 	}

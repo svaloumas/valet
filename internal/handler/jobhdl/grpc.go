@@ -73,6 +73,29 @@ func (hdl *JobgRPCHandler) Get(ctx context.Context, in *pb.GetJobRequest) (*pb.G
 	return res, nil
 }
 
+// GetJobs fetches all jobs, optionally filters them by status.
+func (hdl *JobgRPCHandler) GetJobs(ctx context.Context, in *pb.GetJobsRequest) (*pb.GetJobsResponse, error) {
+	statusValue := in.GetStatus()
+	jobs, err := hdl.jobService.GetJobs(statusValue)
+	if err != nil {
+		switch err.(type) {
+		case *apperrors.ResourceValidationErr:
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+	res := &pb.GetJobsResponse{}
+	for _, j := range jobs {
+		getJobResponse, err := newGetJobResponse(j)
+		if err != nil {
+			return nil, err
+		}
+		res.Jobs = append(res.Jobs, getJobResponse)
+	}
+	return res, nil
+}
+
 // Update updates a job.
 func (hdl *JobgRPCHandler) Update(ctx context.Context, in *pb.UpdateJobRequest) (*pb.UpdateJobResponse, error) {
 	id := in.GetId()

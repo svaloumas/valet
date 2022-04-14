@@ -1,5 +1,5 @@
 server:
-  protocol: http
+  protocol: grpc
   http:
     port: 8080
   grpc:

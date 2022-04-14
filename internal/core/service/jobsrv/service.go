@@ -1,6 +1,8 @@
 package jobsrv
 
 import (
+	"encoding/json"
+	"strings"
 	"time"
 	"valet/internal/core/domain"
 	"valet/internal/core/domain/taskrepo"
@@ -77,6 +79,27 @@ func (srv *jobservice) Get(id string) (*domain.Job, error) {
 	}
 	j.SetDuration()
 	return j, nil
+}
+
+// GetJobs fetches all jobs, optionally filters the jobs by status.
+func (srv *jobservice) GetJobs(status string) ([]*domain.Job, error) {
+	var jobStatus domain.JobStatus
+	if status == "" {
+		jobStatus = domain.Undefined
+	} else {
+		err := json.Unmarshal([]byte("\""+strings.ToUpper(status)+"\""), &jobStatus)
+		if err != nil {
+			return nil, err
+		}
+	}
+	jobs, err := srv.storage.GetJobs(jobStatus)
+	if err != nil {
+		return nil, err
+	}
+	for _, j := range jobs {
+		j.SetDuration()
+	}
+	return jobs, nil
 }
 
 // Update updates a job.

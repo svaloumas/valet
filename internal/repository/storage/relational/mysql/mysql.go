@@ -158,6 +158,41 @@ func (mySQL *MySQL) GetJob(id string) (*domain.Job, error) {
 	return job, nil
 }
 
+// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
+func (mySQL *MySQL) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
+
+	filterByStatus := ""
+	if status != domain.Undefined {
+		filterByStatus = fmt.Sprintf("WHERE status = %d", status.Index())
+	}
+
+	var query bytes.Buffer
+	query.WriteString("SELECT BIN_TO_UUID(id), name, task_name, task_params, ")
+	query.WriteString("timeout, description, status, failure_reason, run_at, ")
+	query.WriteString("scheduled_at, created_at, started_at, completed_at ")
+	query.WriteString("FROM job " + filterByStatus + " ORDER BY created_at ASC")
+
+	jobs := make([]*domain.Job, 0)
+
+	rows, err := mySQL.DB.Query(query.String())
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var taskParams relational.MapStringInterface
+		job := new(domain.Job)
+		err = rows.Scan(&job.ID, &job.Name, &job.TaskName, &taskParams, &job.Timeout,
+			&job.Description, &job.Status, &job.FailureReason, &job.RunAt,
+			&job.ScheduledAt, &job.CreatedAt, &job.StartedAt, &job.CompletedAt)
+		if err != nil {
+			return nil, err
+		}
+		jobs = append(jobs, job)
+	}
+	return jobs, nil
+}
+
 // UpdateJob updates a job to the repository.
 func (mySQL *MySQL) UpdateJob(id string, j *domain.Job) error {
 	tx, err := mySQL.DB.Begin()

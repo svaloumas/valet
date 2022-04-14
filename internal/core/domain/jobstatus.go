@@ -3,6 +3,7 @@ package domain
 import (
 	"fmt"
 	"strconv"
+	"valet/pkg/apperrors"
 )
 
 // JobStatus holds a value for job status ranging from 1 to 5.
@@ -51,12 +52,12 @@ func (js *JobStatus) UnmarshalJSON(data []byte) error {
 
 	unquotedJobStatus, err := strconv.Unquote(string(data))
 	if err != nil {
-		return fmt.Errorf("unquoting job status data returned error: %s", err)
+		return &apperrors.ResourceValidationErr{Message: fmt.Sprintf("unquoting job status data returned error: %s", err)}
 	}
 
 	jobStatus, ok := jobStatuses[unquotedJobStatus]
 	if !ok {
-		return fmt.Errorf("invalid job status: %s", string(data))
+		return &apperrors.ResourceValidationErr{Message: fmt.Sprintf("invalid job status: %s", string(data))}
 	}
 
 	*js = jobStatus

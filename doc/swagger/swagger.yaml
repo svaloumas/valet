@@ -2,6 +2,14 @@ basePath: /api
 consumes:
 - application/json
 definitions:
+  Duration:
+    description: |-
+      A Duration represents the elapsed time between two instants
+      as an int64 nanosecond count. The representation limits the
+      largest representable duration to approximately 290 years.
+    format: int64
+    type: integer
+    x-go-package: time
   Job:
     properties:
       completed_at:
@@ -18,6 +26,8 @@ definitions:
         description: Description gives some information about the job.
         type: string
         x-go-name: Description
+      duration:
+        $ref: '#/definitions/Duration'
       failure_reason:
         description: FailureReason holds the error message that led to the job failure,
           if any.
@@ -27,14 +37,22 @@ definitions:
         description: ID is the auto-generated job identifier in UUID4 format.
         type: string
         x-go-name: ID
-      metadata:
-        description: Metadata is the payload provided for the specific job.
-        type: object
-        x-go-name: Metadata
       name:
         description: Name is the name of the job.
         type: string
         x-go-name: Name
+      run_at:
+        description: RunAt is the UTC timestamp indicating the time for the job to
+          run.
+        format: date-time
+        type: string
+        x-go-name: RunAt
+      scheduled_at:
+        description: ScheduledAt is the UTC timestamp indicating the time that the
+          job got scheduled.
+        format: date-time
+        type: string
+        x-go-name: ScheduledAt
       started_at:
         description: StartedAt is the UTC timestamp of the moment the job started.
         format: date-time
@@ -46,6 +64,13 @@ definitions:
         description: TaskName is the name of the task to be executed.
         type: string
         x-go-name: TaskName
+      task_params:
+        additionalProperties:
+          type: object
+        description: TaskParams are the required parameters for the task assigned
+          to the specific job.
+        type: object
+        x-go-name: TaskParams
       timeout:
         description: Timeout is the time in seconds after which the job task will
           be interrupted.
@@ -79,15 +104,20 @@ definitions:
       description:
         type: string
         x-go-name: Description
-      metadata:
-        type: object
-        x-go-name: Metadata
       name:
         type: string
         x-go-name: Name
+      run_at:
+        type: string
+        x-go-name: RunAt
       task_name:
         type: string
         x-go-name: TaskName
+      task_params:
+        additionalProperties:
+          type: object
+        type: object
+        x-go-name: TaskParams
       timeout:
         format: int64
         type: integer
@@ -231,6 +261,25 @@ paths:
       summary: Returns a specified job's results.
       tags:
       - jobs
+  /jobs?status={status}:
+    get:
+      operationId: getJobs
+      parameters:
+      - description: The status of the jobs to be fetched..
+        in: query
+        name: status
+        type: string
+        x-go-name: Status
+      responses:
+        "200":
+          $ref: '#/responses/getJobsResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Returns all jobs, optionally filters them by status.
+      tags:
+      - jobs
 produces:
 - application/json
 responses:
@@ -246,6 +295,14 @@ responses:
     description: Returns a specified job results.
     schema:
       $ref: '#/definitions/JobResult'
+  getJobsResponse:
+    description: The jobs metadata.
+    schema:
+      additionalProperties:
+        items:
+          $ref: '#/definitions/Job'
+        type: array
+      type: object
   postJobsResponse:
     description: Returns the newly created job metadata.
     schema:

@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type JobClient interface {
 	Create(ctx context.Context, in *CreateJobRequest, opts ...grpc.CallOption) (*CreateJobResponse, error)
 	Get(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
+	GetJobs(ctx context.Context, in *GetJobsRequest, opts ...grpc.CallOption) (*GetJobsResponse, error)
 	Update(ctx context.Context, in *UpdateJobRequest, opts ...grpc.CallOption) (*UpdateJobResponse, error)
 	Delete(ctx context.Context, in *DeleteJobRequest, opts ...grpc.CallOption) (*DeleteJobResponse, error)
 }
@@ -54,6 +55,15 @@ func (c *jobClient) Get(ctx context.Context, in *GetJobRequest, opts ...grpc.Cal
 	return out, nil
 }
 
+func (c *jobClient) GetJobs(ctx context.Context, in *GetJobsRequest, opts ...grpc.CallOption) (*GetJobsResponse, error) {
+	out := new(GetJobsResponse)
+	err := c.cc.Invoke(ctx, "/job.Job/GetJobs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *jobClient) Update(ctx context.Context, in *UpdateJobRequest, opts ...grpc.CallOption) (*UpdateJobResponse, error) {
 	out := new(UpdateJobResponse)
 	err := c.cc.Invoke(ctx, "/job.Job/Update", in, out, opts...)
@@ -78,6 +88,7 @@ func (c *jobClient) Delete(ctx context.Context, in *DeleteJobRequest, opts ...gr
 type JobServer interface {
 	Create(context.Context, *CreateJobRequest) (*CreateJobResponse, error)
 	Get(context.Context, *GetJobRequest) (*GetJobResponse, error)
+	GetJobs(context.Context, *GetJobsRequest) (*GetJobsResponse, error)
 	Update(context.Context, *UpdateJobRequest) (*UpdateJobResponse, error)
 	Delete(context.Context, *DeleteJobRequest) (*DeleteJobResponse, error)
 	mustEmbedUnimplementedJobServer()
@@ -92,6 +103,9 @@ func (UnimplementedJobServer) Create(context.Context, *CreateJobRequest) (*Creat
 }
 func (UnimplementedJobServer) Get(context.Context, *GetJobRequest) (*GetJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedJobServer) GetJobs(context.Context, *GetJobsRequest) (*GetJobsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetJobs not implemented")
 }
 func (UnimplementedJobServer) Update(context.Context, *UpdateJobRequest) (*UpdateJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
@@ -148,6 +162,24 @@ func _Job_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Job_GetJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetJobsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobServer).GetJobs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/job.Job/GetJobs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobServer).GetJobs(ctx, req.(*GetJobsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Job_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateJobRequest)
 	if err := dec(in); err != nil {
@@ -198,6 +230,10 @@ var Job_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _Job_Get_Handler,
+		},
+		{
+			MethodName: "GetJobs",
+			Handler:    _Job_GetJobs_Handler,
 		},
 		{
 			MethodName: "Update",

@@ -15,6 +15,7 @@ import (
 	"valet/pkg/uuidgen"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/golang/mock/gomock"
 )
 
 var (
@@ -210,6 +211,168 @@ func TestMySQLGetJob(t *testing.T) {
 			} else {
 				if !reflect.DeepEqual(job, dbJob) {
 					t.Fatalf("expected %#v got %#v instead", job, dbJob)
+				}
+			}
+		})
+	}
+}
+
+func TestMySQLGetJobs(t *testing.T) {
+	defer resetTestDB()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	createdAt := testTime
+	runAt := testTime
+	pendingJob := &domain.Job{
+		TaskName:  "some task",
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
+		RunAt:     &runAt,
+	}
+	createdAt2 := createdAt.Add(1 * time.Minute)
+	scheduledAt := testTime.Add(2 * time.Minute)
+	scheduledJob := &domain.Job{
+		TaskName:    "some other task",
+		Status:      domain.Scheduled,
+		CreatedAt:   &createdAt2,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+	createdAt3 := createdAt2.Add(1 * time.Minute)
+	completedAt := createdAt3.Add(5 * time.Minute)
+	startedAt := createdAt.Add(1 * time.Minute)
+	inprogressJob := &domain.Job{
+		TaskName:    "some task",
+		Status:      domain.InProgress,
+		CreatedAt:   &createdAt3,
+		StartedAt:   &startedAt,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+	createdAt4 := createdAt3.Add(1 * time.Minute)
+	completedJob := &domain.Job{
+		TaskName:    "some task",
+		Status:      domain.Completed,
+		CreatedAt:   &createdAt4,
+		StartedAt:   &startedAt,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+		CompletedAt: &completedAt,
+	}
+	createdAt5 := createdAt4.Add(1 * time.Minute)
+	failedJob := &domain.Job{
+		TaskName:      "some task",
+		Status:        domain.Failed,
+		FailureReason: "some failure reason",
+		CreatedAt:     &createdAt5,
+		StartedAt:     &startedAt,
+		RunAt:         &runAt,
+		ScheduledAt:   &scheduledAt,
+		CompletedAt:   &completedAt,
+	}
+
+	uuid1, _ := uuidGenerator.GenerateRandomUUIDString()
+	uuid2, _ := uuidGenerator.GenerateRandomUUIDString()
+	uuid3, _ := uuidGenerator.GenerateRandomUUIDString()
+	uuid4, _ := uuidGenerator.GenerateRandomUUIDString()
+	uuid5, _ := uuidGenerator.GenerateRandomUUIDString()
+	pendingJob.ID = uuid1
+	scheduledJob.ID = uuid2
+	inprogressJob.ID = uuid3
+	completedJob.ID = uuid4
+	failedJob.ID = uuid5
+
+	err := mysqlTest.CreateJob(pendingJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+	err = mysqlTest.CreateJob(scheduledJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+	err = mysqlTest.CreateJob(inprogressJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+	err = mysqlTest.CreateJob(completedJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+	err = mysqlTest.CreateJob(failedJob)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job: %#v", err)
+	}
+
+	tests := []struct {
+		name     string
+		status   domain.JobStatus
+		expected []*domain.Job
+	}{
+		{
+			"all",
+			domain.Undefined,
+			[]*domain.Job{
+				pendingJob,
+				scheduledJob,
+				inprogressJob,
+				completedJob,
+				failedJob,
+			},
+		},
+		{
+			"pending",
+			domain.Pending,
+			[]*domain.Job{
+				pendingJob,
+			},
+		},
+		{
+			"scheduled",
+			domain.Scheduled,
+			[]*domain.Job{
+				scheduledJob,
+			},
+		},
+		{
+			"in progress",
+			domain.InProgress,
+			[]*domain.Job{
+				inprogressJob,
+			},
+		},
+		{
+			"completed",
+			domain.Completed,
+			[]*domain.Job{
+				completedJob,
+			},
+		},
+		{
+			"failed",
+			domain.Failed,
+			[]*domain.Job{
+				failedJob,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			jobs, err := mysqlTest.GetJobs(tt.status)
+			if err != nil {
+				t.Errorf("GetJobs returned unexpected error: got %#v want nil", err)
+			}
+
+			if len(tt.expected) != len(jobs) {
+				t.Fatalf("expected %#v accounts got %#v instead", len(tt.expected), len(jobs))
+			}
+
+			for i := range tt.expected {
+				if !reflect.DeepEqual(tt.expected[i], jobs[i]) {
+					t.Fatalf("expected %#v got %#v instead", tt.expected[i], jobs[i])
 				}
 			}
 		})

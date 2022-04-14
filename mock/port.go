@@ -166,6 +166,21 @@ func (mr *MockStorageMockRecorder) GetJobResult(jobID interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobResult", reflect.TypeOf((*MockStorage)(nil).GetJobResult), jobID)
 }
 
+// GetJobs mocks base method.
+func (m *MockStorage) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetJobs", status)
+	ret0, _ := ret[0].([]*domain.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetJobs indicates an expected call of GetJobs.
+func (mr *MockStorageMockRecorder) GetJobs(status interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobs", reflect.TypeOf((*MockStorage)(nil).GetJobs), status)
+}
+
 // UpdateJob mocks base method.
 func (m *MockStorage) UpdateJob(id string, j *domain.Job) error {
 	m.ctrl.T.Helper()
@@ -322,6 +337,21 @@ func (m *MockJobService) Get(id string) (*domain.Job, error) {
 func (mr *MockJobServiceMockRecorder) Get(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockJobService)(nil).Get), id)
+}
+
+// GetJobs mocks base method.
+func (m *MockJobService) GetJobs(status string) ([]*domain.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetJobs", status)
+	ret0, _ := ret[0].([]*domain.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetJobs indicates an expected call of GetJobs.
+func (mr *MockJobServiceMockRecorder) GetJobs(status interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobs", reflect.TypeOf((*MockJobService)(nil).GetJobs), status)
 }
 
 // Update mocks base method.

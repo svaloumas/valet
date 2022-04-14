@@ -370,6 +370,192 @@ func TestGet(t *testing.T) {
 	}
 }
 
+func TestGetJobs(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(2)
+
+	createdAt := freezed.Now()
+	runAt := freezed.Now()
+	pendingJob := &domain.Job{
+		TaskName:  "some task",
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
+		RunAt:     &runAt,
+	}
+	createdAt2 := createdAt.Add(1 * time.Minute)
+	scheduledAt := createdAt.Add(2 * time.Minute)
+	scheduledJob := &domain.Job{
+		TaskName:    "some other task",
+		Status:      domain.Scheduled,
+		CreatedAt:   &createdAt2,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+	createdAt3 := createdAt2.Add(1 * time.Minute)
+	completedAt := createdAt3.Add(5 * time.Minute)
+	startedAt := createdAt.Add(1 * time.Minute)
+	inprogressJob := &domain.Job{
+		TaskName:    "some task",
+		Status:      domain.InProgress,
+		CreatedAt:   &createdAt3,
+		StartedAt:   &startedAt,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+	createdAt4 := createdAt3.Add(1 * time.Minute)
+	completedJob := &domain.Job{
+		TaskName:    "some task",
+		Status:      domain.Completed,
+		CreatedAt:   &createdAt4,
+		StartedAt:   &startedAt,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+		CompletedAt: &completedAt,
+	}
+	completedJob.SetDuration()
+	createdAt5 := createdAt4.Add(1 * time.Minute)
+	failedJob := &domain.Job{
+		TaskName:      "some task",
+		Status:        domain.Failed,
+		FailureReason: "some failure reason",
+		CreatedAt:     &createdAt5,
+		StartedAt:     &startedAt,
+		RunAt:         &runAt,
+		ScheduledAt:   &scheduledAt,
+		CompletedAt:   &completedAt,
+	}
+	failedJob.SetDuration()
+
+	allJobs := []*domain.Job{pendingJob, scheduledJob, inprogressJob, completedJob, failedJob}
+	pendingJobs := []*domain.Job{pendingJob}
+	scheduledJobs := []*domain.Job{scheduledJob}
+	inprogressJobs := []*domain.Job{inprogressJob}
+	completedJobs := []*domain.Job{completedJob}
+	failedJobs := []*domain.Job{failedJob}
+
+	storageErr := errors.New("some storage error")
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
+
+	storage := mock.NewMockStorage(ctrl)
+	storage.
+		EXPECT().
+		GetJobs(domain.Undefined).
+		Return(allJobs, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJobs(pendingJob.Status).
+		Return(pendingJobs, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJobs(scheduledJob.Status).
+		Return(scheduledJobs, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJobs(inprogressJob.Status).
+		Return(inprogressJobs, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJobs(completedJob.Status).
+		Return(completedJobs, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJobs(failedJob.Status).
+		Return(failedJobs, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJobs(failedJob.Status).
+		Return(nil, storageErr).
+		Times(1)
+
+	jobQueue := mock.NewMockJobQueue(ctrl)
+
+	taskrepo := taskrepo.NewTaskRepository()
+	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
+
+	tests := []struct {
+		name     string
+		status   string
+		expected []*domain.Job
+		err      error
+	}{
+		{
+			"all",
+			"",
+			allJobs,
+			nil,
+		},
+		{
+			"pending",
+			"pending",
+			pendingJobs,
+			nil,
+		},
+		{
+			"scheduled",
+			"scheduled",
+			scheduledJobs,
+			nil,
+		},
+		{
+			"in progress",
+			"in_progress",
+			inprogressJobs,
+			nil,
+		},
+		{
+			"completed",
+			"completed",
+			completedJobs,
+			nil,
+		},
+		{
+			"failed",
+			"failed",
+			failedJobs,
+			nil,
+		},
+		{
+			"failed",
+			"failed",
+			nil,
+			storageErr,
+		},
+		{
+			"invalid status",
+			"not_started",
+			nil,
+			errors.New("invalid job status: \"NOT_STARTED\""),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			jobs, err := service.GetJobs(tt.status)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
+			} else {
+				if eq := reflect.DeepEqual(jobs, tt.expected); !eq {
+					t.Errorf("service get returned wrong jobs: got %#v want %#v", jobs, tt.expected)
+				}
+			}
+		})
+	}
+}
 func TestUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

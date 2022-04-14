@@ -63,6 +63,30 @@ func (hdl *JobHTTPHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, BuildResponseBodyDTO(j))
 }
 
+// GetJobs fetches all jobs, optionally filters them by status.
+func (hdl *JobHTTPHandler) GetJobs(c *gin.Context) {
+	var status string
+	value, ok := c.GetQuery("status")
+	if ok {
+		status = value
+	}
+	jobs, err := hdl.jobService.GetJobs(status)
+	if err != nil {
+		switch err.(type) {
+		case *apperrors.ResourceValidationErr:
+			hdl.handleError(c, http.StatusBadRequest, err)
+			return
+		default:
+			hdl.handleError(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+	res := map[string]interface{}{
+		"jobs": jobs,
+	}
+	c.JSON(http.StatusOK, res)
+}
+
 // Update updates a job.
 func (hdl *JobHTTPHandler) Update(c *gin.Context) {
 	body := RequestBodyDTO{}
