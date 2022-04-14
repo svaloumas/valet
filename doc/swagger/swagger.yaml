@@ -146,6 +146,24 @@ info:
   version: 0.8.0
 paths:
   /jobs:
+    get:
+      operationId: getJobs
+      parameters:
+      - description: The status of the jobs to be fetched..
+        in: query
+        name: status
+        type: string
+        x-go-name: Status
+      responses:
+        "200":
+          $ref: '#/responses/getJobsResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Returns all jobs, optionally filters them by status.
+      tags:
+      - jobs
     post:
       operationId: createJobs
       parameters:
@@ -261,25 +279,6 @@ paths:
       summary: Returns a specified job's results.
       tags:
       - jobs
-  /jobs?status={status}:
-    get:
-      operationId: getJobs
-      parameters:
-      - description: The status of the jobs to be fetched..
-        in: query
-        name: status
-        type: string
-        x-go-name: Status
-      responses:
-        "200":
-          $ref: '#/responses/getJobsResponse'
-        "404":
-          $ref: '#/responses/errorResponse'
-        "500":
-          $ref: '#/responses/errorResponse'
-      summary: Returns all jobs, optionally filters them by status.
-      tags:
-      - jobs
 produces:
 - application/json
 responses:
@@ -298,10 +297,12 @@ responses:
   getJobsResponse:
     description: The jobs metadata.
     schema:
-      additionalProperties:
-        items:
-          $ref: '#/definitions/Job'
-        type: array
+      properties:
+        jobs:
+          items:
+            $ref: '#/definitions/Job'
+          type: array
+          x-go-name: Jobs
       type: object
   postJobsResponse:
     description: Returns the newly created job metadata.

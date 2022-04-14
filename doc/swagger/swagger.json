@@ -18,6 +18,33 @@
   "basePath": "/api",
   "paths": {
     "/jobs": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Returns all jobs, optionally filters them by status.",
+        "operationId": "getJobs",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Status",
+            "description": "The status of the jobs to be fetched..",
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getJobsResponse"
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      },
       "post": {
         "tags": [
           "jobs"
@@ -181,35 +208,6 @@
         "responses": {
           "204": {
             "description": ""
-          },
-          "404": {
-            "$ref": "#/responses/errorResponse"
-          },
-          "500": {
-            "$ref": "#/responses/errorResponse"
-          }
-        }
-      }
-    },
-    "/jobs?status={status}": {
-      "get": {
-        "tags": [
-          "jobs"
-        ],
-        "summary": "Returns all jobs, optionally filters them by status.",
-        "operationId": "getJobs",
-        "parameters": [
-          {
-            "type": "string",
-            "x-go-name": "Status",
-            "description": "The status of the jobs to be fetched..",
-            "name": "status",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/getJobsResponse"
           },
           "404": {
             "$ref": "#/responses/errorResponse"
@@ -413,10 +411,13 @@
       "description": "The jobs metadata.",
       "schema": {
         "type": "object",
-        "additionalProperties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Job"
+        "properties": {
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Job"
+            },
+            "x-go-name": "Jobs"
           }
         }
       }
