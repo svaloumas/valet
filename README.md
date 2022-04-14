@@ -1,6 +1,6 @@
 # Valet
 [![CI](https://github.com/svaloumas/valet/actions/workflows/ci.yml/badge.svg)](https://github.com/svaloumas/valet/actions/workflows/ci.yml)
-![Coverage](https://img.shields.io/badge/Coverage-79.8%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-80.9%25-brightgreen)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/svaloumas/valet/blob/develop/LICENSE)
 
 Stateless Go server responsible for executing tasks asynchronously and concurrently.
