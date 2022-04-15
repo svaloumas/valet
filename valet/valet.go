@@ -9,19 +9,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/svaloumas/valet/internal/config"
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
-	"github.com/svaloumas/valet/internal/core/service/consumersrv"
-	"github.com/svaloumas/valet/internal/core/service/jobsrv"
-	"github.com/svaloumas/valet/internal/core/service/resultsrv"
-	"github.com/svaloumas/valet/internal/core/service/schedulersrv"
-	"github.com/svaloumas/valet/internal/core/service/worksrv"
-	"github.com/svaloumas/valet/internal/factory"
-	vlog "github.com/svaloumas/valet/pkg/log"
-	rtime "github.com/svaloumas/valet/pkg/time"
-	"github.com/svaloumas/valet/pkg/uuidgen"
+	"valet/internal/config"
+	"valet/internal/core/domain/taskrepo"
+	"valet/internal/core/service/consumersrv"
+	"valet/internal/core/service/jobsrv"
+	"valet/internal/core/service/resultsrv"
+	"valet/internal/core/service/schedulersrv"
+	"valet/internal/core/service/worksrv"
+	"valet/internal/factory"
+	vlog "valet/pkg/log"
+	rtime "valet/pkg/time"
+	"valet/pkg/uuidgen"
 
-	_ "github.com/svaloumas/valet/doc/swagger"
+	_ "valet/doc/swagger"
 )
 
 func Run(configPath string, taskrepo *taskrepo.TaskRepository) {

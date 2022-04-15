@@ -7,10 +7,10 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/port"
-	pb "github.com/svaloumas/valet/internal/handler/resulthdl/protobuf"
-	"github.com/svaloumas/valet/pkg/apperrors"
+	"valet/internal/core/domain"
+	"valet/internal/core/port"
+	pb "valet/internal/handler/resulthdl/protobuf"
+	"valet/pkg/apperrors"
 )
 
 // ResultgRPCHandler is a gRPC handler that exposes job result endpoints.

@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/svaloumas/valet/pkg/env"
+	"valet/pkg/env"
 )
 
 var (

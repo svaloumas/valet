@@ -5,7 +5,7 @@ package job;
 import "internal/handler/jobhdl/protos/job_request.proto";
 import "internal/handler/jobhdl/protos/job_response.proto";
 
-option go_package = "github.com/svaloumas/valet/internal/handler/jobhdl/protobuf;pb";
+option go_package = "valet/internal/handler/jobhdl/protobuf;pb";
 
 // Interface exported by the service.
 service Job {

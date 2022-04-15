@@ -13,10 +13,10 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 
-	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/port"
-	"github.com/svaloumas/valet/internal/repository/storage/relational"
-	"github.com/svaloumas/valet/pkg/apperrors"
+	"valet/internal/core/domain"
+	"valet/internal/core/port"
+	"valet/internal/repository/storage/relational"
+	"valet/pkg/apperrors"
 )
 
 const (

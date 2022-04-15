@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/mock"
-	"github.com/svaloumas/valet/pkg/apperrors"
-	"github.com/svaloumas/valet/pkg/uuidgen"
+	"valet/internal/core/domain"
+	"valet/mock"
+	"valet/pkg/apperrors"
+	"valet/pkg/uuidgen"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/golang/mock/gomock"

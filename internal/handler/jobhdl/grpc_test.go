@@ -19,10 +19,10 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/svaloumas/valet/internal/core/domain"
-	pb "github.com/svaloumas/valet/internal/handler/jobhdl/protobuf"
-	"github.com/svaloumas/valet/mock"
-	"github.com/svaloumas/valet/pkg/apperrors"
+	"valet/internal/core/domain"
+	pb "valet/internal/handler/jobhdl/protobuf"
+	"valet/mock"
+	"valet/pkg/apperrors"
 )
 
 const bufSize = 1024 * 1024

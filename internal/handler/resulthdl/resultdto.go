@@ -1,7 +1,7 @@
 package resulthdl
 
 import (
-	"github.com/svaloumas/valet/internal/core/domain"
+	"valet/internal/core/domain"
 )
 
 // ResponseBodyDTO is the response data transfer object used for a job result retrieval.

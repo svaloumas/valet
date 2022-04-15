@@ -10,9 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"github.com/svaloumas/valet/internal/core/port"
-	"github.com/svaloumas/valet/internal/handler/jobhdl"
-	"github.com/svaloumas/valet/internal/handler/resulthdl"
+	"valet/internal/core/port"
+	"valet/internal/handler/jobhdl"
+	"valet/internal/handler/resulthdl"
 )
 
 var (

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
+	"valet/internal/core/domain/taskrepo"
 )
 
 func TestJobMarkStarted(t *testing.T) {

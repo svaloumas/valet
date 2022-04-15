@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/svaloumas/valet/internal/core/domain"
+	"valet/internal/core/domain"
 )
 
 func TestBuildResponseBodyDTO(t *testing.T) {

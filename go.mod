@@ -1,4 +1,4 @@
-module github.com/svaloumas/valet
+module valet
 
 go 1.17
 

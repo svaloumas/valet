@@ -8,10 +8,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
-	"github.com/svaloumas/valet/mock"
-	"github.com/svaloumas/valet/pkg/apperrors"
+	"valet/internal/core/domain"
+	"valet/internal/core/domain/taskrepo"
+	"valet/mock"
+	"valet/pkg/apperrors"
 )
 
 func TestCreateErrorCases(t *testing.T) {

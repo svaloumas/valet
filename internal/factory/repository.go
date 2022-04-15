@@ -1,13 +1,13 @@
 package factory
 
 import (
-	"github.com/svaloumas/valet/internal/config"
-	"github.com/svaloumas/valet/internal/core/port"
-	"github.com/svaloumas/valet/internal/repository/storage/memorydb"
-	"github.com/svaloumas/valet/internal/repository/storage/redis"
-	"github.com/svaloumas/valet/internal/repository/storage/relational"
-	"github.com/svaloumas/valet/internal/repository/storage/relational/mysql"
-	"github.com/svaloumas/valet/internal/repository/storage/relational/postgres"
+	"valet/internal/config"
+	"valet/internal/core/port"
+	"valet/internal/repository/storage/memorydb"
+	"valet/internal/repository/storage/redis"
+	"valet/internal/repository/storage/relational"
+	"valet/internal/repository/storage/relational/mysql"
+	"valet/internal/repository/storage/relational/postgres"
 )
 
 func StorageFactory(cfg config.Repository) port.Storage {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/svaloumas/valet/pkg/apperrors"
+	"valet/pkg/apperrors"
 )
 
 // JobStatus holds a value for job status ranging from 1 to 5.

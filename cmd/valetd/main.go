@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/svaloumas/valet/task"
-	"github.com/svaloumas/valet/valet"
+	"valet/task"
+	"valet/valet"
 )
 
 func main() {

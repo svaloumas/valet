@@ -9,9 +9,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 
-	"github.com/svaloumas/valet/internal/config"
-	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/mock"
+	"valet/internal/config"
+	"valet/internal/core/domain"
+	"valet/mock"
 )
 
 func TestRabbitMQPush(t *testing.T) {

@@ -8,13 +8,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/svaloumas/valet/internal/config"
-	"github.com/svaloumas/valet/internal/core/port"
-	"github.com/svaloumas/valet/internal/handler/jobhdl"
-	jobpb "github.com/svaloumas/valet/internal/handler/jobhdl/protobuf"
-	"github.com/svaloumas/valet/internal/handler/resulthdl"
-	resultpb "github.com/svaloumas/valet/internal/handler/resulthdl/protobuf"
-	"github.com/svaloumas/valet/internal/handler/server"
+	"valet/internal/config"
+	"valet/internal/core/port"
+	"valet/internal/handler/jobhdl"
+	jobpb "valet/internal/handler/jobhdl/protobuf"
+	"valet/internal/handler/resulthdl"
+	resultpb "valet/internal/handler/resulthdl/protobuf"
+	"valet/internal/handler/server"
 )
 
 const (

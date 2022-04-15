@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/repository/storage/relational"
-	"github.com/svaloumas/valet/pkg/apperrors"
-	"github.com/svaloumas/valet/pkg/uuidgen"
+	"valet/internal/core/domain"
+	"valet/internal/repository/storage/relational"
+	"valet/pkg/apperrors"
+	"valet/pkg/uuidgen"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/golang/mock/gomock"

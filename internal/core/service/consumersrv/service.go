@@ -6,7 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/svaloumas/valet/internal/core/port"
+	"valet/internal/core/port"
 )
 
 var _ port.Consumer = &consumerservice{}

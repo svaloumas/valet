@@ -8,11 +8,11 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
-	"github.com/svaloumas/valet/internal/core/port"
-	"github.com/svaloumas/valet/internal/core/service/worksrv/work"
-	rtime "github.com/svaloumas/valet/pkg/time"
+	"valet/internal/core/domain"
+	"valet/internal/core/domain/taskrepo"
+	"valet/internal/core/port"
+	"valet/internal/core/service/worksrv/work"
+	rtime "valet/pkg/time"
 )
 
 var _ port.WorkService = &workservice{}

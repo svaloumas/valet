@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/svaloumas/valet/internal/config"
-	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/port"
-	"github.com/svaloumas/valet/pkg/env"
-	"github.com/svaloumas/valet/pkg/log"
+	"valet/internal/config"
+	"valet/internal/core/domain"
+	"valet/internal/core/port"
+	"valet/pkg/env"
+	"valet/pkg/log"
 
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"

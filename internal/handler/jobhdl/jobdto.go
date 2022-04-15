@@ -1,7 +1,7 @@
 package jobhdl
 
 import (
-	"github.com/svaloumas/valet/internal/core/domain"
+	"valet/internal/core/domain"
 )
 
 // RequestBodyDTO is the data transfer object used for a job creation or update.

@@ -8,8 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 	time "time"
-	domain "github.com/svaloumas/valet/internal/core/domain"
-	work "github.com/svaloumas/valet/internal/core/service/worksrv/work"
+	domain "valet/internal/core/domain"
+	work "valet/internal/core/service/worksrv/work"
 
 	gomock "github.com/golang/mock/gomock"
 )

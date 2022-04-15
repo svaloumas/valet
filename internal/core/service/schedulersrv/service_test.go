@@ -10,9 +10,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 
-	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/service/worksrv/work"
-	"github.com/svaloumas/valet/mock"
+	"valet/internal/core/domain"
+	"valet/internal/core/service/worksrv/work"
+	"valet/mock"
 )
 
 func TestSchedule(t *testing.T) {
