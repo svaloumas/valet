@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"valet/internal/core/port"
-	"valet/pkg/apperrors"
+	"github.com/svaloumas/valet/internal/core/port"
+	"github.com/svaloumas/valet/pkg/apperrors"
 )
 
 // JobHTTPHandler is an HTTP handler that exposes job endpoints.

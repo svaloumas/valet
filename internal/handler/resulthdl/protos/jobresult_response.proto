@@ -4,7 +4,7 @@ package jobresult;
 
 import "google/protobuf/struct.proto";
 
-option go_package = "valet/internal/handler/resulthdl/protobuf;pb";
+option go_package = "github.com/svaloumas/valet/internal/handler/resulthdl/protobuf;pb";
 
 
 message GetJobResultResponse {

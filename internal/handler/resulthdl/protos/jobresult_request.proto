@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package jobresult;
 
-option go_package = "valet/internal/handler/resulthdl/protobuf;pb";
+option go_package = "github.com/svaloumas/valet/internal/handler/resulthdl/protobuf;pb";
 
 
 message GetJobResultRequest {

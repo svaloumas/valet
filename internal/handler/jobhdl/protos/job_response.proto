@@ -5,7 +5,7 @@ package job;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/struct.proto";
 
-option go_package = "valet/internal/handler/jobhdl/protobuf;pb";
+option go_package = "github.com/svaloumas/valet/internal/handler/jobhdl/protobuf;pb";
 
 
 message CreateJobResponse {

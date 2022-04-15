@@ -1,4 +1,4 @@
-FROM golang:1.17-buster
+FROM golang:1.17-buster as build
 
 RUN mkdir -p /valet
 WORKDIR /valet

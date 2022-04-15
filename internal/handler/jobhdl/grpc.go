@@ -2,10 +2,11 @@ package jobhdl
 
 import (
 	"context"
-	"valet/internal/core/domain"
-	"valet/internal/core/port"
-	pb "valet/internal/handler/jobhdl/protobuf"
-	"valet/pkg/apperrors"
+
+	"github.com/svaloumas/valet/internal/core/domain"
+	"github.com/svaloumas/valet/internal/core/port"
+	pb "github.com/svaloumas/valet/internal/handler/jobhdl/protobuf"
+	"github.com/svaloumas/valet/pkg/apperrors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

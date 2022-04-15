@@ -1,9 +1,9 @@
 package factory
 
 import (
-	"valet/internal/config"
-	"valet/internal/core/port"
-	"valet/internal/repository/jobqueue"
+	"github.com/svaloumas/valet/internal/config"
+	"github.com/svaloumas/valet/internal/core/port"
+	"github.com/svaloumas/valet/internal/repository/jobqueue"
 )
 
 func JobQueueFactory(cfg config.JobQueue, loggingFormat string) port.JobQueue {

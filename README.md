@@ -60,7 +60,41 @@ git clone https://github.com/svaloumas/valet.git
 
 2. Download and install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
 
-3. Build and run the containers.
+3. Define your own tasks under `task/` directory like the sample below. The task functions should implement the type `func(interface{}) (interface{}, error)`
+and contain the word `task` in their name (case insensitive).
+
+```go
+package task
+
+import (
+	"github.com/mitchellh/mapstructure"
+)
+
+// DummyParams is an example of a task params structure.
+type DummyParams struct {
+	URL string `json:"url,omitempty"`
+}
+
+// DummyTask is a dummy task callback.
+func DummyTask(taskParams interface{}) (interface{}, error) {
+	params := &DummyParams{}
+	mapstructure.Decode(taskParams, params)
+
+        // Do something with the task params you injected through the API
+        // ...
+	metadata, err := downloadContent(params.URL)
+        if err != nil {
+            return nil, err
+        }
+	return metadata, nil
+}
+
+func downloadContent(URL string) (string, error) {
+	return "some metadata", nil
+}
+```
+
+4. Build and run the containers.
 
 ```bash
 docker-compose up -d --build
@@ -75,7 +109,7 @@ All configuration is set through `config.yaml`, which lives under the project's 
 ```yaml
 # Server config section
 server:
-  protocol: grpc                    # string - options: http, grpc
+  protocol: http                    # string - options: http, grpc
   http:
     port: 8080                      # string
   grpc:
@@ -145,36 +179,6 @@ RabbitMQ URI can be provided as an environment variable named as `RABBITMQ_URI`,
 <a name="usage"/>
 
 ## Usage
-
-Define your own tasks under `task/` directory. The tasks should implement the `task.TaskFunc` type.
-
-```go
-// DummyParams is an example of a task params structure.
-type DummyParams struct {
-	URL string `json:"url,omitempty"`
-}
-
-// DummyTask is a dummy task callback.
-func DummyTask(taskParams interface{}) (interface{}, error) {
-	params := &DummyParams{}
-	mapstructure.Decode(taskParams, params)
-
-        // Do something with the task params you injected through the API
-        // ...
-	metadata, err := downloadContent(params.URL)
-        if err != nil {
-            return nil, err
-        }
-	return metadata, nil
-}
-
-```
-
-Register your new task callback in `main` function living in `cmd/valetd/main.go` and provide a name for it.
-
-```go
-taskrepo.Register("dummytask", task.DummyTask)
-```
 
 Create a new job by making an POST HTTP call to `/jobs`. You can inject arbitrary parameters for your task to run
 by including them in the request body.

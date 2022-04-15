@@ -14,7 +14,6 @@ func DummyTask(taskParams interface{}) (interface{}, error) {
 	params := &DummyParams{}
 	mapstructure.Decode(taskParams, params)
 
-	params.URL = "http://www.test-url.com"
 	metadata, err := downloadContent(params.URL)
 	if err != nil {
 		return nil, err

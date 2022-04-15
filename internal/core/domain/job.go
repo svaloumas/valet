@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"valet/internal/core/domain/taskrepo"
+
+	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
 )
 
 // Job represents an async task.

@@ -15,9 +15,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 
-	"valet/internal/core/domain"
-	"valet/mock"
-	"valet/pkg/apperrors"
+	"github.com/svaloumas/valet/internal/core/domain"
+	"github.com/svaloumas/valet/mock"
+	"github.com/svaloumas/valet/pkg/apperrors"
 )
 
 var testTime = "1985-05-04T04:32:53.651387234Z"

@@ -5,6 +5,7 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile
+      target: build
     command:
       - "/bin/sh"
       - "-c"
@@ -20,7 +21,7 @@ services:
       - rabbitmq
       - redis
     volumes:
-      - ./:/valet
+      - ./:/valet/
     ports:
       # HTTP port
       - 8080:8080

@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
-	"valet/internal/core/domain"
-	"valet/internal/core/domain/taskrepo"
-	"valet/internal/core/port"
-	"valet/pkg/apperrors"
-	rtime "valet/pkg/time"
-	"valet/pkg/uuidgen"
+
+	"github.com/svaloumas/valet/internal/core/domain"
+	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
+	"github.com/svaloumas/valet/internal/core/port"
+	"github.com/svaloumas/valet/pkg/apperrors"
+	rtime "github.com/svaloumas/valet/pkg/time"
+	"github.com/svaloumas/valet/pkg/uuidgen"
 )
 
 var _ port.JobService = &jobservice{}
