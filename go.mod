@@ -2,7 +2,8 @@ module github.com/svaloumas/valet
 
 go 1.17
 
-retract [v0.1.0, v0.2.0]
+retract [v0.1.0, v0.2.1]
+retract v0.4.1
 
 require (
 	github.com/gin-contrib/cors v1.3.1
