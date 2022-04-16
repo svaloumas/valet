@@ -79,9 +79,9 @@ func DummyTask(taskParams interface{}) (interface{}, error) {
 	mapstructure.Decode(taskParams, params)
 
 	metadata, err := downloadContent(params.URL)
-  if err != nil {
-    return nil, err
-  }
+	if err != nil {
+		return nil, err
+	}
 	return metadata, nil
 }
 
