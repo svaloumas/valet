@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/svaloumas/valet/internal/core/domain"
+	"github.com/svaloumas/valet/internal/core/service/tasksrv/taskrepo"
 	"github.com/svaloumas/valet/internal/core/service/worksrv/work"
 )
 
@@ -104,6 +105,15 @@ type WorkService interface {
 	Exec(ctx context.Context, w work.Work) error
 }
 
+// TaskService represents a driver actor service interface.
+type TaskService interface {
+	// Register registers a new task in the task repository.
+	Register(name string, taskFunc taskrepo.TaskFunc)
+
+	// GetTaskRepository returns the task repository.
+	GetTaskRepository() *taskrepo.TaskRepository
+}
+
 // Consumer represents a domain event listener.
 type Consumer interface {
 	// Consume listens to the job queue for messages, consumes them and
@@ -121,6 +131,7 @@ type Scheduler interface {
 type Server interface {
 	// Serve start the server.
 	Serve()
+
 	// GracefullyStop gracefully stops the server.
 	GracefullyStop()
 }

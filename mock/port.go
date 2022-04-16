@@ -8,10 +8,11 @@ import (
 	context "context"
 	reflect "reflect"
 	time "time"
-	domain "github.com/svaloumas/valet/internal/core/domain"
-	work "github.com/svaloumas/valet/internal/core/service/worksrv/work"
 
 	gomock "github.com/golang/mock/gomock"
+	domain "github.com/svaloumas/valet/internal/core/domain"
+	taskrepo "github.com/svaloumas/valet/internal/core/service/tasksrv/taskrepo"
+	work "github.com/svaloumas/valet/internal/core/service/worksrv/work"
 )
 
 // MockStorage is a mock of Storage interface.
@@ -505,6 +506,55 @@ func (m *MockWorkService) Stop() {
 func (mr *MockWorkServiceMockRecorder) Stop() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockWorkService)(nil).Stop))
+}
+
+// MockTaskService is a mock of TaskService interface.
+type MockTaskService struct {
+	ctrl     *gomock.Controller
+	recorder *MockTaskServiceMockRecorder
+}
+
+// MockTaskServiceMockRecorder is the mock recorder for MockTaskService.
+type MockTaskServiceMockRecorder struct {
+	mock *MockTaskService
+}
+
+// NewMockTaskService creates a new mock instance.
+func NewMockTaskService(ctrl *gomock.Controller) *MockTaskService {
+	mock := &MockTaskService{ctrl: ctrl}
+	mock.recorder = &MockTaskServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTaskService) EXPECT() *MockTaskServiceMockRecorder {
+	return m.recorder
+}
+
+// GetTaskRepository mocks base method.
+func (m *MockTaskService) GetTaskRepository() *taskrepo.TaskRepository {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTaskRepository")
+	ret0, _ := ret[0].(*taskrepo.TaskRepository)
+	return ret0
+}
+
+// GetTaskRepository indicates an expected call of GetTaskRepository.
+func (mr *MockTaskServiceMockRecorder) GetTaskRepository() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTaskRepository", reflect.TypeOf((*MockTaskService)(nil).GetTaskRepository))
+}
+
+// Register mocks base method.
+func (m *MockTaskService) Register(name string, taskFunc taskrepo.TaskFunc) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Register", name, taskFunc)
+}
+
+// Register indicates an expected call of Register.
+func (mr *MockTaskServiceMockRecorder) Register(name, taskFunc interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockTaskService)(nil).Register), name, taskFunc)
 }
 
 // MockConsumer is a mock of Consumer interface.

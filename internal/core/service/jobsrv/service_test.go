@@ -9,7 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
+	"github.com/svaloumas/valet/internal/core/service/tasksrv/taskrepo"
 	"github.com/svaloumas/valet/mock"
 	"github.com/svaloumas/valet/pkg/apperrors"
 )
@@ -80,7 +80,7 @@ func TestCreateErrorCases(t *testing.T) {
 	taskFunc := func(i interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	taskrepo.Register("test_task", taskFunc)
 	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
@@ -208,7 +208,7 @@ func TestCreate(t *testing.T) {
 	taskFunc := func(i interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	taskrepo.Register("test_task", taskFunc)
 
 	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
@@ -325,7 +325,7 @@ func TestGet(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
@@ -482,7 +482,7 @@ func TestGetJobs(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
@@ -616,7 +616,7 @@ func TestUpdate(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
@@ -712,7 +712,7 @@ func TestDelete(t *testing.T) {
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
 
 	tests := []struct {

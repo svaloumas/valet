@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package task;
+
+option go_package = "github.com/svaloumas/valet/internal/handler/taskhdl/protobuf;pb";
+
+
+// Empty request
+message GetTasksRequest {
+}

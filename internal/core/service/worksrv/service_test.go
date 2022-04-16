@@ -14,7 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
+	"github.com/svaloumas/valet/internal/core/service/tasksrv/taskrepo"
 	"github.com/svaloumas/valet/internal/core/service/worksrv/work"
 	"github.com/svaloumas/valet/mock"
 )
@@ -41,7 +41,7 @@ func TestSend(t *testing.T) {
 	work.Result <- result
 
 	freezed := mock.NewMockTime(ctrl)
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := &taskrepo.TaskRepository{}
 	storage := mock.NewMockStorage(ctrl)
 	wg.Add(1)
 	storage.
@@ -79,7 +79,7 @@ func TestSendBacklogLimit(t *testing.T) {
 	workDeemedToBlock := work.Work{Job: jDeemedToBlock}
 
 	freezed := mock.NewMockTime(ctrl)
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	storage := mock.NewMockStorage(ctrl)
 
 	logger := &logrus.Logger{Out: ioutil.Discard}
@@ -162,7 +162,7 @@ func TestExecCompletedJob(t *testing.T) {
 	var taskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
 	}
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	taskrepo.Register("test_task", taskFunc)
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
@@ -248,7 +248,7 @@ func TestExecFailedJob(t *testing.T) {
 	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		return nil, errors.New(failureReason)
 	}
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
@@ -332,7 +332,7 @@ func TestExecPanicJob(t *testing.T) {
 	var taskFuncReturnsErr = func(metadata interface{}) (interface{}, error) {
 		panic(panicMessage)
 	}
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
@@ -421,7 +421,7 @@ func TestExecJobUpdateErrorCases(t *testing.T) {
 	var taskFunc = func(metadata interface{}) (interface{}, error) {
 		return "test_metadata", nil
 	}
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	taskrepo.Register("test_task", taskFunc)
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
@@ -524,7 +524,7 @@ func TestExecJobTimeoutExceeded(t *testing.T) {
 		time.Sleep(time.Millisecond * 50)
 		return "some_metadata", nil
 	}
-	taskrepo := taskrepo.NewTaskRepository()
+	taskrepo := taskrepo.New()
 	taskrepo.Register("test_task", taskFuncReturnsErr)
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
