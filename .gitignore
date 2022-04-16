@@ -16,3 +16,6 @@
 
 # Executables
 /valetd
+
+# Changelog configuration files and templates
+.chglog
