@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/svaloumas/valet"
 	"github.com/svaloumas/valet/task"
-	"github.com/svaloumas/valet/valet"
 )
 
 func main() {
-	taskrepo := valet.NewTaskRepository()
-	taskrepo.Register("dummytask", task.DummyTask)
-	valet.Run("config.yaml", taskrepo)
+	v := valet.New("config.yaml")
+	v.RegisterTask("dummytask", task.DummyTask)
+	v.Run()
 }

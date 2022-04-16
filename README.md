@@ -28,8 +28,9 @@ After the tasks have been executed, their results along with the errors (if any)
 
 ## Architecture
 
-The project strives to follow the hexagonal architecture design pattern and to support modularity and extendability.
-It provides the following interfaces and can be configured accordingly:
+The service is provided as a `pkg`, to enable user-defined callbacks registration before building the executable.
+Its design strives to follow the hexagonal architecture pattern and to support modularity and extendability.
+`valet` provides the following interfaces and can be configured accordingly:
 
 #### API
 
@@ -52,19 +53,16 @@ It provides the following interfaces and can be configured accordingly:
 
 ## Installation
 
-1. Clone the repo.
+1. Download the `pkg`.
 
 ```bash
-git clone https://github.com/svaloumas/valet.git
+go get github.com/svaloumas/valet
 ```
 
-2. Download and install [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
-
-3. Define your own tasks under `task/` directory like the sample below. The task functions should implement the type `func(interface{}) (interface{}, error)`
-and contain the word `task` in their name (case insensitive).
+2. Define your own task callbacks in your repo by implementing the type `func(interface{}) (interface{}, error)`.
 
 ```go
-package task
+package somepkg
 
 import (
 	"github.com/mitchellh/mapstructure"
@@ -94,11 +92,48 @@ func downloadContent(URL string) (string, error) {
 }
 ```
 
-4. Build and run the containers.
+3. Copy `config.yaml` from the repo and set your own configuration.
+
+4. Initialize `valet` in a `main` function under your repo, register your tasks to the service and run it.
 
 ```bash
-docker-compose up -d --build
+mkdir -p cmd/valetd/
+touch cmd/valetd/main.go
 ```
+
+```go
+// cmd/valetd/main.go
+func main() {
+	v := valet.New("/path/to/config.yaml")
+	v.RegisterTask("mytask", somepkg.DummyTask)
+	v.Run()
+}
+```
+
+5. Build and run the service.
+
+    5.1. To run the service and its dependencies as Docker containers, use the `Dockerfile`, `docker-compose` and `Makefile` files provided.
+
+    ```bash
+    docker-compose up -d --build
+    ```
+
+    5.2. Build and run the service as a standalone binary.
+
+    > Optionally set the corresponding environment variables depending on your configuration options.
+
+    ```bash
+    export POSTGRES_DSN=
+    export RABBITMQ_URI=
+    export MYSQL_DSN=
+    export REDIS_URL=
+    ```
+
+    ```bash
+    go build -o valetd cmd/valted/*.go
+    ./valetd
+
+    ```
 
 <a name="configuration"/>
 

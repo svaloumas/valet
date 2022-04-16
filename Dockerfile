@@ -4,4 +4,4 @@ RUN mkdir -p /valet
 WORKDIR /valet
 COPY ./ /valet
 
-RUN make build
+RUN make build-linux

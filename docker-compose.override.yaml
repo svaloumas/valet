@@ -9,7 +9,7 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "go mod download && make build && /valet/valetd"
+      - "go mod download && make build-linux && /valet/valetd"
     environment:
       - MYSQL_DSN=root:password@tcp(mysql:3306)/valetdb?parseTime=true
       - RABBITMQ_URI=amqp://quest:password@rabbitmq:5672/

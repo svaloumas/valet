@@ -24,16 +24,31 @@ import (
 	_ "github.com/svaloumas/valet/doc/swagger"
 )
 
-func Run(configPath string, taskrepo *taskrepo.TaskRepository) {
+type valet struct {
+	configPath string
+	taskrepo   *taskrepo.TaskRepository
+}
+
+// New initializes and returns a new valet instance.
+func New(configPath string) *valet {
+	taskrepo := taskrepo.NewTaskRepository()
+	return &valet{
+		configPath: configPath,
+		taskrepo:   taskrepo,
+	}
+}
+
+// Run runs the service.
+func (v *valet) Run() {
 	cfg := new(config.Config)
-	filepath, _ := filepath.Abs(configPath)
+	filepath, _ := filepath.Abs(v.configPath)
 	if err := cfg.Load(filepath); err != nil {
 		log.Fatalf("could not load config: %s", err)
 	}
 
 	logger := vlog.NewLogger("valet", cfg.LoggingFormat)
 
-	for _, name := range taskrepo.GetTaskNames() {
+	for _, name := range v.taskrepo.GetTaskNames() {
 		logger.Infof("registered task with name: %s", name)
 	}
 
@@ -43,12 +58,12 @@ func Run(configPath string, taskrepo *taskrepo.TaskRepository) {
 	storage := factory.StorageFactory(cfg.Repository)
 	logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
 
-	jobService := jobsrv.New(storage, jobQueue, taskrepo, uuidgen.New(), rtime.New())
+	jobService := jobsrv.New(storage, jobQueue, v.taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(storage)
 
 	workpoolLogger := vlog.NewLogger("workerpool", cfg.LoggingFormat)
 	workService := worksrv.New(
-		storage, taskrepo, rtime.New(), cfg.TimeoutUnit,
+		storage, v.taskrepo, rtime.New(), cfg.TimeoutUnit,
 		cfg.WorkerPool.Concurrency, cfg.WorkerPool.Backlog, workpoolLogger)
 	workService.Start()
 
@@ -78,6 +93,7 @@ func Run(configPath string, taskrepo *taskrepo.TaskRepository) {
 	storage.Close()
 }
 
-func NewTaskRepository() *taskrepo.TaskRepository {
-	return taskrepo.NewTaskRepository()
+// RegisterTask registers a tack callback to the task repository under the specified name.
+func (v *valet) RegisterTask(name string, callback func(interface{}) (interface{}, error)) {
+	v.taskrepo.Register(name, callback)
 }
