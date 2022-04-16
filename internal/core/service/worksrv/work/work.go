@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
+	"github.com/svaloumas/valet/internal/core/service/tasksrv/taskrepo"
 )
 
 // Work is the task to be executed by the workers.

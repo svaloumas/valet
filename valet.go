@@ -10,11 +10,12 @@ import (
 	"time"
 
 	"github.com/svaloumas/valet/internal/config"
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
+	"github.com/svaloumas/valet/internal/core/port"
 	"github.com/svaloumas/valet/internal/core/service/consumersrv"
 	"github.com/svaloumas/valet/internal/core/service/jobsrv"
 	"github.com/svaloumas/valet/internal/core/service/resultsrv"
 	"github.com/svaloumas/valet/internal/core/service/schedulersrv"
+	"github.com/svaloumas/valet/internal/core/service/tasksrv"
 	"github.com/svaloumas/valet/internal/core/service/worksrv"
 	"github.com/svaloumas/valet/internal/factory"
 	vlog "github.com/svaloumas/valet/pkg/log"
@@ -25,16 +26,16 @@ import (
 )
 
 type valet struct {
-	configPath string
-	taskrepo   *taskrepo.TaskRepository
+	configPath  string
+	taskService port.TaskService
 }
 
 // New initializes and returns a new valet instance.
 func New(configPath string) *valet {
-	taskrepo := taskrepo.NewTaskRepository()
+	taskService := tasksrv.New()
 	return &valet{
-		configPath: configPath,
-		taskrepo:   taskrepo,
+		configPath:  configPath,
+		taskService: taskService,
 	}
 }
 
@@ -48,7 +49,9 @@ func (v *valet) Run() {
 
 	logger := vlog.NewLogger("valet", cfg.LoggingFormat)
 
-	for _, name := range v.taskrepo.GetTaskNames() {
+	taskrepo := v.taskService.GetTaskRepository()
+
+	for _, name := range taskrepo.GetTaskNames() {
 		logger.Infof("registered task with name: %s", name)
 	}
 
@@ -58,12 +61,12 @@ func (v *valet) Run() {
 	storage := factory.StorageFactory(cfg.Repository)
 	logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
 
-	jobService := jobsrv.New(storage, jobQueue, v.taskrepo, uuidgen.New(), rtime.New())
+	jobService := jobsrv.New(storage, jobQueue, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(storage)
 
 	workpoolLogger := vlog.NewLogger("workerpool", cfg.LoggingFormat)
 	workService := worksrv.New(
-		storage, v.taskrepo, rtime.New(), cfg.TimeoutUnit,
+		storage, taskrepo, rtime.New(), cfg.TimeoutUnit,
 		cfg.WorkerPool.Concurrency, cfg.WorkerPool.Backlog, workpoolLogger)
 	workService.Start()
 
@@ -78,7 +81,8 @@ func (v *valet) Run() {
 	schedulerService := schedulersrv.New(storage, workService, rtime.New(), schedulerLogger)
 	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
 
-	server := factory.ServerFactory(cfg.Server, jobService, resultService, storage, cfg.LoggingFormat, logger)
+	server := factory.ServerFactory(
+		cfg.Server, jobService, resultService, v.taskService, storage, cfg.LoggingFormat, logger)
 	server.Serve()
 	logger.Infof("initialized [%s] server", cfg.Server.Protocol)
 
@@ -95,5 +99,5 @@ func (v *valet) Run() {
 
 // RegisterTask registers a tack callback to the task repository under the specified name.
 func (v *valet) RegisterTask(name string, callback func(interface{}) (interface{}, error)) {
-	v.taskrepo.Register(name, callback)
+	v.taskService.Register(name, callback)
 }

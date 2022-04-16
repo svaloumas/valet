@@ -15,6 +15,8 @@ import (
 	"github.com/svaloumas/valet/internal/handler/resulthdl"
 	resultpb "github.com/svaloumas/valet/internal/handler/resulthdl/protobuf"
 	"github.com/svaloumas/valet/internal/handler/server"
+	"github.com/svaloumas/valet/internal/handler/taskhdl"
+	taskpb "github.com/svaloumas/valet/internal/handler/taskhdl/protobuf"
 )
 
 const (
@@ -26,13 +28,14 @@ func ServerFactory(
 	cfg config.Server,
 	jobService port.JobService,
 	resultService port.ResultService,
+	taskService port.TaskService,
 	storage port.Storage, loggingFormat string,
 	logger *logrus.Logger) port.Server {
 
 	if cfg.Protocol == HTTP {
 		srv := http.Server{
 			Addr:    ":" + cfg.HTTP.Port,
-			Handler: server.NewRouter(jobService, resultService, storage, loggingFormat),
+			Handler: server.NewRouter(jobService, resultService, taskService, storage, loggingFormat),
 		}
 		httpsrv := server.NewHTTPServer(srv, logger)
 		return httpsrv
@@ -45,8 +48,10 @@ func ServerFactory(
 	s := grpc.NewServer()
 	jobgRPCHandler := jobhdl.NewJobgRPCHandler(jobService)
 	resultgRPCHandler := resulthdl.NewResultgRPCHandler(resultService)
+	taskgRPCHandler := taskhdl.NewTaskgRPCHandler(taskService)
 	jobpb.RegisterJobServer(s, jobgRPCHandler)
 	resultpb.RegisterJobResultServer(s, resultgRPCHandler)
+	taskpb.RegisterTaskServer(s, taskgRPCHandler)
 	reflection.Register(s)
 
 	grpcsrv := server.NewGRPCServer(s, listener, logger)

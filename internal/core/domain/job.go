@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
+	"github.com/svaloumas/valet/internal/core/service/tasksrv/taskrepo"
 )
 
 // Job represents an async task.

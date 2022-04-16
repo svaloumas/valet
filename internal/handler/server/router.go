@@ -13,20 +13,23 @@ import (
 	"github.com/svaloumas/valet/internal/core/port"
 	"github.com/svaloumas/valet/internal/handler/jobhdl"
 	"github.com/svaloumas/valet/internal/handler/resulthdl"
+	"github.com/svaloumas/valet/internal/handler/taskhdl"
 )
 
 var (
-	version = "0.5.0"
+	version = "0.6.0"
 )
 
 // NewRouter initializes and returns a new gin.Engine instance.
 func NewRouter(
 	jobService port.JobService,
 	resultService port.ResultService,
+	taskService port.TaskService,
 	storage port.Storage, loggingFormat string) *gin.Engine {
 
-	jobHandhler := jobhdl.NewJobHTTPHandler(jobService)
-	resultHandhler := resulthdl.NewResultHTTPHandler(resultService)
+	jobHandler := jobhdl.NewJobHTTPHandler(jobService)
+	resultHandler := resulthdl.NewResultHTTPHandler(resultService)
+	taskHandler := taskhdl.NewTaskHTTPHandler(taskService)
 
 	r := gin.New()
 	if loggingFormat == "text" {
@@ -45,14 +48,16 @@ func NewRouter(
 
 	r.GET("/api/status", HandleStatus(storage))
 
-	r.POST("/api/jobs", jobHandhler.Create)
-	r.GET("/api/jobs", jobHandhler.GetJobs)
-	r.GET("/api/jobs/:id", jobHandhler.Get)
-	r.PATCH("/api/jobs/:id", jobHandhler.Update)
-	r.DELETE("/api/jobs/:id", jobHandhler.Delete)
+	r.POST("/api/jobs", jobHandler.Create)
+	r.GET("/api/jobs", jobHandler.GetJobs)
+	r.GET("/api/jobs/:id", jobHandler.Get)
+	r.PATCH("/api/jobs/:id", jobHandler.Update)
+	r.DELETE("/api/jobs/:id", jobHandler.Delete)
 
-	r.GET("/api/jobs/:id/results", resultHandhler.Get)
-	r.DELETE("/api/jobs/:id/results", resultHandhler.Delete)
+	r.GET("/api/jobs/:id/results", resultHandler.Get)
+	r.DELETE("/api/jobs/:id/results", resultHandler.Delete)
+
+	r.GET("/api/tasks", taskHandler.GetTasks)
 	return r
 }
 

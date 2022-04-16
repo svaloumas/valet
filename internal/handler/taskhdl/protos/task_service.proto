@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package task;
+
+import "internal/handler/taskhdl/protos/task_request.proto";
+import "internal/handler/taskhdl/protos/task_response.proto";
+
+option go_package = "github.com/svaloumas/valet/internal/handler/taskhdl/protobuf;pb";
+
+// Interface exported by the service.
+service Task {
+    rpc GetTasks(GetTasksRequest) returns (GetTasksResponse) {}
+}

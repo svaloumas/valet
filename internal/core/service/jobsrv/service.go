@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
 	"github.com/svaloumas/valet/internal/core/port"
+	"github.com/svaloumas/valet/internal/core/service/tasksrv/taskrepo"
 	"github.com/svaloumas/valet/pkg/apperrors"
 	rtime "github.com/svaloumas/valet/pkg/time"
 	"github.com/svaloumas/valet/pkg/uuidgen"
