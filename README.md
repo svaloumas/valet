@@ -103,6 +103,13 @@ touch cmd/valetd/main.go
 
 ```go
 // cmd/valetd/main.go
+package main
+
+import (
+	"github.com/svaloumas/valet"
+	"path/to/somepkg"
+)
+
 func main() {
 	v := valet.New("/path/to/config.yaml")
 	v.RegisterTask("mytask", somepkg.DummyTask)
