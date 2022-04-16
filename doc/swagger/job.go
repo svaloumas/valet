@@ -1,8 +1,8 @@
 package swagger
 
 import (
-	"valet/internal/core/domain"
-	"valet/internal/handler/jobhdl"
+	"github.com/svaloumas/valet/internal/core/domain"
+	"github.com/svaloumas/valet/internal/handler/jobhdl"
 )
 
 // swagger:route POST /jobs jobs createJobs

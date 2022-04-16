@@ -12,9 +12,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 
-	"valet/internal/core/domain"
-	"valet/mock"
-	"valet/pkg/apperrors"
+	"github.com/svaloumas/valet/internal/core/domain"
+	"github.com/svaloumas/valet/mock"
+	"github.com/svaloumas/valet/pkg/apperrors"
 )
 
 func TestHTTPGetJobResult(t *testing.T) {

@@ -3,8 +3,8 @@ package work
 import (
 	"time"
 
-	"valet/internal/core/domain"
-	"valet/internal/core/domain/taskrepo"
+	"github.com/svaloumas/valet/internal/core/domain"
+	"github.com/svaloumas/valet/internal/core/domain/taskrepo"
 )
 
 // Work is the task to be executed by the workers.

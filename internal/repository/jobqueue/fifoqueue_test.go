@@ -8,8 +8,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"valet/internal/core/domain"
-	"valet/mock"
+	"github.com/svaloumas/valet/internal/core/domain"
+	"github.com/svaloumas/valet/mock"
 )
 
 func TestFIFOQueuePush(t *testing.T) {

@@ -17,10 +17,10 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"valet/internal/core/domain"
-	pb "valet/internal/handler/resulthdl/protobuf"
-	"valet/mock"
-	"valet/pkg/apperrors"
+	"github.com/svaloumas/valet/internal/core/domain"
+	pb "github.com/svaloumas/valet/internal/handler/resulthdl/protobuf"
+	"github.com/svaloumas/valet/mock"
+	"github.com/svaloumas/valet/pkg/apperrors"
 )
 
 const bufSize = 1024 * 1024

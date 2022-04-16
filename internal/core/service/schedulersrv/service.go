@@ -6,8 +6,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"valet/internal/core/port"
-	rtime "valet/pkg/time"
+	"github.com/svaloumas/valet/internal/core/port"
+	rtime "github.com/svaloumas/valet/pkg/time"
 )
 
 var _ port.Scheduler = &schedulerservice{}

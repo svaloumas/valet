@@ -1,8 +1,8 @@
 package resultsrv
 
 import (
-	"valet/internal/core/domain"
-	"valet/internal/core/port"
+	"github.com/svaloumas/valet/internal/core/domain"
+	"github.com/svaloumas/valet/internal/core/port"
 )
 
 var _ port.ResultService = &resultservice{}

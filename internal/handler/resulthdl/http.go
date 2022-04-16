@@ -3,8 +3,8 @@ package resulthdl
 import (
 	"net/http"
 
-	"valet/internal/core/port"
-	"valet/pkg/apperrors"
+	"github.com/svaloumas/valet/internal/core/port"
+	"github.com/svaloumas/valet/pkg/apperrors"
 
 	"github.com/gin-gonic/gin"
 )

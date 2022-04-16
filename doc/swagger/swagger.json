@@ -306,7 +306,7 @@
           "x-go-name": "Timeout"
         }
       },
-      "x-go-package": "valet/internal/core/domain"
+      "x-go-package": "github.com/svaloumas/valet/internal/core/domain"
     },
     "JobResult": {
       "type": "object",
@@ -325,13 +325,13 @@
           "x-go-name": "Metadata"
         }
       },
-      "x-go-package": "valet/internal/core/domain"
+      "x-go-package": "github.com/svaloumas/valet/internal/core/domain"
     },
     "JobStatus": {
       "type": "integer",
       "format": "int64",
       "title": "JobStatus holds a value for job status ranging from 1 to 5.",
-      "x-go-package": "valet/internal/core/domain"
+      "x-go-package": "github.com/svaloumas/valet/internal/core/domain"
     },
     "RequestBodyDTO": {
       "type": "object",
@@ -366,7 +366,7 @@
           "x-go-name": "Timeout"
         }
       },
-      "x-go-package": "valet/internal/handler/jobhdl"
+      "x-go-package": "github.com/svaloumas/valet/internal/handler/jobhdl"
     },
     "errResponse": {
       "type": "object",
@@ -385,7 +385,7 @@
           "x-go-name": "Message"
         }
       },
-      "x-go-package": "valet/doc/swagger"
+      "x-go-package": "github.com/svaloumas/valet/doc/swagger"
     }
   },
   "responses": {

@@ -1,7 +1,7 @@
 package swagger
 
 import (
-	"valet/internal/core/domain"
+	"github.com/svaloumas/valet/internal/core/domain"
 )
 
 // swagger:route GET /jobs/{id}/results jobs getJobResults
