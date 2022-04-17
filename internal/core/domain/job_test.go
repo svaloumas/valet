@@ -119,7 +119,7 @@ func TestJobSetDuration(t *testing.T) {
 }
 
 func TestJobValidate(t *testing.T) {
-	taskFunc := func(i interface{}) (interface{}, error) {
+	taskFunc := func(...interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
 	taskService := tasksrv.New()
@@ -154,5 +154,42 @@ func TestJobValidate(t *testing.T) {
 				t.Errorf("validator returned wrong error: got %v want %v", err.Error(), tt.desc)
 			}
 		})
+	}
+}
+
+func TestJobIsScheduled(t *testing.T) {
+	runAt := time.Now()
+	scheduledJob := &Job{RunAt: &runAt}
+	notScheduledJob := &Job{}
+
+	if !scheduledJob.IsScheduled() {
+		t.Errorf("IsScheduled returned wrong value: got %t, want true", scheduledJob.IsScheduled())
+	}
+	if notScheduledJob.IsScheduled() {
+		t.Errorf("IsScheduled returned wrong value: got %t, want false", notScheduledJob.IsScheduled())
+	}
+}
+
+func TestHasNext(t *testing.T) {
+	job := Job{}
+	pipedJob := Job{NextJobID: "some_id"}
+
+	if job.HasNext() {
+		t.Errorf("HasNext returned wrong value: got %t, want false", job.HasNext())
+	}
+	if !pipedJob.HasNext() {
+		t.Errorf("HasNext returned wrong value: got %t, want true", pipedJob.HasNext())
+	}
+}
+
+func TestBelongsToPipeline(t *testing.T) {
+	job := Job{}
+	pipelineJob := Job{PipelineID: "some_id"}
+
+	if job.BelongsToPipeline() {
+		t.Errorf("BelongsToPipeline returned wrong value: got %t, want false", job.BelongsToPipeline())
+	}
+	if !pipelineJob.BelongsToPipeline() {
+		t.Errorf("BelongsToPipeline returned wrong value: got %t, want true", pipelineJob.BelongsToPipeline())
 	}
 }

@@ -17,7 +17,6 @@ var _ port.JobService = &jobservice{}
 
 type jobservice struct {
 	storage  port.Storage
-	jobQueue port.JobQueue
 	taskrepo *taskrepo.TaskRepository
 	uuidGen  uuidgen.UUIDGenerator
 	time     rtime.Time
@@ -26,13 +25,11 @@ type jobservice struct {
 // New creates a new job service.
 func New(
 	storage port.Storage,
-	jobQueue port.JobQueue,
 	taskrepo *taskrepo.TaskRepository,
 	uuidGen uuidgen.UUIDGenerator,
 	time rtime.Time) *jobservice {
 	return &jobservice{
 		storage:  storage,
-		jobQueue: jobQueue,
 		taskrepo: taskrepo,
 		uuidGen:  uuidGen,
 		time:     time,
@@ -61,11 +58,7 @@ func (srv *jobservice) Create(
 	if err := j.Validate(srv.taskrepo); err != nil {
 		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}
 	}
-	if runAtTime.IsZero() {
-		if err := srv.jobQueue.Push(j); err != nil {
-			return nil, err
-		}
-	}
+
 	if err := srv.storage.CreateJob(j); err != nil {
 		return nil, err
 	}

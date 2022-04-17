@@ -25,9 +25,10 @@ func NewRouter(
 	jobService port.JobService,
 	resultService port.ResultService,
 	taskService port.TaskService,
+	jobQueue port.JobQueue,
 	storage port.Storage, loggingFormat string) *gin.Engine {
 
-	jobHandler := jobhdl.NewJobHTTPHandler(jobService)
+	jobHandler := jobhdl.NewJobHTTPHandler(jobService, jobQueue)
 	resultHandler := resulthdl.NewResultHTTPHandler(resultService)
 	taskHandler := taskhdl.NewTaskHTTPHandler(taskService)
 

@@ -23,7 +23,7 @@ func TestCreateErrorCases(t *testing.T) {
 		EXPECT().
 		Now().
 		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
-		Times(5)
+		Times(4)
 
 	createdAt := freezed.Now()
 	job := &domain.Job{
@@ -41,7 +41,6 @@ func TestCreateErrorCases(t *testing.T) {
 	uuidGenErr := errors.New("some uuid generator error")
 	jobValidateErr := errors.New("name required")
 	storageErr := errors.New("some storage error")
-	jobQueueErr := &apperrors.FullQueueErr{}
 	jobTaskNameErr := &apperrors.ResourceValidationErr{Message: "wrongtask is not a valid task name - valid tasks: [test_task]"}
 	parseTimeErr := &apperrors.ParseTimeErr{
 		Message: "parsing time \"invalid_timestamp_format\" as \"2006-01-02T15:04:05.999999999Z07:00\": cannot parse \"invalid_timestamp_format\" as \"2006\""}
@@ -51,7 +50,7 @@ func TestCreateErrorCases(t *testing.T) {
 		EXPECT().
 		GenerateRandomUUIDString().
 		Return(job.ID, nil).
-		Times(5)
+		Times(4)
 	uuidGen.
 		EXPECT().
 		GenerateRandomUUIDString().
@@ -65,24 +64,12 @@ func TestCreateErrorCases(t *testing.T) {
 		Return(storageErr).
 		Times(1)
 
-	jobQueue := mock.NewMockJobQueue(ctrl)
-	jobQueue.
-		EXPECT().
-		Push(job).
-		Return(nil).
-		Times(1)
-	jobQueue.
-		EXPECT().
-		Push(job).
-		Return(jobQueueErr).
-		Times(1)
-
 	taskFunc := func(i interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
 	taskrepo := taskrepo.New()
 	taskrepo.Register("test_task", taskFunc)
-	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name     string
@@ -104,13 +91,6 @@ func TestCreateErrorCases(t *testing.T) {
 			"test_task",
 			"",
 			storageErr,
-		},
-		{
-			"job queue error",
-			"job_name",
-			"test_task",
-			"",
-			jobQueueErr,
 		},
 		{
 			"job task type error",
@@ -198,20 +178,13 @@ func TestCreate(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	jobQueue := mock.NewMockJobQueue(ctrl)
-	jobQueue.
-		EXPECT().
-		Push(jobWithoutSchedule).
-		Return(nil).
-		Times(1)
-
 	taskFunc := func(i interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
 	taskrepo := taskrepo.New()
 	taskrepo.Register("test_task", taskFunc)
 
-	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name        string
@@ -323,10 +296,8 @@ func TestGet(t *testing.T) {
 		Return(nil, storageErr).
 		Times(1)
 
-	jobQueue := mock.NewMockJobQueue(ctrl)
-
 	taskrepo := taskrepo.New()
-	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name string
@@ -480,10 +451,8 @@ func TestGetJobs(t *testing.T) {
 		Return(nil, storageErr).
 		Times(1)
 
-	jobQueue := mock.NewMockJobQueue(ctrl)
-
 	taskrepo := taskrepo.New()
-	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name     string
@@ -614,10 +583,8 @@ func TestUpdate(t *testing.T) {
 		Return(nil, jobNotFoundErr).
 		Times(1)
 
-	jobQueue := mock.NewMockJobQueue(ctrl)
-
 	taskrepo := taskrepo.New()
-	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name string
@@ -710,10 +677,8 @@ func TestDelete(t *testing.T) {
 		Return(storageErr).
 		Times(1)
 
-	jobQueue := mock.NewMockJobQueue(ctrl)
-
 	taskrepo := taskrepo.New()
-	service := New(storage, jobQueue, taskrepo, uuidGen, freezed)
+	service := New(storage, taskrepo, uuidGen, freezed)
 
 	tests := []struct {
 		name string

@@ -29,13 +29,14 @@ func ServerFactory(
 	jobService port.JobService,
 	resultService port.ResultService,
 	taskService port.TaskService,
+	jobQueue port.JobQueue,
 	storage port.Storage, loggingFormat string,
 	logger *logrus.Logger) port.Server {
 
 	if cfg.Protocol == HTTP {
 		srv := http.Server{
 			Addr:    ":" + cfg.HTTP.Port,
-			Handler: server.NewRouter(jobService, resultService, taskService, storage, loggingFormat),
+			Handler: server.NewRouter(jobService, resultService, taskService, jobQueue, storage, loggingFormat),
 		}
 		httpsrv := server.NewHTTPServer(srv, logger)
 		return httpsrv

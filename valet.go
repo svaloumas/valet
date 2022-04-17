@@ -61,7 +61,7 @@ func (v *valet) Run() {
 	storage := factory.StorageFactory(cfg.Repository)
 	logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
 
-	jobService := jobsrv.New(storage, jobQueue, taskrepo, uuidgen.New(), rtime.New())
+	jobService := jobsrv.New(storage, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(storage)
 
 	workpoolLogger := vlog.NewLogger("workerpool", cfg.LoggingFormat)
@@ -82,7 +82,7 @@ func (v *valet) Run() {
 	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
 
 	server := factory.ServerFactory(
-		cfg.Server, jobService, resultService, v.taskService, storage, cfg.LoggingFormat, logger)
+		cfg.Server, jobService, resultService, v.taskService, jobQueue, storage, cfg.LoggingFormat, logger)
 	server.Serve()
 	logger.Infof("initialized [%s] server", cfg.Server.Protocol)
 
