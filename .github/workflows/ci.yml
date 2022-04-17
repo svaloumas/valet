@@ -43,7 +43,7 @@ jobs:
     - uses: actions/checkout@master
     - uses: codecov/codecov-action@v2
       with:
-        files: ./coverage.out
+        files: coverage.out
         flags: unittests
         name: codecov-coverage
         fail_ci_if_error: true
