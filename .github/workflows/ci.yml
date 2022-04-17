@@ -39,11 +39,13 @@ jobs:
 
     - name: Coverage report
       run: make report
+      run: cat coverage.out
 
     - uses: actions/checkout@master
     - uses: codecov/codecov-action@v2
       with:
-        files: coverage.out
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.out
         flags: unittests
         name: codecov-coverage
         fail_ci_if_error: true
