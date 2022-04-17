@@ -34,6 +34,9 @@ jobs:
       with:
         go-version: '1.17'
 
+    - name: Build and spawn the containers
+      run: docker-compose up -d mysql postgres rabbitmq redis
+
     - name: Coverage report
       run: make report
 
