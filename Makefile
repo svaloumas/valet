@@ -24,7 +24,6 @@ test: generate
 report: generate
 	MYSQL_DSN=$(MYSQL_TEST_DSN)	POSTGRES_DSN=$(POSTGRES_TEST_DSN) RABBITMQ_URI=$(RABBITMQ_TEST_URI) \
 	REDIS_URL=$(REDIS_TEST_URL) go test `go list ./...` -cover -covermode=count -coverprofile=coverage.out
-	go tool cover -func=coverage.out -o=coverage.out
 
 fmt:
 	! go fmt ./... 2>&1 | tee /dev/tty | read
