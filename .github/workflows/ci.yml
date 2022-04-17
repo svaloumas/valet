@@ -42,7 +42,6 @@ jobs:
     - name: verify coverage.out
       run: cat coverage.out
 
-    - uses: actions/checkout@master
     - uses: codecov/codecov-action@v2
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
