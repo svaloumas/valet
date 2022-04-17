@@ -21,6 +21,7 @@ import (
 )
 
 var testTime = "1985-05-04T04:32:53.651387234Z"
+var runAtTestTime = "1985-05-04T04:42:53.651387234Z"
 
 func TestHTTPPostJobs(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -47,6 +48,10 @@ func TestHTTPPostJobs(t *testing.T) {
 		Status:    domain.Pending,
 		CreatedAt: &createdAt,
 	}
+	jobWithSchedule := &domain.Job{}
+	*jobWithSchedule = *job
+	runAt := createdAt.Add(10 * time.Minute)
+	jobWithSchedule.RunAt = &runAt
 
 	jobServiceErr := errors.New("some job service error")
 	jobValidationErr := &apperrors.ResourceValidationErr{Message: "some job validation error"}
@@ -66,11 +71,6 @@ func TestHTTPPostJobs(t *testing.T) {
 		Times(1)
 	jobService.
 		EXPECT().
-		Create(job.Name, job.TaskName, job.Description, "", job.Timeout, job.TaskParams).
-		Return(nil, fullQueueErr).
-		Times(1)
-	jobService.
-		EXPECT().
 		Create("", job.TaskName, job.Description, "", job.Timeout, job.TaskParams).
 		Return(nil, jobValidationErr).
 		Times(1)
@@ -81,11 +81,28 @@ func TestHTTPPostJobs(t *testing.T) {
 		Times(1)
 	jobService.
 		EXPECT().
-		Create(job.Name, job.TaskName, job.Description, "2006-01-02T15:04:05.999999999Z", job.Timeout, job.TaskParams).
+		Create(jobWithSchedule.Name, jobWithSchedule.TaskName, jobWithSchedule.Description, "2006-01-02T15:04:05.999999999Z", jobWithSchedule.Timeout, jobWithSchedule.TaskParams).
+		Return(jobWithSchedule, nil).
+		Times(1)
+	jobService.
+		EXPECT().
+		Create(job.Name, job.TaskName, job.Description, "", job.Timeout, job.TaskParams).
 		Return(job, nil).
 		Times(1)
 
-	hdl := NewJobHTTPHandler(jobService)
+	jobQueue := mock.NewMockJobQueue(ctrl)
+	jobQueue.
+		EXPECT().
+		Push(job).
+		Return(nil).
+		Times(1)
+	jobQueue.
+		EXPECT().
+		Push(job).
+		Return(fullQueueErr).
+		Times(1)
+
+	hdl := NewJobHTTPHandler(jobService, jobQueue)
 
 	tests := []struct {
 		name    string
@@ -96,8 +113,8 @@ func TestHTTPPostJobs(t *testing.T) {
 		{
 			"ok",
 			`{
-				"name":"job_name", 
-				"description": "some description", 
+				"name":"job_name",
+				"description": "some description",
 				"timeout": 10,
 				"task_params": {
 					"url": "some-url.com"
@@ -110,8 +127,8 @@ func TestHTTPPostJobs(t *testing.T) {
 		{
 			"ok with schedule",
 			`{
-				"name":"job_name", 
-				"description": "some description", 
+				"name":"job_name",
+				"description": "some description",
 				"timeout": 10,
 				"task_params": {
 					"url": "some-url.com"
@@ -125,8 +142,8 @@ func TestHTTPPostJobs(t *testing.T) {
 		{
 			"internal server error",
 			`{
-				"name":"job_name", 
-				"description": "some description", 
+				"name":"job_name",
+				"description": "some description",
 				"timeout": 10,
 				"task_params": {
 					"url": "some-url.com"
@@ -139,7 +156,7 @@ func TestHTTPPostJobs(t *testing.T) {
 		{
 			"job validation error",
 			`{
-				"description": "some description", 
+				"description": "some description",
 				"timeout": 10,
 				"task_params": {
 					"url": "some-url.com"
@@ -152,8 +169,8 @@ func TestHTTPPostJobs(t *testing.T) {
 		{
 			"service unavailable error",
 			`{
-				"name":"job_name", 
-				"description": "some description", 
+				"name":"job_name",
+				"description": "some description",
 				"timeout": 10,
 				"task_params": {
 					"url": "some-url.com"
@@ -166,8 +183,8 @@ func TestHTTPPostJobs(t *testing.T) {
 		{
 			"invalid timestamp format",
 			`{
-				"name":"job_name", 
-				"description": "some description", 
+				"name":"job_name",
+				"description": "some description",
 				"timeout": 10,
 				"task_params": {
 					"url": "some-url.com"
@@ -212,6 +229,9 @@ func TestHTTPPostJobs(t *testing.T) {
 					"task_params": job.TaskParams,
 					"status":      job.Status.String(),
 					"created_at":  testTime,
+				}
+				if tt.name == "ok with schedule" {
+					expected["run_at"] = runAtTestTime
 				}
 			} else {
 				expected = map[string]interface{}{
@@ -273,7 +293,9 @@ func TestHTTPGetJob(t *testing.T) {
 		Return(nil, jobServiceErr).
 		Times(1)
 
-	hdl := NewJobHTTPHandler(jobService)
+	jobQueue := mock.NewMockJobQueue(ctrl)
+
+	hdl := NewJobHTTPHandler(jobService, jobQueue)
 
 	tests := []struct {
 		name    string
@@ -331,7 +353,7 @@ func TestHTTPGetJob(t *testing.T) {
 	}
 }
 
-func TestHTTPListJobs(t *testing.T) {
+func TestHTTPGetJobs(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -430,7 +452,9 @@ func TestHTTPListJobs(t *testing.T) {
 		Return(nil, jobStatusValidationErr).
 		Times(1)
 
-	hdl := NewJobHTTPHandler(jobService)
+	jobQueue := mock.NewMockJobQueue(ctrl)
+
+	hdl := NewJobHTTPHandler(jobService, jobQueue)
 
 	tests := []struct {
 		name    string
@@ -561,7 +585,9 @@ func TestHTTPPatchJob(t *testing.T) {
 		Return(jobServiceErr).
 		Times(1)
 
-	hdl := NewJobHTTPHandler(jobService)
+	jobQueue := mock.NewMockJobQueue(ctrl)
+
+	hdl := NewJobHTTPHandler(jobService, jobQueue)
 
 	tests := []struct {
 		name    string
@@ -664,7 +690,9 @@ func TestHTTPDeleteJob(t *testing.T) {
 		Return(jobServiceErr).
 		Times(1)
 
-	hdl := NewJobHTTPHandler(jobService)
+	jobQueue := mock.NewMockJobQueue(ctrl)
+
+	hdl := NewJobHTTPHandler(jobService, jobQueue)
 
 	tests := []struct {
 		name    string

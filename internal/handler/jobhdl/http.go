@@ -12,12 +12,14 @@ import (
 // JobHTTPHandler is an HTTP handler that exposes job endpoints.
 type JobHTTPHandler struct {
 	jobService port.JobService
+	jobQueue   port.JobQueue
 }
 
 // NewJobHTTPHandler creates and returns a new JobHTTPHandler.
-func NewJobHTTPHandler(jobService port.JobService) *JobHTTPHandler {
+func NewJobHTTPHandler(jobService port.JobService, jobQueue port.JobQueue) *JobHTTPHandler {
 	return &JobHTTPHandler{
 		jobService: jobService,
+		jobQueue:   jobQueue,
 	}
 }
 
@@ -42,6 +44,18 @@ func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 		default:
 			hdl.handleError(c, http.StatusInternalServerError, err)
 			return
+		}
+	}
+	if j.RunAt == nil {
+		if err := hdl.jobQueue.Push(j); err != nil {
+			switch err.(type) {
+			case *apperrors.FullQueueErr:
+				hdl.handleError(c, http.StatusServiceUnavailable, err)
+				return
+			default:
+				hdl.handleError(c, http.StatusInternalServerError, err)
+				return
+			}
 		}
 	}
 	c.JSON(http.StatusAccepted, BuildResponseBodyDTO(j))
