@@ -25,6 +25,7 @@ jobs:
       run: make test
 
   codecov:
+    runs-on: ubuntu-latest
     steps:
     - name: Coverage report
       run: make report
