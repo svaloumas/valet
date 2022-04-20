@@ -20,14 +20,17 @@ type Storage interface {
 	// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
 	GetJobs(status domain.JobStatus) ([]*domain.Job, error)
 
+	// GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
+	GetDueJobs() ([]*domain.Job, error)
+
+	// GetJobsByPipelineID fetches the jobs of the specified pipeline.
+	GetJobsByPipelineID(pipelineID string) ([]*domain.Job, error)
+
 	// UpdateJob updates a job to the repository.
 	UpdateJob(id string, j *domain.Job) error
 
 	// DeleteJob deletes a job from the repository.
 	DeleteJob(id string) error
-
-	// GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
-	GetDueJobs() ([]*domain.Job, error)
 
 	// CreateJobResult adds a new job result to the repository.
 	CreateJobResult(result *domain.JobResult) error
@@ -40,6 +43,21 @@ type Storage interface {
 
 	// DeleteJobResult deletes a job result from the repository.
 	DeleteJobResult(jobID string) error
+
+	// CreatePipeline adds a new pipeline and of its jobs to the repository.
+	CreatePipeline(p *domain.Pipeline) error
+
+	// GetPipeline fetches a pipeline from the repository.
+	GetPipeline(id string) (*domain.Pipeline, error)
+
+	// GetPipelines fetches all pipelines from the repository, optionally filters the pipelines by status.
+	GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, error)
+
+	// UpdatePipeline updates a pipeline to the repository.
+	UpdatePipeline(id string, p *domain.Pipeline) error
+
+	// DeletePipeline deletes a pipeline and all its jobs from the repository.
+	DeletePipeline(id string) error
 
 	// CheckHealth checks if the storage is alive.
 	CheckHealth() bool

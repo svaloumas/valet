@@ -303,7 +303,113 @@ func TestRedisGetJobs(t *testing.T) {
 			}
 
 			if len(tt.expected) != len(jobs) {
-				t.Fatalf("expected %#v accounts got %#v instead", len(tt.expected), len(jobs))
+				t.Fatalf("expected %#v jobs got %#v instead", len(tt.expected), len(jobs))
+			}
+
+			for i := range tt.expected {
+				if !reflect.DeepEqual(tt.expected[i], jobs[i]) {
+					t.Fatalf("expected %#v got %#v instead", tt.expected[i], jobs[i])
+				}
+			}
+		})
+	}
+}
+func TestRedisGetJobsByPipelineID(t *testing.T) {
+	defer redisTest.client.FlushDB(ctx)
+
+	createdAt := testTime
+	runAt := testTime
+	job1 := &domain.Job{
+		TaskName:  "some task",
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
+		RunAt:     &runAt,
+	}
+	createdAt2 := createdAt.Add(1 * time.Minute)
+	scheduledAt := testTime.Add(2 * time.Minute)
+	job2 := &domain.Job{
+		TaskName:    "some other task",
+		Status:      domain.Scheduled,
+		CreatedAt:   &createdAt2,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+	createdAt3 := createdAt2.Add(1 * time.Minute)
+	startedAt := createdAt.Add(1 * time.Minute)
+	job3 := &domain.Job{
+		TaskName:    "some task",
+		Status:      domain.InProgress,
+		CreatedAt:   &createdAt3,
+		StartedAt:   &startedAt,
+		RunAt:       &runAt,
+		ScheduledAt: &scheduledAt,
+	}
+
+	uuid1, _ := uuidGenerator.GenerateRandomUUIDString()
+	uuid2, _ := uuidGenerator.GenerateRandomUUIDString()
+	uuid3, _ := uuidGenerator.GenerateRandomUUIDString()
+	pipelineID, _ := uuidGenerator.GenerateRandomUUIDString()
+	notExistingPipelineID, _ := uuidGenerator.GenerateRandomUUIDString()
+	job1.ID = uuid1
+	job2.ID = uuid2
+	job3.ID = uuid3
+
+	job1.NextJobID = job2.ID
+	job2.NextJobID = job3.ID
+
+	job1.PipelineID = pipelineID
+	job2.PipelineID = pipelineID
+	job3.PipelineID = pipelineID
+
+	jobs := []*domain.Job{job1, job2, job3}
+
+	p := &domain.Pipeline{
+		ID:          pipelineID,
+		Name:        "pipeline_name",
+		Description: "some description",
+		Jobs:        jobs,
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+	err := redisTest.CreatePipeline(p)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test pipeline: %#v", err)
+	}
+
+	tests := []struct {
+		name       string
+		pipelineID string
+		expected   []*domain.Job
+	}{
+		{
+			"ok",
+			p.ID,
+			[]*domain.Job{
+				job1,
+				job2,
+				job3,
+			},
+		},
+		{
+			"empty jobs list",
+			notExistingPipelineID,
+			[]*domain.Job{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			jobs, err := redisTest.GetJobsByPipelineID(tt.pipelineID)
+			if err != nil {
+				t.Errorf("GetJobsByPipelineID returned unexpected error: got %#v want nil", err)
+			}
+
+			if len(tt.expected) != len(jobs) {
+				t.Fatalf("expected %#v jobs got %#v instead", len(tt.expected), len(jobs))
 			}
 
 			for i := range tt.expected {
@@ -517,7 +623,7 @@ func TestRedisGetDueJobs(t *testing.T) {
 	}
 
 	if len(dueJobs) != len(dbDueJobs) {
-		t.Fatalf("expected %#v accounts got %#v instead", len(dueJobs), len(dbDueJobs))
+		t.Fatalf("expected %#v due jobs got %#v instead", len(dueJobs), len(dbDueJobs))
 	}
 
 	for i := range dueJobs {
@@ -681,6 +787,429 @@ func TestRedisDeleteJobResult(t *testing.T) {
 	} else {
 		if err != redis.Nil {
 			t.Errorf("get job did not return no found error: got %#v want %#v", err, redis.Nil)
+		}
+	}
+}
+
+func TestRedisCreatePipeline(t *testing.T) {
+	defer redisTest.client.FlushDB(ctx)
+
+	pipelineUUID, _ := uuidGenerator.GenerateRandomUUIDString()
+	jobUUID, _ := uuidGenerator.GenerateRandomUUIDString()
+	secondJobUUID, _ := uuidGenerator.GenerateRandomUUIDString()
+
+	completedAt := testTime.Add(1 * time.Minute)
+	job := &domain.Job{
+		ID:          jobUUID,
+		Name:        "job_name",
+		TaskName:    "test_task",
+		PipelineID:  pipelineUUID,
+		NextJobID:   secondJobUUID,
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		UsePreviousResults: false,
+		Timeout:            3,
+		Status:             domain.Pending,
+		FailureReason:      "",
+		RunAt:              &testTime,
+		ScheduledAt:        &testTime,
+		CreatedAt:          &testTime,
+		StartedAt:          &testTime,
+		CompletedAt:        &completedAt,
+	}
+
+	later := testTime.Add(1 * time.Minute)
+	secondJob := &domain.Job{}
+	*secondJob = *job
+	secondJob.ID = secondJobUUID
+	secondJob.Name = "second_job_name"
+	secondJob.CreatedAt = &later
+
+	jobs := []*domain.Job{job, secondJob}
+
+	p := &domain.Pipeline{
+		ID:          pipelineUUID,
+		Name:        "pipeline_name",
+		Description: "some description",
+		Jobs:        jobs,
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+
+	err := redisTest.CreatePipeline(p)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test pipeline: %#v", err)
+	}
+
+	serializedPipeline, err := json.Marshal(p)
+	if err != nil {
+		t.Fatalf("unexpected error when marshalling pipeline: %#v", err)
+	}
+	serializedJob, err := json.Marshal(job)
+	if err != nil {
+		t.Fatalf("unexpected error when marshalling job: %#v", err)
+	}
+	serializedSecondJob, err := json.Marshal(secondJob)
+	if err != nil {
+		t.Fatalf("unexpected error when marshalling job: %#v", err)
+	}
+
+	pipelineKey := fmt.Sprintf("pipeline:%s", p.ID)
+	jobKey := fmt.Sprintf("job:%s", job.ID)
+	secondJobKey := fmt.Sprintf("job:%s", secondJob.ID)
+
+	dbJob, err := redisTest.client.Get(ctx, jobKey).Result()
+	if err != nil {
+		t.Errorf("get job returned unexpected error: got %#v want nil", err)
+	} else {
+		if !reflect.DeepEqual(string(serializedJob), dbJob) {
+			t.Fatalf("expected %#v got %#v instead", string(serializedJob), dbJob)
+		}
+	}
+
+	dbSecondJob, err := redisTest.client.Get(ctx, secondJobKey).Result()
+	if err != nil {
+		t.Errorf("get job returned unexpected error: got %#v want nil", err)
+	} else {
+		if !reflect.DeepEqual(string(serializedSecondJob), dbSecondJob) {
+			t.Fatalf("expected %#v got %#v instead", string(serializedSecondJob), dbSecondJob)
+		}
+	}
+
+	dbPipeline, err := redisTest.client.Get(ctx, pipelineKey).Result()
+	if err != nil {
+		t.Errorf("get pipeline returned unexpected error: got %#v want nil", err)
+	} else {
+		if !reflect.DeepEqual(string(serializedPipeline), dbPipeline) {
+			t.Fatalf("expected %#v got %#v instead", string(serializedPipeline), dbPipeline)
+		}
+	}
+}
+
+func TestRedisGetPipeline(t *testing.T) {
+	defer redisTest.client.FlushDB(ctx)
+
+	p := &domain.Pipeline{
+		Name:        "pipeline_name",
+		Description: "some description",
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
+	p.ID = uuid
+
+	notExistingPipelineID, _ := uuidGenerator.GenerateRandomUUIDString()
+
+	err := redisTest.CreatePipeline(p)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test pipeline: %#v", err)
+	}
+
+	tests := []struct {
+		name     string
+		id       string
+		pipeline *domain.Pipeline
+		err      error
+	}{
+		{
+			"ok",
+			p.ID,
+			p,
+			nil,
+		},
+		{
+			"not found",
+			notExistingPipelineID,
+			nil,
+			&apperrors.NotFoundErr{ID: notExistingPipelineID, ResourceName: "pipeline"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			dbPipeline, err := redisTest.GetPipeline(tt.id)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("GetPipeline returned wrong error: got %#v want %#v", err, tt.err)
+				}
+			} else {
+				if !reflect.DeepEqual(p, dbPipeline) {
+					t.Fatalf("expected %#v got %#v instead", p, dbPipeline)
+				}
+			}
+		})
+	}
+}
+
+func TestRedisGetPipelines(t *testing.T) {
+	defer redisTest.client.FlushDB(ctx)
+
+	createdAt := testTime
+	runAt := testTime
+	pendingPipeline := &domain.Pipeline{
+		Name:      "pending_pipeline",
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
+		RunAt:     &runAt,
+	}
+	later := createdAt.Add(1 * time.Minute)
+	inprogressPipeline := &domain.Pipeline{
+		Name:      "inprogress_pipeline",
+		Status:    domain.InProgress,
+		CreatedAt: &later,
+		RunAt:     &runAt,
+		StartedAt: &later,
+	}
+
+	uuid1, _ := uuidGenerator.GenerateRandomUUIDString()
+	uuid2, _ := uuidGenerator.GenerateRandomUUIDString()
+	pendingPipeline.ID = uuid1
+	inprogressPipeline.ID = uuid2
+
+	err := redisTest.CreatePipeline(pendingPipeline)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test pipeline: %#v", err)
+	}
+	err = redisTest.CreatePipeline(inprogressPipeline)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test pipeline: %#v", err)
+	}
+
+	tests := []struct {
+		name     string
+		status   domain.JobStatus
+		expected []*domain.Pipeline
+	}{
+		{
+			"all",
+			domain.Undefined,
+			[]*domain.Pipeline{
+				pendingPipeline,
+				inprogressPipeline,
+			},
+		},
+		{
+			"pending",
+			domain.Pending,
+			[]*domain.Pipeline{
+				pendingPipeline,
+			},
+		},
+		{
+			"inprogress",
+			domain.InProgress,
+			[]*domain.Pipeline{
+				inprogressPipeline,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			pipelines, err := redisTest.GetPipelines(tt.status)
+			if err != nil {
+				t.Errorf("GetPipelines returned unexpected error: got %#v want nil", err)
+			}
+
+			if len(tt.expected) != len(pipelines) {
+				t.Fatalf("expected %#v pipelines got %#v instead", len(tt.expected), len(pipelines))
+			}
+
+			for i := range tt.expected {
+				if !reflect.DeepEqual(tt.expected[i], pipelines[i]) {
+					t.Fatalf("expected %#v got %#v instead", tt.expected[i], pipelines[i])
+				}
+			}
+		})
+	}
+}
+
+func TestRedisUpdatePipeline(t *testing.T) {
+	defer redisTest.client.FlushDB(ctx)
+
+	p := &domain.Pipeline{
+		Name:        "pipeline_name",
+		Description: "some description",
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+	uuid, _ := uuidGenerator.GenerateRandomUUIDString()
+	p.ID = uuid
+
+	err := redisTest.CreatePipeline(p)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test pipeline: %#v", err)
+	}
+
+	p.Name = "updated_pipeline"
+	completedAt := testTime.Add(1 * time.Minute)
+	p.CompletedAt = &completedAt
+
+	pipelineKey := fmt.Sprintf("pipeline:%s", p.ID)
+
+	err = redisTest.UpdatePipeline(p.ID, p)
+	if err != nil {
+		t.Fatalf("unexpected error when updating test pipeline: %#v", err)
+	}
+
+	serializedPipeline, err := json.Marshal(p)
+	if err != nil {
+		t.Fatalf("unexpected error when marshalling job: %#v", err)
+	}
+
+	dbPipeline, err := redisTest.client.Get(ctx, pipelineKey).Result()
+	if err != nil {
+		t.Errorf("get pipeline returned unexpected error: got %#v want nil", err)
+	} else {
+		if !reflect.DeepEqual(string(serializedPipeline), dbPipeline) {
+			t.Fatalf("expected %#v got %#v instead", string(serializedPipeline), dbPipeline)
+		}
+	}
+}
+
+func TestRedisDeletePipeline(t *testing.T) {
+	defer redisTest.client.FlushDB(ctx)
+
+	pipelineUUID, _ := uuidGenerator.GenerateRandomUUIDString()
+	jobUUID, _ := uuidGenerator.GenerateRandomUUIDString()
+	secondJobUUID, _ := uuidGenerator.GenerateRandomUUIDString()
+
+	completedAt := testTime.Add(1 * time.Minute)
+	job := &domain.Job{
+		ID:          jobUUID,
+		Name:        "job_name",
+		TaskName:    "test_task",
+		PipelineID:  pipelineUUID,
+		NextJobID:   secondJobUUID,
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		UsePreviousResults: false,
+		Timeout:            3,
+		Status:             domain.Pending,
+		FailureReason:      "",
+		RunAt:              &testTime,
+		ScheduledAt:        &testTime,
+		CreatedAt:          &testTime,
+		StartedAt:          &testTime,
+		CompletedAt:        &completedAt,
+	}
+
+	later := testTime.Add(1 * time.Minute)
+	secondJob := &domain.Job{}
+	*secondJob = *job
+	secondJob.ID = secondJobUUID
+	secondJob.Name = "second_job_name"
+	secondJob.CreatedAt = &later
+
+	jobs := []*domain.Job{job, secondJob}
+
+	p := &domain.Pipeline{
+		ID:          pipelineUUID,
+		Name:        "pipeline_name",
+		Description: "some description",
+		Jobs:        jobs,
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+
+	err := redisTest.CreatePipeline(p)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test pipeline: %#v", err)
+	}
+
+	result1 := &domain.JobResult{
+		JobID:    job.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+	result2 := &domain.JobResult{
+		JobID:    secondJob.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+
+	pipelineKey := fmt.Sprintf("pipeline:%s", p.ID)
+	jobKey := fmt.Sprintf("job:%s", job.ID)
+	secondJobKey := fmt.Sprintf("job:%s", secondJob.ID)
+	result1Key := fmt.Sprintf("jobresult:%s", result1.JobID)
+	result2Key := fmt.Sprintf("jobresult:%s", result2.JobID)
+
+	err = redisTest.CreateJobResult(result1)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job result: %#v", err)
+	}
+
+	err = redisTest.CreateJobResult(result2)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test job result: %#v", err)
+	}
+
+	err = redisTest.DeletePipeline(p.ID)
+	if err != nil {
+		t.Fatalf("unexpected error when deleting test pipeline: %#v", err)
+	}
+
+	// Should CASCADE
+	_, err = redisTest.client.Get(ctx, pipelineKey).Result()
+	if err == nil {
+		t.Errorf("get pipeline did not return expected error: got %#v want nil", err)
+	} else {
+		if err != redis.Nil {
+			t.Errorf("get pipeline did not return no found error: got %#v want %#v", err, redis.Nil)
+		}
+	}
+
+	_, err = redisTest.client.Get(ctx, jobKey).Result()
+	if err == nil {
+		t.Errorf("get job did not return expected error: got %#v want nil", err)
+	} else {
+		if err != redis.Nil {
+			t.Errorf("get job did not return no found error: got %#v want %#v", err, redis.Nil)
+		}
+	}
+
+	_, err = redisTest.client.Get(ctx, secondJobKey).Result()
+	if err == nil {
+		t.Errorf("get job did not return expected error: got %#v want nil", err)
+	} else {
+		if err != redis.Nil {
+			t.Errorf("get job did not return no found error: got %#v want %#v", err, redis.Nil)
+		}
+	}
+
+	_, err = redisTest.client.Get(ctx, result1Key).Result()
+	if err == nil {
+		t.Errorf("get job result did not return expected error: got %#v want nil", err)
+	} else {
+		if err != redis.Nil {
+			t.Errorf("get job result did not return no found error: got %#v want %#v", err, redis.Nil)
+		}
+	}
+
+	_, err = redisTest.client.Get(ctx, result2Key).Result()
+	if err == nil {
+		t.Errorf("get job result did not return expected error: got %#v want nil", err)
+	} else {
+		if err != redis.Nil {
+			t.Errorf("get job result did not return no found error: got %#v want %#v", err, redis.Nil)
 		}
 	}
 }
