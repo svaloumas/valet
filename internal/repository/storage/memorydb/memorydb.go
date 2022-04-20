@@ -13,6 +13,7 @@ import (
 var _ port.Storage = &memorydb{}
 
 type memorydb struct {
+	pipelinedb  map[string][]byte
 	jobdb       map[string][]byte
 	jobresultdb map[string][]byte
 }
@@ -20,9 +21,20 @@ type memorydb struct {
 // NewMemoryDB creates a new memorydb instance.
 func New() *memorydb {
 	return &memorydb{
+		pipelinedb:  make(map[string][]byte),
 		jobdb:       make(map[string][]byte),
 		jobresultdb: make(map[string][]byte),
 	}
+}
+
+// CheckHealth checks if the storage is alive.
+func (mem *memorydb) CheckHealth() bool {
+	return mem.jobdb != nil && mem.jobresultdb != nil
+}
+
+// Close terminates any storage connections gracefully.
+func (mem *memorydb) Close() error {
+	return nil
 }
 
 // CreateJob adds a new job to the repository.
@@ -65,6 +77,20 @@ func (mem *memorydb) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
 		return jobs[i].CreatedAt.Before(*jobs[j].CreatedAt)
 	})
 	return jobs, nil
+}
+
+// GetJobsByPipelineID fetches the jobs of the specified pipeline.
+func (mem *memorydb) GetJobsByPipelineID(pipelineID string) ([]*domain.Job, error) {
+	serializedPipeline, ok := mem.pipelinedb[pipelineID]
+	if !ok {
+		// Mimic the behavior or the relational databases.
+		return []*domain.Job{}, nil
+	}
+	p := &domain.Pipeline{}
+	if err := json.Unmarshal(serializedPipeline, p); err != nil {
+		return nil, err
+	}
+	return p.Jobs, nil
 }
 
 // UpdateJob updates a job to the repository.
@@ -149,12 +175,81 @@ func (mem *memorydb) DeleteJobResult(id string) error {
 	return nil
 }
 
-// CheckHealth checks if the storage is alive.
-func (mem *memorydb) CheckHealth() bool {
-	return mem.jobdb != nil && mem.jobresultdb != nil
+// CreatePipeline adds a new pipeline and of its jobs to the repository.
+func (mem *memorydb) CreatePipeline(p *domain.Pipeline) error {
+	serializedPipeline, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+	mem.pipelinedb[p.ID] = serializedPipeline
+	for _, j := range p.Jobs {
+		serializedJob, err := json.Marshal(j)
+		if err != nil {
+			return err
+		}
+		mem.jobdb[j.ID] = serializedJob
+	}
+	return nil
 }
 
-// Close terminates any storage connections gracefully.
-func (mem *memorydb) Close() error {
+// GetPipeline fetches a pipeline from the repository.
+func (mem *memorydb) GetPipeline(id string) (*domain.Pipeline, error) {
+	serializedPipeline, ok := mem.pipelinedb[id]
+	if !ok {
+		return nil, &apperrors.NotFoundErr{ID: id, ResourceName: "pipeline"}
+	}
+	p := &domain.Pipeline{}
+	if err := json.Unmarshal(serializedPipeline, p); err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+// GetPipelines fetches all pipelines from the repository, optionally filters the pipelines by status.
+func (mem *memorydb) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, error) {
+	pipelines := []*domain.Pipeline{}
+	for _, serializedPipeline := range mem.pipelinedb {
+		p := &domain.Pipeline{}
+		if err := json.Unmarshal(serializedPipeline, p); err != nil {
+			return nil, err
+		}
+		if status == domain.Undefined || p.Status == status {
+			pipelines = append(pipelines, p)
+		}
+	}
+	// ORDER BY created_at ASC
+	sort.Slice(pipelines, func(i, j int) bool {
+		return pipelines[i].CreatedAt.Before(*pipelines[j].CreatedAt)
+	})
+	return pipelines, nil
+}
+
+// UpdatePipeline updates a pipeline to the repository.
+func (mem *memorydb) UpdatePipeline(id string, p *domain.Pipeline) error {
+	serializedPipeline, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+	mem.pipelinedb[p.ID] = serializedPipeline
+	return nil
+}
+
+// DeletePipeline deletes a pipeline and all its jobs from the repository.
+func (mem *memorydb) DeletePipeline(id string) error {
+	serializedPipeline, ok := mem.pipelinedb[id]
+	if !ok {
+		return &apperrors.NotFoundErr{ID: id, ResourceName: "pipeline"}
+	}
+	p := &domain.Pipeline{}
+	err := json.Unmarshal(serializedPipeline, &p)
+	if err != nil {
+		return err
+	}
+	for _, j := range p.Jobs {
+		// CASCADE
+		delete(mem.jobdb, j.ID)
+		delete(mem.jobresultdb, j.ID)
+	}
+	delete(mem.pipelinedb, id)
 	return nil
 }

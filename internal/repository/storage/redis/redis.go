@@ -147,6 +147,40 @@ func (rs *Redis) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
 	return jobs, nil
 }
 
+// GetJobsByPipelineID fetches the jobs of the specified pipeline.
+func (rs *Redis) GetJobsByPipelineID(pipelineID string) ([]*domain.Job, error) {
+	var keys []string
+	key := rs.getRedisPrefixedKey("job:*")
+	iter := rs.client.Scan(ctx, 0, key, 0).Iterator()
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
+	}
+
+	jobs := []*domain.Job{}
+	for _, key := range keys {
+		value, err := rs.client.Get(ctx, key).Bytes()
+		if err != nil {
+			return nil, err
+		}
+		j := &domain.Job{}
+		if err := json.Unmarshal(value, j); err != nil {
+			return nil, err
+		}
+		if j.PipelineID == pipelineID {
+			jobs = append(jobs, j)
+		}
+	}
+
+	// ORDER BY created_at ASC
+	sort.Slice(jobs, func(i, j int) bool {
+		return jobs[i].CreatedAt.Before(*jobs[j].CreatedAt)
+	})
+	return jobs, nil
+}
+
 // UpdateJob adds a new job to the repository.
 func (rs *Redis) UpdateJob(id string, j *domain.Job) error {
 	key := rs.getRedisKeyForJob(id)
@@ -267,6 +301,162 @@ func (rs *Redis) DeleteJobResult(jobID string) error {
 	return nil
 }
 
+// CreatePipeline adds a new pipeline and of its jobs to the repository.
+func (rs *Redis) CreatePipeline(p *domain.Pipeline) error {
+	err := rs.client.Watch(ctx, func(tx *redis.Tx) error {
+
+		for _, j := range p.Jobs {
+			key := rs.getRedisKeyForJob(j.ID)
+			value, err := json.Marshal(j)
+			if err != nil {
+				return err
+			}
+
+			err = rs.client.Set(ctx, key, value, 0).Err()
+			if err != nil {
+				return err
+			}
+		}
+
+		key := rs.getRedisKeyForPipeline(p.ID)
+		value, err := json.Marshal(p)
+		if err != nil {
+			return err
+		}
+
+		err = rs.client.Set(ctx, key, value, 0).Err()
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetPipeline fetches a pipeline from the repository.
+func (rs *Redis) GetPipeline(id string) (*domain.Pipeline, error) {
+	key := rs.getRedisKeyForPipeline(id)
+	val, err := rs.client.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, &apperrors.NotFoundErr{ID: id, ResourceName: "pipeline"}
+		}
+		return nil, err
+	}
+
+	var p *domain.Pipeline
+	err = json.Unmarshal([]byte(val), &p)
+	if err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+// GetPipelines fetches all pipelines from the repository, optionally filters the pipelines by status.
+func (rs *Redis) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, error) {
+	var keys []string
+	key := rs.getRedisPrefixedKey("pipeline:*")
+	iter := rs.client.Scan(ctx, 0, key, 0).Iterator()
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
+	}
+
+	pipelines := []*domain.Pipeline{}
+	for _, key := range keys {
+		value, err := rs.client.Get(ctx, key).Bytes()
+		if err != nil {
+			return nil, err
+		}
+		p := &domain.Pipeline{}
+		if err := json.Unmarshal(value, p); err != nil {
+			return nil, err
+		}
+		if status == domain.Undefined || p.Status == status {
+			pipelines = append(pipelines, p)
+		}
+	}
+
+	// ORDER BY created_at ASC
+	sort.Slice(pipelines, func(i, j int) bool {
+		return pipelines[i].CreatedAt.Before(*pipelines[j].CreatedAt)
+	})
+	return pipelines, nil
+
+}
+
+// UpdatePipeline updates a pipeline to the repository.
+func (rs *Redis) UpdatePipeline(id string, p *domain.Pipeline) error {
+	key := rs.getRedisKeyForPipeline(id)
+	value, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	err = rs.client.Set(ctx, key, value, 0).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeletePipeline deletes a pipeline and all its jobs from the repository.
+func (rs *Redis) DeletePipeline(id string) error {
+	err := rs.client.Watch(ctx, func(tx *redis.Tx) error {
+		var keys []string
+		key := rs.getRedisPrefixedKey("job:*")
+		iter := rs.client.Scan(ctx, 0, key, 0).Iterator()
+		for iter.Next(ctx) {
+			keys = append(keys, iter.Val())
+		}
+		if err := iter.Err(); err != nil {
+			return err
+		}
+
+		jobs := []*domain.Job{}
+		for _, key := range keys {
+			value, err := rs.client.Get(ctx, key).Bytes()
+			if err != nil {
+				return err
+			}
+			j := &domain.Job{}
+			if err := json.Unmarshal(value, j); err != nil {
+				return err
+			}
+			if j.PipelineID == id {
+				jobs = append(jobs, j)
+			}
+		}
+		for _, j := range jobs {
+			key = rs.getRedisKeyForJobResult(j.ID)
+			_, err := rs.client.Del(ctx, key).Result()
+			if err != nil {
+				return err
+			}
+			key = rs.getRedisKeyForJob(j.ID)
+			_, err = rs.client.Del(ctx, key).Result()
+			if err != nil {
+				return err
+			}
+		}
+		key = rs.getRedisKeyForPipeline(id)
+		_, err := rs.client.Del(ctx, key).Result()
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Close terminates any storage connections gracefully.
 func (rs *Redis) Close() error {
 	return rs.client.Close()
@@ -277,6 +467,10 @@ func (rs *Redis) getRedisPrefixedKey(key string) string {
 		return rs.KeyPrefix + ":" + key
 	}
 	return key
+}
+
+func (rs *Redis) getRedisKeyForPipeline(pipelineID string) string {
+	return rs.getRedisPrefixedKey("pipeline:" + pipelineID)
 }
 
 func (rs *Redis) getRedisKeyForJob(jobID string) string {

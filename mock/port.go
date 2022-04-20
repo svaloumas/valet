@@ -94,6 +94,20 @@ func (mr *MockStorageMockRecorder) CreateJobResult(result interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJobResult", reflect.TypeOf((*MockStorage)(nil).CreateJobResult), result)
 }
 
+// CreatePipeline mocks base method.
+func (m *MockStorage) CreatePipeline(p *domain.Pipeline) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePipeline", p)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreatePipeline indicates an expected call of CreatePipeline.
+func (mr *MockStorageMockRecorder) CreatePipeline(p interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePipeline", reflect.TypeOf((*MockStorage)(nil).CreatePipeline), p)
+}
+
 // DeleteJob mocks base method.
 func (m *MockStorage) DeleteJob(id string) error {
 	m.ctrl.T.Helper()
@@ -120,6 +134,20 @@ func (m *MockStorage) DeleteJobResult(jobID string) error {
 func (mr *MockStorageMockRecorder) DeleteJobResult(jobID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJobResult", reflect.TypeOf((*MockStorage)(nil).DeleteJobResult), jobID)
+}
+
+// DeletePipeline mocks base method.
+func (m *MockStorage) DeletePipeline(id string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePipeline", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePipeline indicates an expected call of DeletePipeline.
+func (mr *MockStorageMockRecorder) DeletePipeline(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePipeline", reflect.TypeOf((*MockStorage)(nil).DeletePipeline), id)
 }
 
 // GetDueJobs mocks base method.
@@ -182,6 +210,51 @@ func (mr *MockStorageMockRecorder) GetJobs(status interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobs", reflect.TypeOf((*MockStorage)(nil).GetJobs), status)
 }
 
+// GetJobsByPipelineID mocks base method.
+func (m *MockStorage) GetJobsByPipelineID(pipelineID string) ([]*domain.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetJobsByPipelineID", pipelineID)
+	ret0, _ := ret[0].([]*domain.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetJobsByPipelineID indicates an expected call of GetJobsByPipelineID.
+func (mr *MockStorageMockRecorder) GetJobsByPipelineID(pipelineID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobsByPipelineID", reflect.TypeOf((*MockStorage)(nil).GetJobsByPipelineID), pipelineID)
+}
+
+// GetPipeline mocks base method.
+func (m *MockStorage) GetPipeline(id string) (*domain.Pipeline, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPipeline", id)
+	ret0, _ := ret[0].(*domain.Pipeline)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPipeline indicates an expected call of GetPipeline.
+func (mr *MockStorageMockRecorder) GetPipeline(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPipeline", reflect.TypeOf((*MockStorage)(nil).GetPipeline), id)
+}
+
+// GetPipelines mocks base method.
+func (m *MockStorage) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPipelines", status)
+	ret0, _ := ret[0].([]*domain.Pipeline)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPipelines indicates an expected call of GetPipelines.
+func (mr *MockStorageMockRecorder) GetPipelines(status interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPipelines", reflect.TypeOf((*MockStorage)(nil).GetPipelines), status)
+}
+
 // UpdateJob mocks base method.
 func (m *MockStorage) UpdateJob(id string, j *domain.Job) error {
 	m.ctrl.T.Helper()
@@ -208,6 +281,20 @@ func (m *MockStorage) UpdateJobResult(jobID string, result *domain.JobResult) er
 func (mr *MockStorageMockRecorder) UpdateJobResult(jobID, result interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateJobResult", reflect.TypeOf((*MockStorage)(nil).UpdateJobResult), jobID, result)
+}
+
+// UpdatePipeline mocks base method.
+func (m *MockStorage) UpdatePipeline(id string, p *domain.Pipeline) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePipeline", id, p)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePipeline indicates an expected call of UpdatePipeline.
+func (mr *MockStorageMockRecorder) UpdatePipeline(id, p interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePipeline", reflect.TypeOf((*MockStorage)(nil).UpdatePipeline), id, p)
 }
 
 // MockJobQueue is a mock of JobQueue interface.
@@ -419,6 +506,102 @@ func (m *MockResultService) Get(id string) (*domain.JobResult, error) {
 func (mr *MockResultServiceMockRecorder) Get(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockResultService)(nil).Get), id)
+}
+
+// MockPipelineService is a mock of PipelineService interface.
+type MockPipelineService struct {
+	ctrl     *gomock.Controller
+	recorder *MockPipelineServiceMockRecorder
+}
+
+// MockPipelineServiceMockRecorder is the mock recorder for MockPipelineService.
+type MockPipelineServiceMockRecorder struct {
+	mock *MockPipelineService
+}
+
+// NewMockPipelineService creates a new mock instance.
+func NewMockPipelineService(ctrl *gomock.Controller) *MockPipelineService {
+	mock := &MockPipelineService{ctrl: ctrl}
+	mock.recorder = &MockPipelineServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockPipelineService) EXPECT() *MockPipelineServiceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method.
+func (m *MockPipelineService) Create(name, description, runAt string, jobs []*domain.Job) (*domain.Pipeline, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", name, description, runAt, jobs)
+	ret0, _ := ret[0].(*domain.Pipeline)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockPipelineServiceMockRecorder) Create(name, description, runAt, jobs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockPipelineService)(nil).Create), name, description, runAt, jobs)
+}
+
+// Delete mocks base method.
+func (m *MockPipelineService) Delete(id string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockPipelineServiceMockRecorder) Delete(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPipelineService)(nil).Delete), id)
+}
+
+// Get mocks base method.
+func (m *MockPipelineService) Get(id string) (*domain.Pipeline, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", id)
+	ret0, _ := ret[0].(*domain.Pipeline)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockPipelineServiceMockRecorder) Get(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockPipelineService)(nil).Get), id)
+}
+
+// GetPipelines mocks base method.
+func (m *MockPipelineService) GetPipelines(status string) ([]*domain.Pipeline, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPipelines", status)
+	ret0, _ := ret[0].([]*domain.Pipeline)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPipelines indicates an expected call of GetPipelines.
+func (mr *MockPipelineServiceMockRecorder) GetPipelines(status interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPipelines", reflect.TypeOf((*MockPipelineService)(nil).GetPipelines), status)
+}
+
+// Update mocks base method.
+func (m *MockPipelineService) Update(id, name, description string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", id, name, description)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockPipelineServiceMockRecorder) Update(id, name, description interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPipelineService)(nil).Update), id, name, description)
 }
 
 // MockWorkService is a mock of WorkService interface.

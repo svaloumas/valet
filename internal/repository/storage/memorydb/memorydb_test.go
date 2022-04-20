@@ -276,7 +276,7 @@ func TestMemoryDBGetJobs(t *testing.T) {
 			}
 
 			if len(tt.expected) != len(jobs) {
-				t.Fatalf("expected %#v accounts got %#v instead", len(tt.expected), len(jobs))
+				t.Fatalf("expected %#v jobs got %#v instead", len(tt.expected), len(jobs))
 			}
 
 			for i := range tt.expected {
@@ -288,6 +288,113 @@ func TestMemoryDBGetJobs(t *testing.T) {
 	}
 }
 
+func TestMemoryDBGetJobsByPipelineID(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	testTime := freezed.Now()
+	job1 := &domain.Job{
+		ID:        "job1_id",
+		TaskName:  "some task",
+		Status:    domain.Pending,
+		CreatedAt: &testTime,
+		RunAt:     &testTime,
+	}
+	createdAt2 := testTime.Add(1 * time.Minute)
+	job2 := &domain.Job{
+		ID:        "job2_id",
+		TaskName:  "some other task",
+		Status:    domain.Scheduled,
+		CreatedAt: &createdAt2,
+		RunAt:     &testTime,
+	}
+	createdAt3 := createdAt2.Add(1 * time.Minute)
+	job3 := &domain.Job{
+		ID:        "job3_id",
+		TaskName:  "some task",
+		Status:    domain.InProgress,
+		CreatedAt: &createdAt3,
+		StartedAt: &testTime,
+		RunAt:     &testTime,
+	}
+
+	notExistingPipelineID := "invalid_id"
+
+	job1.NextJobID = job2.ID
+	job2.NextJobID = job3.ID
+
+	pipelineID := "pipeline_id"
+	job1.PipelineID = pipelineID
+	job2.PipelineID = pipelineID
+	job3.PipelineID = pipelineID
+
+	jobs := []*domain.Job{job1, job2, job3}
+
+	p := &domain.Pipeline{
+		ID:          pipelineID,
+		Name:        "pipeline_name",
+		Description: "some description",
+		Jobs:        jobs,
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+	memorydb := New()
+	err := memorydb.CreatePipeline(p)
+	if err != nil {
+		t.Fatalf("unexpected error when creating test pipeline: %#v", err)
+	}
+
+	tests := []struct {
+		name       string
+		pipelineID string
+		expected   []*domain.Job
+	}{
+		{
+			"ok",
+			p.ID,
+			[]*domain.Job{
+				job1,
+				job2,
+				job3,
+			},
+		},
+		{
+			"empty jobs list",
+			notExistingPipelineID,
+			[]*domain.Job{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			jobs, err := memorydb.GetJobsByPipelineID(tt.pipelineID)
+			if err != nil {
+				t.Errorf("GetJobsByPipelineID returned unexpected error: got %#v want nil", err)
+			}
+
+			if len(tt.expected) != len(jobs) {
+				t.Fatalf("expected %#v jobs got %#v instead", len(tt.expected), len(jobs))
+			}
+
+			for i := range tt.expected {
+				if !reflect.DeepEqual(tt.expected[i], jobs[i]) {
+					t.Fatalf("expected %#v got %#v instead", tt.expected[i], jobs[i])
+				}
+			}
+		})
+	}
+}
 func TestMemoryDBUpdateJob(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -463,7 +570,7 @@ func TestMemoryDBGetDueJobs(t *testing.T) {
 		t.Errorf("GetDueJobs returned error: got %#v want nil", err)
 	}
 	if len(expected) != len(dueJobs) {
-		t.Fatalf("expected %#v accounts got %#v instead", len(expected), len(dueJobs))
+		t.Fatalf("expected %#v due jobs got %#v instead", len(expected), len(dueJobs))
 	}
 
 	for i := range expected {
@@ -622,6 +729,443 @@ func TestMemoryDBDeleteJobResult(t *testing.T) {
 			} else {
 				if job := memorydb.jobresultdb[result.JobID]; job != nil {
 					t.Errorf("DeleteJobResult did not delete job: got %#v want nil", job)
+				}
+			}
+		})
+	}
+}
+
+func TestMemoryDBCreatePipeline(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	testTime := freezed.Now()
+	job := &domain.Job{
+		ID:          "job_id",
+		Name:        "job_name",
+		TaskName:    "test_task",
+		PipelineID:  "pipeline_id",
+		NextJobID:   "second_job_id",
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		UsePreviousResults: false,
+		Timeout:            3,
+		Status:             domain.Pending,
+		FailureReason:      "",
+		RunAt:              &testTime,
+		ScheduledAt:        &testTime,
+		CreatedAt:          &testTime,
+		StartedAt:          &testTime,
+		CompletedAt:        &testTime,
+	}
+
+	later := testTime.Add(1 * time.Minute)
+	secondJob := &domain.Job{}
+	*secondJob = *job
+	secondJob.ID = "second_job_id"
+	secondJob.Name = "second_job_name"
+	secondJob.CreatedAt = &later
+
+	jobs := []*domain.Job{job, secondJob}
+
+	p := &domain.Pipeline{
+		ID:          "pipeline_id",
+		Name:        "pipeline_name",
+		Description: "some description",
+		Jobs:        jobs,
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+
+	memorydb := New()
+	err := memorydb.CreatePipeline(p)
+	if err != nil {
+		t.Errorf("CreateJob returned error: got %#v want nil", err)
+	}
+
+	serializedPipeline := memorydb.pipelinedb[p.ID]
+	serializedJob := memorydb.jobdb[job.ID]
+	serializedSecondJob := memorydb.jobdb[secondJob.ID]
+
+	expectedPipeline, err := json.Marshal(p)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+
+	expectedJob, err := json.Marshal(job)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+
+	expectedSecondJob, err := json.Marshal(secondJob)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+
+	if eq := reflect.DeepEqual(serializedPipeline, expectedPipeline); !eq {
+		t.Errorf("CreateJob stored wrong pipeline: got %#v want %#v", string(serializedPipeline), string(expectedPipeline))
+	}
+	if eq := reflect.DeepEqual(serializedJob, expectedJob); !eq {
+		t.Errorf("CreateJob stored wrong job: got %#v want %#v", string(serializedJob), string(expectedJob))
+	}
+	if eq := reflect.DeepEqual(serializedSecondJob, expectedSecondJob); !eq {
+		t.Errorf("CreateJob stored wrong job: got %#v want %#v", string(serializedSecondJob), string(expectedSecondJob))
+	}
+}
+
+func TestMemoryDBGetPipeline(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	testTime := freezed.Now()
+	expected := &domain.Pipeline{
+		ID:          "pipeline_id",
+		Name:        "pipeline_name",
+		Description: "some description",
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+	invalidID := "invalid_id"
+
+	memorydb := New()
+	serializedPipeline, err := json.Marshal(expected)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.pipelinedb[expected.ID] = serializedPipeline
+
+	tests := []struct {
+		name string
+		id   string
+		err  error
+	}{
+		{
+			"ok",
+			expected.ID,
+			nil,
+		},
+		{
+			"not found",
+			invalidID,
+			&apperrors.NotFoundErr{ID: invalidID, ResourceName: "pipeline"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pipeline, err := memorydb.GetJob(tt.id)
+			if err != nil {
+				errValue, ok := err.(*apperrors.NotFoundErr)
+				if !ok {
+					t.Errorf("GetPipeline returned wrong error: got %#v want %#v", errValue, tt.err)
+				}
+			} else {
+				if eq := reflect.DeepEqual(pipeline, expected); !eq {
+					t.Errorf("GetPipeline returned wrong job: got %#v want %#v", pipeline, expected)
+				}
+			}
+		})
+	}
+}
+
+func TestMemoryDBGetPipelines(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(2)
+
+	createdAt := freezed.Now()
+	runAt := freezed.Now()
+	pendingPipeline := &domain.Pipeline{
+		ID:        "pending_pipeline_id",
+		Name:      "pending_pipeline",
+		Status:    domain.Pending,
+		CreatedAt: &createdAt,
+		RunAt:     &runAt,
+	}
+	later := createdAt.Add(1 * time.Minute)
+	inprogressPipeline := &domain.Pipeline{
+		ID:        "inprogress_pipeline_id",
+		Name:      "inprogress_pipeline",
+		Status:    domain.InProgress,
+		CreatedAt: &later,
+		RunAt:     &runAt,
+		StartedAt: &later,
+	}
+
+	memorydb := New()
+	serializedPendingPipeline, err := json.Marshal(pendingPipeline)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	serializedInProgressPipeline, err := json.Marshal(inprogressPipeline)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.pipelinedb[pendingPipeline.ID] = serializedPendingPipeline
+	memorydb.pipelinedb[inprogressPipeline.ID] = serializedInProgressPipeline
+
+	tests := []struct {
+		name     string
+		status   domain.JobStatus
+		expected []*domain.Pipeline
+	}{
+		{
+			"all",
+			domain.Undefined,
+			[]*domain.Pipeline{
+				pendingPipeline,
+				inprogressPipeline,
+			},
+		},
+		{
+			"pending",
+			domain.Pending,
+			[]*domain.Pipeline{
+				pendingPipeline,
+			},
+		},
+		{
+			"inprogress",
+			domain.InProgress,
+			[]*domain.Pipeline{
+				inprogressPipeline,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			pipelines, err := memorydb.GetPipelines(tt.status)
+			if err != nil {
+				t.Errorf("GetPipelines returned unexpected error: got %#v want nil", err)
+			}
+
+			if len(tt.expected) != len(pipelines) {
+				t.Fatalf("expected %#v pipelines got %#v instead", len(tt.expected), len(pipelines))
+			}
+
+			for i := range tt.expected {
+				if !reflect.DeepEqual(tt.expected[i], pipelines[i]) {
+					t.Fatalf("expected %#v got %#v instead", tt.expected[i], pipelines[i])
+				}
+			}
+		})
+	}
+}
+
+func TestMemoryDBUpdatePipeline(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	testTime := freezed.Now()
+	p := &domain.Pipeline{
+		Name:        "pipeline_name",
+		Description: "some description",
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+
+	memorydb := New()
+	serializedPipeline, err := json.Marshal(p)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.pipelinedb[p.ID] = serializedPipeline
+
+	updatedPipeline := &domain.Pipeline{}
+	*updatedPipeline = *p
+	updatedPipeline.Name = "updated pipeline_name"
+	expected, err := json.Marshal(updatedPipeline)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+
+	err = memorydb.UpdatePipeline(updatedPipeline.ID, updatedPipeline)
+	if err != nil {
+		t.Errorf("UpdatePipeline returned error: got %#v want nil", err)
+	}
+	serializedUpdatedPipeline := memorydb.pipelinedb[updatedPipeline.ID]
+	if eq := reflect.DeepEqual(serializedUpdatedPipeline, expected); !eq {
+		t.Errorf("UpdatePipeline updated wrong pipeline: got %#v want %#v", string(serializedUpdatedPipeline), string(expected))
+	}
+}
+
+func TestMemoryDBDeletePipeline(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	testTime := freezed.Now()
+	job := &domain.Job{
+		ID:          "job_id",
+		Name:        "job_name",
+		TaskName:    "test_task",
+		PipelineID:  "pipeline_id",
+		NextJobID:   "second_job_id",
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		UsePreviousResults: false,
+		Timeout:            3,
+		Status:             domain.Pending,
+		FailureReason:      "",
+		RunAt:              &testTime,
+		ScheduledAt:        &testTime,
+		CreatedAt:          &testTime,
+		StartedAt:          &testTime,
+		CompletedAt:        &testTime,
+	}
+
+	later := testTime.Add(1 * time.Minute)
+	secondJob := &domain.Job{}
+	*secondJob = *job
+	secondJob.ID = "second_job_id"
+	secondJob.Name = "second_job_name"
+	secondJob.CreatedAt = &later
+
+	jobs := []*domain.Job{job, secondJob}
+
+	p := &domain.Pipeline{
+		ID:          "pipeline_id",
+		Name:        "pipeline_name",
+		Description: "some description",
+		Jobs:        jobs,
+		Status:      domain.Pending,
+		RunAt:       &testTime,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+
+	result1 := &domain.JobResult{
+		JobID:    job.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+	result2 := &domain.JobResult{
+		JobID:    secondJob.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+	invalidID := "invalid_id"
+
+	memorydb := New()
+	serializedJob, err := json.Marshal(job)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.jobdb[job.ID] = serializedJob
+
+	serializedSecondJob, err := json.Marshal(secondJob)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.jobdb[secondJob.ID] = serializedSecondJob
+
+	serializedJobResult1, err := json.Marshal(result1)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.jobresultdb[result1.JobID] = serializedJobResult1
+
+	serializedJobResult2, err := json.Marshal(result2)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.jobresultdb[result2.JobID] = serializedJobResult2
+
+	serializedPipeline, err := json.Marshal(p)
+	if err != nil {
+		t.Errorf("json marshal returned error: got %#v want nil", err)
+	}
+	memorydb.pipelinedb[p.ID] = serializedPipeline
+
+	tests := []struct {
+		name       string
+		pipelineID string
+		err        error
+	}{
+		{
+			"ok",
+			p.ID,
+			nil,
+		},
+		{
+			"not found",
+			invalidID,
+			&apperrors.NotFoundErr{ID: invalidID, ResourceName: "pipeline"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := memorydb.DeletePipeline(tt.pipelineID)
+			if err != nil {
+				errValue, ok := err.(*apperrors.NotFoundErr)
+				if !ok {
+					t.Errorf("DeletePipeline returned wrong error: got %#v want %#v", errValue, tt.err)
+				}
+			} else {
+				if job := memorydb.jobdb[job.ID]; job != nil {
+					t.Errorf("DeletPipeline did not delete job: got %#v want nil", job)
+				}
+				if job := memorydb.jobdb[secondJob.ID]; job != nil {
+					t.Errorf("DeletPipeline did not delete second job: got %#v want nil", job)
+				}
+				if result := memorydb.jobresultdb[result1.JobID]; result != nil {
+					t.Errorf("DeletPipeline did not delete job result1 (CASCADE): got %#v want nil", job)
+				}
+				if result := memorydb.jobresultdb[result2.JobID]; result != nil {
+					t.Errorf("DeletPipeline did not delete job result2 (CASCADE): got %#v want nil", job)
+				}
+				if pipeline := memorydb.jobresultdb[p.ID]; pipeline != nil {
+					t.Errorf("DeletPipeline did not delete pipeline (CASCADE): got %#v want nil", job)
 				}
 			}
 		})
