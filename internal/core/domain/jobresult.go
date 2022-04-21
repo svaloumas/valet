@@ -15,11 +15,5 @@ type FutureJobResult struct {
 
 // Wait waits for JobResult to become available and returns it.
 func (f FutureJobResult) Wait() JobResult {
-	r, ok := <-f.Result
-	if !ok {
-		// This should never happen, reading from the result
-		// channel is exclusive to this future
-		panic("failed to read from result channel")
-	}
-	return r
+	return <-f.Result
 }
