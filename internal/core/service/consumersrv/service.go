@@ -2,6 +2,7 @@ package consumersrv
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -49,7 +50,11 @@ func (srv *consumerservice) Consume(ctx context.Context, duration time.Duration)
 				w := srv.workService.CreateWork(j)
 				// Blocks until worker pool backlog has some space.
 				srv.workService.Send(w)
-				srv.logger.Infof("sent work for job with ID: %s to worker pool", j.ID)
+				message := fmt.Sprintf("job with ID: %s", j.ID)
+				if j.BelongsToPipeline() {
+					message = fmt.Sprintf("pipeline with ID: %s", j.PipelineID)
+				}
+				srv.logger.Infof("sent work for %s to worker pool", message)
 			}
 		}
 	}()
