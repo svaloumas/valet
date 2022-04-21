@@ -6,11 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/svaloumas/valet/internal/core/port"
+	"github.com/svaloumas/valet/internal/handler"
 	"github.com/svaloumas/valet/pkg/apperrors"
 )
 
 // JobHTTPHandler is an HTTP handler that exposes job endpoints.
 type JobHTTPHandler struct {
+	handler.HTTPHandler
 	jobService port.JobService
 	jobQueue   port.JobQueue
 }
@@ -33,27 +35,24 @@ func (hdl *JobHTTPHandler) Create(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.ResourceValidationErr:
-			hdl.handleError(c, http.StatusBadRequest, err)
+			hdl.HandleError(c, http.StatusBadRequest, err)
 			return
 		case *apperrors.ParseTimeErr:
-			hdl.handleError(c, http.StatusBadRequest, err)
-			return
-		case *apperrors.FullQueueErr:
-			hdl.handleError(c, http.StatusServiceUnavailable, err)
+			hdl.HandleError(c, http.StatusBadRequest, err)
 			return
 		default:
-			hdl.handleError(c, http.StatusInternalServerError, err)
+			hdl.HandleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
-	if j.RunAt == nil {
+	if !j.IsScheduled() {
 		if err := hdl.jobQueue.Push(j); err != nil {
 			switch err.(type) {
 			case *apperrors.FullQueueErr:
-				hdl.handleError(c, http.StatusServiceUnavailable, err)
+				hdl.HandleError(c, http.StatusServiceUnavailable, err)
 				return
 			default:
-				hdl.handleError(c, http.StatusInternalServerError, err)
+				hdl.HandleError(c, http.StatusInternalServerError, err)
 				return
 			}
 		}
@@ -67,10 +66,10 @@ func (hdl *JobHTTPHandler) Get(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			hdl.handleError(c, http.StatusNotFound, err)
+			hdl.HandleError(c, http.StatusNotFound, err)
 			return
 		default:
-			hdl.handleError(c, http.StatusInternalServerError, err)
+			hdl.HandleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -88,10 +87,10 @@ func (hdl *JobHTTPHandler) GetJobs(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.ResourceValidationErr:
-			hdl.handleError(c, http.StatusBadRequest, err)
+			hdl.HandleError(c, http.StatusBadRequest, err)
 			return
 		default:
-			hdl.handleError(c, http.StatusInternalServerError, err)
+			hdl.HandleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -110,10 +109,10 @@ func (hdl *JobHTTPHandler) Update(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			hdl.handleError(c, http.StatusNotFound, err)
+			hdl.HandleError(c, http.StatusNotFound, err)
 			return
 		default:
-			hdl.handleError(c, http.StatusInternalServerError, err)
+			hdl.HandleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -126,17 +125,15 @@ func (hdl *JobHTTPHandler) Delete(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			hdl.handleError(c, http.StatusNotFound, err)
+			hdl.HandleError(c, http.StatusNotFound, err)
+			return
+		case *apperrors.CannotDeletePipelineJobErr:
+			hdl.HandleError(c, http.StatusConflict, err)
 			return
 		default:
-			hdl.handleError(c, http.StatusInternalServerError, err)
+			hdl.HandleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
 	c.Writer.WriteHeader(http.StatusNoContent)
-}
-
-func (hdl *JobHTTPHandler) handleError(c *gin.Context, code int, err error) {
-	c.Error(err)
-	c.AbortWithStatusJSON(code, gin.H{"error": true, "code": code, "message": err.Error()})
 }

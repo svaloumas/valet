@@ -672,6 +672,9 @@ func TestHTTPDeleteJob(t *testing.T) {
 
 	jobNotFoundErr := &apperrors.NotFoundErr{ID: jobID, ResourceName: "job"}
 	jobServiceErr := errors.New("some job service error")
+	cannotDeletePipelineJobErr := &apperrors.CannotDeletePipelineJobErr{
+		Message: "job with ID: pipeline_job_id can not be deleted because it belongs to a pipeline - try to delete the pipeline instead",
+	}
 
 	jobService := mock.NewMockJobService(ctrl)
 	jobService.
@@ -689,6 +692,11 @@ func TestHTTPDeleteJob(t *testing.T) {
 		Delete(jobID).
 		Return(jobServiceErr).
 		Times(1)
+	jobService.
+		EXPECT().
+		Delete("pipeline_job_id").
+		Return(cannotDeletePipelineJobErr).
+		Times(1)
 
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
@@ -703,6 +711,12 @@ func TestHTTPDeleteJob(t *testing.T) {
 		{"ok", jobID, http.StatusNoContent, ""},
 		{"not found", "invalid_id", http.StatusNotFound, "job with ID: auuid4 not found"},
 		{"internal server error", jobID, http.StatusInternalServerError, "some job service error"},
+		{
+			"cannot delete pipeline job error",
+			"pipeline_job_id",
+			http.StatusConflict,
+			"job with ID: pipeline_job_id can not be deleted because it belongs to a pipeline - try to delete the pipeline instead",
+		},
 	}
 
 	for _, tt := range tests {

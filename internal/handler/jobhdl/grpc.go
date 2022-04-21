@@ -125,6 +125,8 @@ func (hdl *JobgRPCHandler) Delete(ctx context.Context, in *pb.DeleteJobRequest) 
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
 			return nil, status.Error(codes.NotFound, err.Error())
+		case *apperrors.CannotDeletePipelineJobErr:
+			return nil, status.Error(codes.PermissionDenied, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -141,7 +143,7 @@ func newCreateJobResponse(j *domain.Job) (*pb.CreateJobResponse, error) {
 	var runAtTimestamp *timestamppb.Timestamp
 	var createdAtTimestamp *timestamppb.Timestamp
 
-	if j.RunAt != nil {
+	if j.IsScheduled() {
 		runAtTimestamp = timestamppb.New(*j.RunAt)
 	}
 	if j.CreatedAt != nil {
@@ -173,7 +175,7 @@ func newGetJobResponse(j *domain.Job) (*pb.GetJobResponse, error) {
 	var completedAtTimestamp *timestamppb.Timestamp
 	var duration int64
 
-	if j.RunAt != nil {
+	if j.IsScheduled() {
 		runAtTimestamp = timestamppb.New(*j.RunAt)
 	}
 	if j.ScheduledAt != nil {

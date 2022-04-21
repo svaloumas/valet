@@ -30,13 +30,15 @@ func TestCreateErrorCases(t *testing.T) {
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskName:    "test_task",
+		PipelineID:  "",
 		Timeout:     10,
 		Description: "some description",
 		TaskParams: map[string]interface{}{
 			"url": "some-url.com",
 		},
-		Status:    domain.Pending,
-		CreatedAt: &createdAt,
+		Status:             domain.Pending,
+		UsePreviousResults: false,
+		CreatedAt:          &createdAt,
 	}
 	uuidGenErr := errors.New("some uuid generator error")
 	jobValidateErr := errors.New("name required")
@@ -64,7 +66,7 @@ func TestCreateErrorCases(t *testing.T) {
 		Return(storageErr).
 		Times(1)
 
-	taskFunc := func(i interface{}) (interface{}, error) {
+	taskFunc := func(...interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
 	taskrepo := taskrepo.New()
@@ -146,13 +148,15 @@ func TestCreate(t *testing.T) {
 		ID:          "auuid4",
 		Name:        "job_name",
 		TaskName:    "test_task",
+		PipelineID:  "",
 		Timeout:     10,
 		Description: "some description",
 		TaskParams: map[string]interface{}{
 			"url": "some-url.com",
 		},
-		Status:    domain.Pending,
-		CreatedAt: &createdAt,
+		Status:             domain.Pending,
+		UsePreviousResults: false,
+		CreatedAt:          &createdAt,
 	}
 
 	jobWithSchedule := &domain.Job{}
@@ -178,7 +182,7 @@ func TestCreate(t *testing.T) {
 		Return(nil).
 		Times(1)
 
-	taskFunc := func(i interface{}) (interface{}, error) {
+	taskFunc := func(...interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
 	taskrepo := taskrepo.New()
@@ -632,7 +636,7 @@ func TestDelete(t *testing.T) {
 		Times(1)
 
 	createdAt := freezed.Now()
-	expectedJob := &domain.Job{
+	j := &domain.Job{
 		ID:       "auuid4",
 		Name:     "job_name",
 		TaskName: "test_task",
@@ -643,18 +647,31 @@ func TestDelete(t *testing.T) {
 		Status:      domain.Pending,
 		CreatedAt:   &createdAt,
 	}
+	pipelineJob := &domain.Job{}
+	*pipelineJob = *j
+	pipelineJob.ID = "pipeline_job_id"
+	pipelineJob.PipelineID = "pipeline_id"
 
 	invalidID := "invalid_id"
 	notExistingID := "not_existing_id"
 	notFoundErr := &apperrors.NotFoundErr{ID: invalidID, ResourceName: "job"}
+	cannotDeletePipelineJobErr := &apperrors.CannotDeletePipelineJobErr{
+		Message: `job with ID: pipeline_job_id can not be deleted because it belongs 
+				to a pipeline - try to delete the pipeline instead`,
+	}
 	storageErr := errors.New("some storage error")
 	uuidGen := mock.NewMockUUIDGenerator(ctrl)
 
 	storage := mock.NewMockStorage(ctrl)
 	storage.
 		EXPECT().
-		GetJob(expectedJob.ID).
-		Return(expectedJob, nil).
+		GetJob(j.ID).
+		Return(j, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJob(pipelineJob.ID).
+		Return(pipelineJob, nil).
 		Times(1)
 	storage.
 		EXPECT().
@@ -663,13 +680,13 @@ func TestDelete(t *testing.T) {
 		Times(1)
 	storage.
 		EXPECT().
-		DeleteJob(expectedJob.ID).
+		DeleteJob(j.ID).
 		Return(nil).
 		Times(1)
 	storage.
 		EXPECT().
 		GetJob(invalidID).
-		Return(expectedJob, nil).
+		Return(j, nil).
 		Times(1)
 	storage.
 		EXPECT().
@@ -687,7 +704,7 @@ func TestDelete(t *testing.T) {
 	}{
 		{
 			"ok",
-			expectedJob.ID,
+			j.ID,
 			nil,
 		},
 		{
@@ -699,6 +716,11 @@ func TestDelete(t *testing.T) {
 			"storage error",
 			invalidID,
 			storageErr,
+		},
+		{
+			"cannot delete pipeline job error",
+			pipelineJob.ID,
+			cannotDeletePipelineJobErr,
 		},
 	}
 
