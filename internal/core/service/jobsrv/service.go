@@ -2,6 +2,7 @@ package jobsrv
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -53,7 +54,10 @@ func (srv *jobservice) Create(
 		}
 	}
 	createdAt := srv.time.Now()
-	j := domain.NewJob(uuid, name, taskName, description, timeout, &runAtTime, &createdAt, taskParams)
+	j := domain.NewJob(
+		uuid, name, taskName, description,
+		"", "", timeout, &runAtTime,
+		&createdAt, false, taskParams)
 
 	if err := j.Validate(srv.taskrepo); err != nil {
 		return nil, &apperrors.ResourceValidationErr{Message: err.Error()}
@@ -109,9 +113,17 @@ func (srv *jobservice) Update(id, name, description string) error {
 
 // Delete deletes a job.
 func (srv *jobservice) Delete(id string) error {
-	_, err := srv.storage.GetJob(id)
+	j, err := srv.storage.GetJob(id)
 	if err != nil {
 		return err
+	}
+	if j.BelongsToPipeline() {
+		// TODO: Add a test case for this scenario.
+		return &apperrors.CannotDeletePipelineJobErr{
+			Message: fmt.Sprintf(
+				`job with ID: %s can not be deleted because it belongs 
+				to a pipeline - try to delete the pipeline instead`, id),
+		}
 	}
 	return srv.storage.DeleteJob(id)
 }

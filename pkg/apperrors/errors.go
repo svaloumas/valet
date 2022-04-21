@@ -45,12 +45,22 @@ func (e *ResourceValidationErr) Error() string {
 	return e.Message
 }
 
-// ParseTimeErr is an erros indicating that the input string
+// ParseTimeErr is an error indicating that the input string
 // is not in a valid timestamp format.
 type ParseTimeErr struct {
 	Message string
 }
 
 func (e *ParseTimeErr) Error() string {
+	return e.Message
+}
+
+// CannotDeletePipelinePipedJobErr is an error indicating that the deletion of
+// a job that belongs to a pipeline can not be deleted.
+type CannotDeletePipelineJobErr struct {
+	Message string
+}
+
+func (e *CannotDeletePipelineJobErr) Error() string {
 	return e.Message
 }

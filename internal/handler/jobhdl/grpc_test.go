@@ -681,6 +681,9 @@ func TestGRPCDeleteJob(t *testing.T) {
 	jobID := "auuid4"
 	jobNotFoundErr := &apperrors.NotFoundErr{ID: jobID, ResourceName: "job"}
 	jobServiceErr := errors.New("some job service error")
+	cannotDeletePipelineJobErr := &apperrors.CannotDeletePipelineJobErr{
+		Message: "job with ID: pipeline_job_id can not be deleted because it belongs to a pipeline - try to delete the pipeline instead",
+	}
 
 	jobService.
 		EXPECT().
@@ -696,6 +699,11 @@ func TestGRPCDeleteJob(t *testing.T) {
 		EXPECT().
 		Delete(jobID).
 		Return(jobServiceErr).
+		Times(1)
+	jobService.
+		EXPECT().
+		Delete("pipeline_job_id").
+		Return(cannotDeletePipelineJobErr).
 		Times(1)
 
 	tests := []struct {
@@ -725,6 +733,13 @@ func TestGRPCDeleteJob(t *testing.T) {
 			nil,
 			codes.Internal,
 			status.Error(codes.Internal, jobServiceErr.Error()),
+		},
+		{
+			"cannot delete pipeline job error",
+			&pb.DeleteJobRequest{Id: "pipeline_job_id"},
+			nil,
+			codes.PermissionDenied,
+			status.Error(codes.PermissionDenied, cannotDeletePipelineJobErr.Error()),
 		},
 	}
 
