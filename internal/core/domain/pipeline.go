@@ -112,8 +112,14 @@ func (p *Pipeline) IsScheduled() bool {
 	return p.RunAt != nil
 }
 
-func (p *Pipeline) CreateNestedJobPipeline() {
+func (p *Pipeline) MergeJobsInOne() {
 	for i := 0; i < len(p.Jobs)-1; i++ {
 		p.Jobs[i].Next = p.Jobs[i+1]
+	}
+}
+
+func (p *Pipeline) UnmergeJobs() {
+	for _, j := range p.Jobs {
+		j.Next = nil
 	}
 }
