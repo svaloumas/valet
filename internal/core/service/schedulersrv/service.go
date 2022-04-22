@@ -2,6 +2,7 @@ package schedulersrv
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -51,6 +52,15 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 					continue
 				}
 				for _, j := range dueJobs {
+					if j.BelongsToPipeline() {
+						for job := j; job.HasNext(); job = job.Next {
+							job.Next, err = srv.storage.GetJob(job.NextJobID)
+							if err != nil {
+								srv.logger.Errorf("could not get piped due job from repository: %s", err)
+								continue
+							}
+						}
+					}
 					w := srv.workService.CreateWork(j)
 					// Blocks until worker pool backlog has some space.
 					srv.workService.Send(w)
@@ -60,7 +70,11 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 					if err := srv.storage.UpdateJob(j.ID, j); err != nil {
 						srv.logger.Errorf("could not update job: %s", err)
 					}
-					srv.logger.Infof("scheduled work for job with ID: %s to worker pool", j.ID)
+					message := fmt.Sprintf("job with ID: %s", j.ID)
+					if j.BelongsToPipeline() {
+						message = fmt.Sprintf("pipeline with ID: %s", j.PipelineID)
+					}
+					srv.logger.Infof("scheduled work for %s to worker pool", message)
 				}
 			}
 		}

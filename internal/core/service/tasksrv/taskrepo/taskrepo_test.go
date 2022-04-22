@@ -9,7 +9,7 @@ import (
 
 func TestGetTaskFunc(t *testing.T) {
 	taskName := "test_task"
-	testTaskFunc := func(i interface{}) (interface{}, error) {
+	testTaskFunc := func(...interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
 
@@ -32,7 +32,7 @@ func TestGetTaskFunc(t *testing.T) {
 func TestGetTaskNames(t *testing.T) {
 	aTaskName := "some task name"
 	otherTaskName := "another task name"
-	testTaskFunc := func(i interface{}) (interface{}, error) {
+	testTaskFunc := func(...interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
 
@@ -57,7 +57,7 @@ func TestGetTaskNames(t *testing.T) {
 
 func TestRegister(t *testing.T) {
 	taskName := "test_task"
-	testTaskFunc := func(i interface{}) (interface{}, error) {
+	testTaskFunc := func(...interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
 

@@ -121,7 +121,7 @@ func TestCreateErrorCases(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := service.Create(tt.jobName, tt.taskName, job.Description, tt.runAt, job.Timeout, job.TaskParams)
 			if err == nil {
-				t.Error("service created expected error, returned nil instead")
+				t.Error("service create did not return expected error, returned nil instead")
 			}
 			if err.Error() != tt.err.Error() {
 				t.Errorf("service create returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())

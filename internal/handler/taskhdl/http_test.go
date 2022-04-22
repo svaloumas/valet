@@ -18,8 +18,9 @@ import (
 func TestHTTPGetTasks(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	gin.SetMode(gin.ReleaseMode)
 
-	taskFunc := func(i interface{}) (interface{}, error) {
+	taskFunc := func(...interface{}) (interface{}, error) {
 		return "some metadata", errors.New("some task error")
 	}
 	repo := make(map[string]taskrepo.TaskFunc)

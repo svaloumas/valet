@@ -15,8 +15,13 @@ import (
 	rtime "github.com/svaloumas/valet/pkg/time"
 )
 
+const (
+	WorkTypeTask                    = "task"
+	WorkTypePipeline                = "pipeline"
+	DefaultJobTimeout time.Duration = 84600 * time.Second
+)
+
 var _ port.WorkService = &workservice{}
-var defaultJobTimeout time.Duration = 84600 * time.Second
 
 type workservice struct {
 	// The fixed amount of goroutines that will be handling running jobs.
@@ -58,30 +63,37 @@ func New(
 func (srv *workservice) Start() {
 	for i := 0; i < srv.concurrency; i++ {
 		srv.wg.Add(1)
-		go srv.work(i, srv.queue, &srv.wg)
+		go srv.startWorker(i, srv.queue, &srv.wg)
 	}
 	srv.logger.Infof("set up %d workers with a queue of backlog %d", srv.concurrency, srv.backlog)
 }
 
 // Send sends a work to the worker pool.
 func (srv *workservice) Send(w work.Work) {
-	srv.queue <- w
-	go func() {
-		futureResult := domain.FutureJobResult{Result: w.Result}
-		result := futureResult.Wait()
+	workType := WorkTypeTask
+	for job := w.Job; ; job, workType = job.Next, WorkTypePipeline {
+		go func() {
+			futureResult := domain.FutureJobResult{Result: w.Result}
+			result := futureResult.Wait()
 
-		if err := srv.storage.CreateJobResult(&result); err != nil {
-			srv.logger.Errorf("could not create job result to the repository %s", err)
+			if err := srv.storage.CreateJobResult(&result); err != nil {
+				srv.logger.Errorf("could not create job result to the repository %s", err)
+			}
+		}()
+
+		if !job.HasNext() {
+			break
 		}
-	}()
+	}
+	w.Type = workType
+
+	srv.queue <- w
 }
 
 // CreateWork creates and return a new Work instance.
 func (srv *workservice) CreateWork(j *domain.Job) work.Work {
-	// Should be already validated.
-	taskFunc, _ := srv.taskrepo.GetTaskFunc(j.TaskName)
 	resultChan := make(chan domain.JobResult, 1)
-	return work.NewWork(j, resultChan, taskFunc, srv.timeoutUnit)
+	return work.NewWork(j, resultChan, srv.timeoutUnit)
 }
 
 // Stop signals the workers to stop working gracefully.
@@ -91,14 +103,14 @@ func (srv *workservice) Stop() {
 	srv.wg.Wait()
 }
 
-// Exec executes the work.
-func (srv *workservice) Exec(ctx context.Context, w work.Work) error {
+// ExecJobWork executes the job work.
+func (srv *workservice) ExecJobWork(ctx context.Context, w work.Work) error {
 	startedAt := srv.time.Now()
 	w.Job.MarkStarted(&startedAt)
 	if err := srv.storage.UpdateJob(w.Job.ID, w.Job); err != nil {
 		return err
 	}
-	timeout := defaultJobTimeout
+	timeout := DefaultJobTimeout
 	if w.Job.Timeout > 0 {
 		timeout = time.Duration(w.Job.Timeout) * w.TimeoutUnit
 	}
@@ -106,33 +118,8 @@ func (srv *workservice) Exec(ctx context.Context, w work.Work) error {
 	defer cancel()
 
 	jobResultChan := make(chan domain.JobResult, 1)
-	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				result := domain.JobResult{
-					JobID:    w.Job.ID,
-					Metadata: nil,
-					Error:    fmt.Errorf("%v", p).Error(),
-				}
-				jobResultChan <- result
-			}
-		}()
-		var errMsg string
 
-		// Perform the actual work.
-		resultMetadata, jobErr := w.TaskFunc(w.Job.TaskParams)
-		if jobErr != nil {
-			errMsg = jobErr.Error()
-		}
-
-		result := domain.JobResult{
-			JobID:    w.Job.ID,
-			Metadata: resultMetadata,
-			Error:    errMsg,
-		}
-		jobResultChan <- result
-		close(jobResultChan)
-	}()
+	srv.work(w.Job, jobResultChan, nil)
 
 	var jobResult domain.JobResult
 	select {
@@ -163,15 +150,148 @@ func (srv *workservice) Exec(ctx context.Context, w work.Work) error {
 	return nil
 }
 
-func (srv *workservice) work(id int, queue <-chan work.Work, wg *sync.WaitGroup) {
+// ExecPipelineWork executes the pipeline work.
+func (srv *workservice) ExecPipelineWork(ctx context.Context, w work.Work) error {
+	p, err := srv.storage.GetPipeline(w.Job.PipelineID)
+	if err != nil {
+		return err
+	}
+	var jobResult domain.JobResult
+
+	for job, i := w.Job, 0; ; job, i = job.Next, i+1 {
+		startedAt := srv.time.Now()
+		job.MarkStarted(&startedAt)
+		if err := srv.storage.UpdateJob(job.ID, job); err != nil {
+			return err
+		}
+		if i == 0 {
+			p.MarkStarted(&startedAt)
+			if err := srv.storage.UpdatePipeline(p.ID, p); err != nil {
+				return err
+			}
+		}
+
+		timeout := DefaultJobTimeout
+		if job.Timeout > 0 {
+			timeout = time.Duration(job.Timeout) * w.TimeoutUnit
+		}
+		ctx, cancel := context.WithTimeout(ctx, timeout)
+		jobResultChan := make(chan domain.JobResult, 1)
+
+		srv.work(job, jobResultChan, jobResult.Metadata)
+
+		select {
+		case <-ctx.Done():
+			failedAt := srv.time.Now()
+			job.MarkFailed(&failedAt, ctx.Err().Error())
+			p.MarkFailed(&failedAt)
+
+			jobResult = domain.JobResult{
+				JobID:    job.ID,
+				Metadata: nil,
+				Error:    ctx.Err().Error(),
+			}
+		case jobResult = <-jobResultChan:
+			if jobResult.Error != "" {
+				failedAt := srv.time.Now()
+				job.MarkFailed(&failedAt, jobResult.Error)
+				p.MarkFailed(&failedAt)
+			} else {
+				completedAt := srv.time.Now()
+				job.MarkCompleted(&completedAt)
+
+				if !job.HasNext() {
+					p.MarkCompleted(&completedAt)
+				}
+			}
+		}
+		// Reset timeout.
+		cancel()
+
+		if err := srv.storage.UpdateJob(job.ID, job); err != nil {
+			return err
+		}
+		if p.Status == domain.Failed || p.Status == domain.Completed {
+			if err := srv.storage.UpdatePipeline(p.ID, p); err != nil {
+				return err
+			}
+		}
+		w.Result <- jobResult
+
+		// Stop the pipeline execution on failure.
+		if job.Status == domain.Failed {
+			break
+		}
+
+		// Stop the pipeline execution if there's no other job.
+		if !job.HasNext() {
+			break
+		}
+	}
+	close(w.Result)
+
+	return nil
+}
+
+func (srv *workservice) work(
+	job *domain.Job,
+	jobResultChan chan domain.JobResult,
+	previousJobResultsMetadata interface{}) {
+
+	go func() {
+		defer func() {
+			if p := recover(); p != nil {
+				result := domain.JobResult{
+					JobID:    job.ID,
+					Metadata: nil,
+					Error:    fmt.Errorf("%v", p).Error(),
+				}
+				jobResultChan <- result
+			}
+		}()
+		var errMsg string
+
+		// Should be already validated.
+		taskFunc, _ := srv.taskrepo.GetTaskFunc(job.TaskName)
+
+		params := []interface{}{
+			job.TaskParams,
+		}
+		if job.UsePreviousResults && previousJobResultsMetadata != nil {
+			params = append(params, previousJobResultsMetadata)
+		}
+		// Perform the actual work.
+		resultMetadata, jobErr := taskFunc(params...)
+		if jobErr != nil {
+			errMsg = jobErr.Error()
+		}
+
+		result := domain.JobResult{
+			JobID:    job.ID,
+			Metadata: resultMetadata,
+			Error:    errMsg,
+		}
+		jobResultChan <- result
+		close(jobResultChan)
+	}()
+}
+
+func (srv *workservice) Exec(ctx context.Context, w work.Work) error {
+	if w.Type == WorkTypePipeline {
+		return srv.ExecPipelineWork(ctx, w)
+	}
+	return srv.ExecJobWork(ctx, w)
+}
+
+func (srv *workservice) startWorker(id int, queue <-chan work.Work, wg *sync.WaitGroup) {
 	defer wg.Done()
 	logPrefix := fmt.Sprintf("[worker] %d", id)
 	for work := range queue {
-		srv.logger.Infof("%s executing task...", logPrefix)
+		srv.logger.Infof("%s executing %s...", logPrefix, work.Type)
 		if err := srv.Exec(context.Background(), work); err != nil {
 			srv.logger.Errorf("could not update job status: %s", err)
 		}
-		srv.logger.Infof("%s task finished!", logPrefix)
+		srv.logger.Infof("%s %s finished!", logPrefix, work.Type)
 	}
 	srv.logger.Infof("%s exiting...", logPrefix)
 }

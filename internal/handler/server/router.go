@@ -12,6 +12,7 @@ import (
 
 	"github.com/svaloumas/valet/internal/core/port"
 	"github.com/svaloumas/valet/internal/handler/jobhdl"
+	"github.com/svaloumas/valet/internal/handler/pipelinehdl"
 	"github.com/svaloumas/valet/internal/handler/resulthdl"
 	"github.com/svaloumas/valet/internal/handler/taskhdl"
 )
@@ -24,12 +25,14 @@ var (
 func NewRouter(
 	jobService port.JobService,
 	resultService port.ResultService,
+	pipelineService port.PipelineService,
 	taskService port.TaskService,
 	jobQueue port.JobQueue,
 	storage port.Storage, loggingFormat string) *gin.Engine {
 
 	jobHandler := jobhdl.NewJobHTTPHandler(jobService, jobQueue)
 	resultHandler := resulthdl.NewResultHTTPHandler(resultService)
+	pipelineHandler := pipelinehdl.NewPipelineHTTPHandler(pipelineService, jobQueue)
 	taskHandler := taskhdl.NewTaskHTTPHandler(taskService)
 
 	r := gin.New()
@@ -57,6 +60,14 @@ func NewRouter(
 
 	r.GET("/api/jobs/:id/results", resultHandler.Get)
 	r.DELETE("/api/jobs/:id/results", resultHandler.Delete)
+
+	r.POST("/api/pipelines", pipelineHandler.Create)
+	// r.GET("/api/pipelines", pipelineHandler.GetPipelines)
+	// r.GET("/api/pipelines/:id", pipelineHandler.Get)
+	// r.PATCH("/api/pipelines/:id", pipelineHandler.Update)
+	// r.DELETE("/api/pipelines/:id", pipelineHandler.Delete)
+
+	// r.GET("/api/pipelines/:id/jobs", pipelineHandler.GetJobs)
 
 	r.GET("/api/tasks", taskHandler.GetTasks)
 	return r

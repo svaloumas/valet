@@ -27,6 +27,7 @@ const (
 func ServerFactory(
 	cfg config.Server,
 	jobService port.JobService,
+	pipelineService port.PipelineService,
 	resultService port.ResultService,
 	taskService port.TaskService,
 	jobQueue port.JobQueue,
@@ -35,8 +36,11 @@ func ServerFactory(
 
 	if cfg.Protocol == HTTP {
 		srv := http.Server{
-			Addr:    ":" + cfg.HTTP.Port,
-			Handler: server.NewRouter(jobService, resultService, taskService, jobQueue, storage, loggingFormat),
+			Addr: ":" + cfg.HTTP.Port,
+			Handler: server.NewRouter(
+				jobService, resultService,
+				pipelineService, taskService,
+				jobQueue, storage, loggingFormat),
 		}
 		httpsrv := server.NewHTTPServer(srv, logger)
 		return httpsrv

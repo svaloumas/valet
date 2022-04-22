@@ -4,14 +4,13 @@ import (
 	"time"
 
 	"github.com/svaloumas/valet/internal/core/domain"
-	"github.com/svaloumas/valet/internal/core/service/tasksrv/taskrepo"
 )
 
 // Work is the task to be executed by the workers.
 type Work struct {
+	Type        string
 	Job         *domain.Job
 	Result      chan domain.JobResult
-	TaskFunc    taskrepo.TaskFunc
 	TimeoutUnit time.Duration
 }
 
@@ -19,13 +18,11 @@ type Work struct {
 func NewWork(
 	j *domain.Job,
 	resultChan chan domain.JobResult,
-	taskFunc taskrepo.TaskFunc,
 	timeoutUnit time.Duration) Work {
 
 	return Work{
 		Job:         j,
 		Result:      resultChan,
-		TaskFunc:    taskFunc,
 		TimeoutUnit: timeoutUnit,
 	}
 }

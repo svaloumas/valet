@@ -55,7 +55,7 @@ func TestGRPCGetTasks(t *testing.T) {
 	client := pb.NewTaskClient(conn)
 
 	taskrepo := taskrepo.New()
-	taskrepo.Register("test_task", func(i interface{}) (interface{}, error) {
+	taskrepo.Register("test_task", func(...interface{}) (interface{}, error) {
 		return "some metadata", nil
 	})
 	taskService.

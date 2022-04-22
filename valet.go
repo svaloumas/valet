@@ -9,10 +9,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/svaloumas/valet/internal/config"
 	"github.com/svaloumas/valet/internal/core/port"
 	"github.com/svaloumas/valet/internal/core/service/consumersrv"
 	"github.com/svaloumas/valet/internal/core/service/jobsrv"
+	"github.com/svaloumas/valet/internal/core/service/pipelinesrv"
 	"github.com/svaloumas/valet/internal/core/service/resultsrv"
 	"github.com/svaloumas/valet/internal/core/service/schedulersrv"
 	"github.com/svaloumas/valet/internal/core/service/tasksrv"
@@ -61,6 +63,7 @@ func (v *valet) Run() {
 	storage := factory.StorageFactory(cfg.Repository)
 	logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
 
+	pipelineService := pipelinesrv.New(storage, taskrepo, uuidgen.New(), rtime.New())
 	jobService := jobsrv.New(storage, taskrepo, uuidgen.New(), rtime.New())
 	resultService := resultsrv.New(storage)
 
@@ -82,7 +85,8 @@ func (v *valet) Run() {
 	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
 
 	server := factory.ServerFactory(
-		cfg.Server, jobService, resultService, v.taskService, jobQueue, storage, cfg.LoggingFormat, logger)
+		cfg.Server, jobService, pipelineService, resultService,
+		v.taskService, jobQueue, storage, cfg.LoggingFormat, logger)
 	server.Serve()
 	logger.Infof("initialized [%s] server", cfg.Server.Protocol)
 
@@ -98,6 +102,20 @@ func (v *valet) Run() {
 }
 
 // RegisterTask registers a tack callback to the task repository under the specified name.
-func (v *valet) RegisterTask(name string, callback func(interface{}) (interface{}, error)) {
+func (v *valet) RegisterTask(name string, callback func(...interface{}) (interface{}, error)) {
 	v.taskService.Register(name, callback)
+}
+
+// DecodeTaskParams uses https://github.com/mitchellh/mapstructure
+// to decode task params to a pointer of map or struct.
+func DecodeTaskParams(args []interface{}, params interface{}) {
+	mapstructure.Decode(args[0], params)
+}
+
+// DecodeTaskParams uses https://github.com/mitchellh/mapstructure
+// to safely decode previous job's results metadata to a pointer of map or struct.
+func DecodePreviousJobResults(args []interface{}, results interface{}) {
+	if len(args) == 2 {
+		mapstructure.Decode(args[1], results)
+	}
 }

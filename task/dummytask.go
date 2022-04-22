@@ -1,7 +1,7 @@
 package task
 
 import (
-	"github.com/mitchellh/mapstructure"
+	"github.com/svaloumas/valet"
 )
 
 // DummyParams is an example of a task params structure.
@@ -10,17 +10,19 @@ type DummyParams struct {
 }
 
 // DummyTask is a dummy task callback.
-func DummyTask(taskParams interface{}) (interface{}, error) {
-	params := &DummyParams{}
-	mapstructure.Decode(taskParams, params)
+func DummyTask(args ...interface{}) (interface{}, error) {
+	dummyParams := &DummyParams{}
+	var resultsMetadata string
+	valet.DecodeTaskParams(args, dummyParams)
+	valet.DecodePreviousJobResults(args, &resultsMetadata)
 
-	metadata, err := downloadContent(params.URL)
+	metadata, err := downloadContent(dummyParams.URL, resultsMetadata)
 	if err != nil {
 		return nil, err
 	}
 	return metadata, nil
 }
 
-func downloadContent(URL string) (string, error) {
+func downloadContent(URL, bucket string) (string, error) {
 	return "some metadata", nil
 }
