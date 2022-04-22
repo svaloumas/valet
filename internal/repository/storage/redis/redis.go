@@ -228,7 +228,7 @@ func (rs *Redis) GetDueJobs() ([]*domain.Job, error) {
 		if err := json.Unmarshal(value, j); err != nil {
 			return nil, err
 		}
-		if j.RunAt != nil {
+		if j.IsScheduled() {
 			if j.RunAt.Before(time.Now()) && j.Status == domain.Pending {
 				dueJobs = append(dueJobs, j)
 			}

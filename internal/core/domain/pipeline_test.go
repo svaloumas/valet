@@ -128,34 +128,6 @@ func TestPipelineValidate(t *testing.T) {
 	}
 }
 
-func TestMakeNestedJobPipeline(t *testing.T) {
-	p := &Pipeline{}
-
-	jobs := []*Job{
-		{Name: "first_job"},
-		{Name: "second_job"},
-		{Name: "third_job"},
-	}
-
-	p.Jobs = jobs
-
-	p.CreateNestedJobPipeline()
-
-	expected := jobs[0]
-	expected.Next = jobs[1]
-	expected.Next.Next = jobs[2]
-
-	if eq := reflect.DeepEqual(jobs[0], expected); !eq {
-		t.Errorf("CreateNestedJobPipeline returned wrong piped jobs: got %#v want %#v", jobs[0], expected)
-	}
-	if eq := reflect.DeepEqual(jobs[1], expected.Next); !eq {
-		t.Errorf("CreateNestedJobPipeline returned wrong piped jobs: got %#v want %#v", jobs[1], expected.Next)
-	}
-	if eq := reflect.DeepEqual(jobs[2], expected.Next.Next); !eq {
-		t.Errorf("CreateNestedJobPipeline returned wrong piped jobs: got %#v want %#v", jobs[2], expected.Next.Next)
-	}
-}
-
 func TestPipelineIsScheduled(t *testing.T) {
 	runAt := time.Now()
 	scheduledPipeline := &Pipeline{RunAt: &runAt}
@@ -166,5 +138,73 @@ func TestPipelineIsScheduled(t *testing.T) {
 	}
 	if notScheduledPipeline.IsScheduled() {
 		t.Errorf("IsScheduled returned wrong value: got %t, want false", notScheduledPipeline.IsScheduled())
+	}
+}
+
+func TestMergeJobsInOne(t *testing.T) {
+	firstJob := &Job{
+		Name: "first_job",
+	}
+	secondJob := &Job{
+		Name: "second_job",
+	}
+	thirdJob := &Job{
+		Name: "third_job",
+	}
+	fourthJob := &Job{
+		Name: "fourth_job",
+	}
+	fifthJob := &Job{
+		Name: "fifth_job",
+	}
+	p := &Pipeline{
+		Jobs: []*Job{
+			firstJob,
+			secondJob,
+			thirdJob,
+			fourthJob,
+			fifthJob,
+		},
+	}
+
+	p.MergeJobsInOne()
+
+	if eq := reflect.DeepEqual(firstJob.Next, secondJob); !eq {
+		t.Errorf("MergeJobsInOne did not link the first job's next with the second job: got %#v want %#v", firstJob.Next, secondJob)
+	}
+	if eq := reflect.DeepEqual(firstJob.Next.Next, thirdJob); !eq {
+		t.Errorf("MergeJobsInOne did not link the second job's next with the third job: got %#v want %#v", secondJob.Next, thirdJob)
+	}
+	if eq := reflect.DeepEqual(firstJob.Next.Next.Next, fourthJob); !eq {
+		t.Errorf("MergeJobsInOne did not link the third job's next with the fourth job: got %#v want %#v", thirdJob.Next, fourthJob)
+	}
+	if eq := reflect.DeepEqual(firstJob.Next.Next.Next.Next, fifthJob); !eq {
+		t.Errorf("MergeJobsInOne did not link the fourth job's next with the fifth job: got %#v want %#v", fourthJob.Next, fifthJob)
+	}
+	if firstJob.Next.Next.Next.Next.Next != nil {
+		t.Errorf("MergeJobsInOne linked the last job's next with a job: got %#v want nil", fifthJob.Next)
+	}
+}
+
+func TestUnmergeJobs(t *testing.T) {
+	firstJob := &Job{
+		Name: "first_job",
+	}
+	secondJob := &Job{
+		Name: "second_job",
+	}
+	p := &Pipeline{
+		Jobs: []*Job{
+			firstJob,
+			secondJob,
+		},
+	}
+
+	p.MergeJobsInOne()
+
+	p.UnmergeJobs()
+
+	if firstJob.Next != nil {
+		t.Errorf("UnmergeJobs did not unlink the first job's next with the second job: got %#v want %#v", firstJob.Next, secondJob)
 	}
 }
