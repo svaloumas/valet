@@ -139,3 +139,75 @@ func TestScheduleErrorCases(t *testing.T) {
 	// give some time for the scheduler to schedule two jobs
 	time.Sleep(25 * time.Millisecond)
 }
+
+func TestSchedulePipeline(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	secondJob := &domain.Job{
+		ID:         "second_job_id",
+		PipelineID: "pipeline_id",
+		TaskName:   "some task",
+	}
+
+	runAt := time.Now()
+	j := &domain.Job{
+		ID:         "due_job_id",
+		PipelineID: "pipeline_id",
+		NextJobID:  secondJob.ID,
+		Next:       secondJob,
+		TaskName:   "some task",
+		RunAt:      &runAt,
+	}
+
+	w := work.Work{
+		Job:         j,
+		TimeoutUnit: time.Millisecond,
+	}
+	logger := &logrus.Logger{Out: ioutil.Discard}
+
+	dueJobs := []*domain.Job{j}
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+	storage := mock.NewMockStorage(ctrl)
+	storage.
+		EXPECT().
+		GetDueJobs().
+		Return(dueJobs, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJob(j.NextJobID).
+		Return(secondJob, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		UpdateJob(j.ID, j).
+		Return(nil).
+		Times(1)
+	workService := mock.NewMockWorkService(ctrl)
+	workService.
+		EXPECT().
+		Send(w).
+		Return().
+		Times(1)
+	workService.
+		EXPECT().
+		CreateWork(j).
+		Return(w).
+		Times(1)
+
+	schedulerService := New(storage, workService, freezed, logger)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	schedulerService.Schedule(ctx, 10*time.Millisecond)
+
+	// give some time for the scheduler to schedule the job
+	time.Sleep(15 * time.Millisecond)
+}

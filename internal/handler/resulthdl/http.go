@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/svaloumas/valet/internal/core/port"
+	"github.com/svaloumas/valet/internal/handler"
 	"github.com/svaloumas/valet/pkg/apperrors"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 
 // ResultHTTPHandler is an HTTP handler that exposes result endpoints.
 type ResultHTTPHandler struct {
+	handler.HTTPHandler
 	resultService port.ResultService
 }
 
@@ -27,10 +29,10 @@ func (hdl *ResultHTTPHandler) Get(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			hdl.handleError(c, http.StatusNotFound, err)
+			hdl.HandleError(c, http.StatusNotFound, err)
 			return
 		default:
-			hdl.handleError(c, http.StatusInternalServerError, err)
+			hdl.HandleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -43,17 +45,12 @@ func (hdl *ResultHTTPHandler) Delete(c *gin.Context) {
 	if err != nil {
 		switch err.(type) {
 		case *apperrors.NotFoundErr:
-			hdl.handleError(c, http.StatusNotFound, err)
+			hdl.HandleError(c, http.StatusNotFound, err)
 			return
 		default:
-			hdl.handleError(c, http.StatusInternalServerError, err)
+			hdl.HandleError(c, http.StatusInternalServerError, err)
 			return
 		}
 	}
 	c.Writer.WriteHeader(http.StatusNoContent)
-}
-
-func (hdl *ResultHTTPHandler) handleError(c *gin.Context, code int, err error) {
-	c.Error(err)
-	c.AbortWithStatusJSON(code, gin.H{"error": true, "code": code, "message": err.Error()})
 }

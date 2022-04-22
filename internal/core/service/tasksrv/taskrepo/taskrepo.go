@@ -5,7 +5,7 @@ import (
 )
 
 // TaskFunc is the type of the task callback.
-type TaskFunc func(interface{}) (interface{}, error)
+type TaskFunc func(...interface{}) (interface{}, error)
 
 // TaskRepository is the in memory task repository.
 type TaskRepository map[string]TaskFunc

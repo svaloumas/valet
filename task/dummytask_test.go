@@ -10,7 +10,7 @@ func TestDummyTask(t *testing.T) {
 		"url": "some-url.com",
 	}
 
-	metadata, err := DummyTask(params)
+	metadata, err := DummyTask(params, "")
 	if err != nil {
 		t.Errorf("dummytask returned unexpected error: got %#v want nil", err)
 	}
