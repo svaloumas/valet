@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package jobresult;
+
+import "google/protobuf/struct.proto";
+
+option go_package = "valet/internal/handler/resulthdl/protobuf";
+
+
+message GetJobResultResponse {
+    string job_id = 1;
+    google.protobuf.Struct metadata = 2;
+    string error = 3;
+}
+ 
+// Empty response
+message DeleteJobResultResponse {}

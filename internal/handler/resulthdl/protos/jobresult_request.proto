@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package jobresult;
+
+option go_package = "valet/internal/handler/resulthdl/protobuf";
+
+
+message GetJobResultRequest {
+    string job_id = 1;
+}
+
+message DeleteJobResultRequest {
+    string job_id = 1;
+}
