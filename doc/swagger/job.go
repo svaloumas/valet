@@ -76,7 +76,7 @@ type getJobRequestParams struct {
 }
 
 // swagger:route PATCH /jobs/{id} jobs patchJob
-// Updates a job's name of description.
+// Updates a job's name or description.
 // responses:
 //   204:
 //   404: errorResponse

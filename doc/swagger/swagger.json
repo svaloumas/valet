@@ -135,7 +135,7 @@
         "tags": [
           "jobs"
         ],
-        "summary": "Updates a job's name of description.",
+        "summary": "Updates a job's name or description.",
         "operationId": "patchJob",
         "parameters": [
           {
@@ -217,6 +217,179 @@
           }
         }
       }
+    },
+    "/pipelines": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Returns all pipelines, optionally filters them by status.",
+        "operationId": "getPipelines",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Status",
+            "description": "The status of the pipelines to be fetched..",
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getPipelinesResponse"
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Creates a new pipeline.",
+        "operationId": "createPipelines",
+        "parameters": [
+          {
+            "description": "Name, description and metadata of the new pipeline to be performed.",
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/RequestBodyDTO"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/responses/postPipelinesResponse"
+          },
+          "400": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      }
+    },
+    "/pipelines/{id}": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Returns a specified pipeline.",
+        "operationId": "getPipeline",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the specified pipeline.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getPipelineResponse"
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Deletes a specified pipeline.",
+        "operationId": "deletePipeline",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the specified pipeline.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Updates a pipeline's name or description.",
+        "operationId": "patchPipeline",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the specified pipeline.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      }
+    },
+    "/pipelines/{id}/jobs": {
+      "get": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Returns the jobs of the specified pipeline.",
+        "operationId": "getPipelineJobs",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the specified pipeline.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getPipelineJobsResponse"
+          },
+          "404": {
+            "$ref": "#/responses/errorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/errorResponse"
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -265,6 +438,19 @@
           "type": "string",
           "x-go-name": "Name"
         },
+        "next": {
+          "$ref": "#/definitions/Job"
+        },
+        "next_job_id": {
+          "description": "NextJobID is the ID of the job that should run next in the pipeline, if any.",
+          "type": "string",
+          "x-go-name": "NextJobID"
+        },
+        "pipeline_id": {
+          "description": "PipelineID is the auto-generated pipeline identifier in UUID4 format.\nIt will be empty if the job does not belong to a pipeline.",
+          "type": "string",
+          "x-go-name": "PipelineID"
+        },
         "run_at": {
           "description": "RunAt is the UTC timestamp indicating the time for the job to run.",
           "type": "string",
@@ -304,6 +490,11 @@
           "type": "integer",
           "format": "int64",
           "x-go-name": "Timeout"
+        },
+        "use_previous_results": {
+          "description": "UsePreviousResults indicates where the job should use the\nresults of the previous job in the pipeline or not.",
+          "type": "boolean",
+          "x-go-name": "UsePreviousResults"
         }
       },
       "x-go-package": "github.com/svaloumas/valet/internal/core/domain"
@@ -333,6 +524,66 @@
       "title": "JobStatus holds a value for job status ranging from 1 to 5.",
       "x-go-package": "github.com/svaloumas/valet/internal/core/domain"
     },
+    "Pipeline": {
+      "type": "object",
+      "title": "Pipeline represents a sequence of async tasks.",
+      "properties": {
+        "completed_at": {
+          "description": "CompletedAt is the UTC timestamp of the moment the pipeline finished.",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CompletedAt"
+        },
+        "created_at": {
+          "description": "CreatedAt is the UTC timestamp of the pipeline creation.",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CreatedAt"
+        },
+        "description": {
+          "description": "Description gives some information about the pipeline.",
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "duration": {
+          "$ref": "#/definitions/Duration"
+        },
+        "id": {
+          "description": "ID is the auto-generated pipeline identifier in UUID4 format.",
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "jobs": {
+          "description": "Jobs represents the jobs included to this pipeline.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Job"
+          },
+          "x-go-name": "Jobs"
+        },
+        "name": {
+          "description": "Name is the name of the pipeline.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "run_at": {
+          "description": "RunAt is the UTC timestamp indicating the time for the pipeline to run.\nThis property will be propagated to the first job of the pipeline.",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "RunAt"
+        },
+        "started_at": {
+          "description": "StartedAt is the UTC timestamp of the moment the pipeline started.",
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "StartedAt"
+        },
+        "status": {
+          "$ref": "#/definitions/JobStatus"
+        }
+      },
+      "x-go-package": "github.com/svaloumas/valet/internal/core/domain"
+    },
     "RequestBodyDTO": {
       "type": "object",
       "title": "RequestBodyDTO is the data transfer object used for a job creation or update.",
@@ -341,6 +592,13 @@
           "type": "string",
           "x-go-name": "Description"
         },
+        "jobs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RequestBodyDTO"
+          },
+          "x-go-name": "Jobs"
+        },
         "name": {
           "type": "string",
           "x-go-name": "Name"
@@ -348,25 +606,9 @@
         "run_at": {
           "type": "string",
           "x-go-name": "RunAt"
-        },
-        "task_name": {
-          "type": "string",
-          "x-go-name": "TaskName"
-        },
-        "task_params": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object"
-          },
-          "x-go-name": "TaskParams"
-        },
-        "timeout": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "Timeout"
         }
       },
-      "x-go-package": "github.com/svaloumas/valet/internal/handler/jobhdl"
+      "x-go-package": "github.com/svaloumas/valet/internal/handler/pipelinehdl"
     },
     "errResponse": {
       "type": "object",
@@ -422,10 +664,52 @@
         }
       }
     },
+    "getPipelineJobsResponse": {
+      "description": "The pipeline jobs metadata.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Job"
+            },
+            "x-go-name": "Jobs"
+          }
+        }
+      }
+    },
+    "getPipelineResponse": {
+      "description": "The specified pipeline's metadata.",
+      "schema": {
+        "$ref": "#/definitions/Pipeline"
+      }
+    },
+    "getPipelinesResponse": {
+      "description": "The pipelines metadata.",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "pipelines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Pipeline"
+            },
+            "x-go-name": "Pipelines"
+          }
+        }
+      }
+    },
     "postJobsResponse": {
       "description": "Returns the newly created job metadata.",
       "schema": {
         "$ref": "#/definitions/Job"
+      }
+    },
+    "postPipelinesResponse": {
+      "description": "Returns the newly created pipeline metadata.",
+      "schema": {
+        "$ref": "#/definitions/Pipeline"
       }
     }
   }
