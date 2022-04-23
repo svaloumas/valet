@@ -41,6 +41,19 @@ definitions:
         description: Name is the name of the job.
         type: string
         x-go-name: Name
+      next:
+        $ref: '#/definitions/Job'
+      next_job_id:
+        description: NextJobID is the ID of the job that should run next in the pipeline,
+          if any.
+        type: string
+        x-go-name: NextJobID
+      pipeline_id:
+        description: |-
+          PipelineID is the auto-generated pipeline identifier in UUID4 format.
+          It will be empty if the job does not belong to a pipeline.
+        type: string
+        x-go-name: PipelineID
       run_at:
         description: RunAt is the UTC timestamp indicating the time for the job to
           run.
@@ -77,9 +90,15 @@ definitions:
         format: int64
         type: integer
         x-go-name: Timeout
+      use_previous_results:
+        description: |-
+          UsePreviousResults indicates where the job should use the
+          results of the previous job in the pipeline or not.
+        type: boolean
+        x-go-name: UsePreviousResults
     title: Job represents an async task.
     type: object
-    x-go-package: valet/internal/core/domain
+    x-go-package: github.com/svaloumas/valet/internal/core/domain
   JobResult:
     properties:
       error:
@@ -93,38 +112,80 @@ definitions:
         x-go-name: Metadata
     title: JobResult contains the result of a job.
     type: object
-    x-go-package: valet/internal/core/domain
+    x-go-package: github.com/svaloumas/valet/internal/core/domain
   JobStatus:
     format: int64
     title: JobStatus holds a value for job status ranging from 1 to 5.
     type: integer
-    x-go-package: valet/internal/core/domain
+    x-go-package: github.com/svaloumas/valet/internal/core/domain
+  Pipeline:
+    properties:
+      completed_at:
+        description: CompletedAt is the UTC timestamp of the moment the pipeline finished.
+        format: date-time
+        type: string
+        x-go-name: CompletedAt
+      created_at:
+        description: CreatedAt is the UTC timestamp of the pipeline creation.
+        format: date-time
+        type: string
+        x-go-name: CreatedAt
+      description:
+        description: Description gives some information about the pipeline.
+        type: string
+        x-go-name: Description
+      duration:
+        $ref: '#/definitions/Duration'
+      id:
+        description: ID is the auto-generated pipeline identifier in UUID4 format.
+        type: string
+        x-go-name: ID
+      jobs:
+        description: Jobs represents the jobs included to this pipeline.
+        items:
+          $ref: '#/definitions/Job'
+        type: array
+        x-go-name: Jobs
+      name:
+        description: Name is the name of the pipeline.
+        type: string
+        x-go-name: Name
+      run_at:
+        description: |-
+          RunAt is the UTC timestamp indicating the time for the pipeline to run.
+          This property will be propagated to the first job of the pipeline.
+        format: date-time
+        type: string
+        x-go-name: RunAt
+      started_at:
+        description: StartedAt is the UTC timestamp of the moment the pipeline started.
+        format: date-time
+        type: string
+        x-go-name: StartedAt
+      status:
+        $ref: '#/definitions/JobStatus'
+    title: Pipeline represents a sequence of async tasks.
+    type: object
+    x-go-package: github.com/svaloumas/valet/internal/core/domain
   RequestBodyDTO:
     properties:
       description:
         type: string
         x-go-name: Description
+      jobs:
+        items:
+          $ref: '#/definitions/RequestBodyDTO'
+        type: array
+        x-go-name: Jobs
       name:
         type: string
         x-go-name: Name
       run_at:
         type: string
         x-go-name: RunAt
-      task_name:
-        type: string
-        x-go-name: TaskName
-      task_params:
-        additionalProperties:
-          type: object
-        type: object
-        x-go-name: TaskParams
-      timeout:
-        format: int64
-        type: integer
-        x-go-name: Timeout
     title: RequestBodyDTO is the data transfer object used for a job creation or update.
     type: object
-    x-go-package: valet/internal/handler/jobhdl
+    x-go-package: github.com/svaloumas/valet/internal/handler/pipelinehdl
   errResponse:
     properties:
       code:
@@ -138,7 +199,7 @@ definitions:
         type: string
         x-go-name: Message
     type: object
-    x-go-package: valet/doc/swagger
+    x-go-package: github.com/svaloumas/valet/doc/swagger
 host: localhost:8080
 info:
   description: Documentation of the valet API.
@@ -237,7 +298,7 @@ paths:
           $ref: '#/responses/errorResponse'
         "500":
           $ref: '#/responses/errorResponse'
-      summary: Updates a job's name of description.
+      summary: Updates a job's name or description.
       tags:
       - jobs
   /jobs/{id}/results:
@@ -279,6 +340,121 @@ paths:
       summary: Returns a specified job's results.
       tags:
       - jobs
+  /pipelines:
+    get:
+      operationId: getPipelines
+      parameters:
+      - description: The status of the pipelines to be fetched..
+        in: query
+        name: status
+        type: string
+        x-go-name: Status
+      responses:
+        "200":
+          $ref: '#/responses/getPipelinesResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Returns all pipelines, optionally filters them by status.
+      tags:
+      - pipelines
+    post:
+      operationId: createPipelines
+      parameters:
+      - description: Name, description and metadata of the new pipeline to be performed.
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/RequestBodyDTO'
+      responses:
+        "202":
+          $ref: '#/responses/postPipelinesResponse'
+        "400":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Creates a new pipeline.
+      tags:
+      - pipelines
+  /pipelines/{id}:
+    delete:
+      operationId: deletePipeline
+      parameters:
+      - description: The ID of the specified pipeline.
+        in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "204":
+          description: ""
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Deletes a specified pipeline.
+      tags:
+      - pipelines
+    get:
+      operationId: getPipeline
+      parameters:
+      - description: The ID of the specified pipeline.
+        in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/getPipelineResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Returns a specified pipeline.
+      tags:
+      - pipelines
+    patch:
+      operationId: patchPipeline
+      parameters:
+      - description: The ID of the specified pipeline.
+        in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "204":
+          description: ""
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Updates a pipeline's name or description.
+      tags:
+      - pipelines
+  /pipelines/{id}/jobs:
+    get:
+      operationId: getPipelineJobs
+      parameters:
+      - description: The ID of the specified pipeline.
+        in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
+      responses:
+        "200":
+          $ref: '#/responses/getPipelineJobsResponse'
+        "404":
+          $ref: '#/responses/errorResponse'
+        "500":
+          $ref: '#/responses/errorResponse'
+      summary: Returns the jobs of the specified pipeline.
+      tags:
+      - pipelines
 produces:
 - application/json
 responses:
@@ -304,10 +480,38 @@ responses:
           type: array
           x-go-name: Jobs
       type: object
+  getPipelineJobsResponse:
+    description: The pipeline jobs metadata.
+    schema:
+      properties:
+        jobs:
+          items:
+            $ref: '#/definitions/Job'
+          type: array
+          x-go-name: Jobs
+      type: object
+  getPipelineResponse:
+    description: The specified pipeline's metadata.
+    schema:
+      $ref: '#/definitions/Pipeline'
+  getPipelinesResponse:
+    description: The pipelines metadata.
+    schema:
+      properties:
+        pipelines:
+          items:
+            $ref: '#/definitions/Pipeline'
+          type: array
+          x-go-name: Pipelines
+      type: object
   postJobsResponse:
     description: Returns the newly created job metadata.
     schema:
       $ref: '#/definitions/Job'
+  postPipelinesResponse:
+    description: Returns the newly created pipeline metadata.
+    schema:
+      $ref: '#/definitions/Pipeline'
 schemes:
 - http
 swagger: "2.0"
