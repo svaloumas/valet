@@ -18,7 +18,7 @@ type Pipeline struct {
 	Description string `json:"description,omitempty"`
 
 	// Jobs represents the jobs included to this pipeline.
-	Jobs []*Job `json:"jobs"`
+	Jobs []*Job `json:"jobs,omitempty"`
 
 	// Status represents the status of the pipeline.
 	// Jobs propagate their finite status to the pipeline.

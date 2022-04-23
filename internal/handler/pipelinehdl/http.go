@@ -28,7 +28,7 @@ func NewPipelineHTTPHandler(
 	}
 }
 
-// Create creates a new pipeline.
+// Create creates a new pipeline and all of its jobs.
 func (hdl *PipelineHTTPHandler) Create(c *gin.Context) {
 	body := NewRequestBodyDTO()
 	c.BindJSON(&body)
@@ -80,4 +80,98 @@ func (hdl *PipelineHTTPHandler) Create(c *gin.Context) {
 		p.UnmergeJobs()
 	}
 	c.JSON(http.StatusAccepted, BuildResponseBodyDTO(p))
+}
+
+// Get fetches a pipeline.
+func (hdl *PipelineHTTPHandler) Get(c *gin.Context) {
+	j, err := hdl.pipelineService.Get(c.Param("id"))
+	if err != nil {
+		switch err.(type) {
+		case *apperrors.NotFoundErr:
+			hdl.HandleError(c, http.StatusNotFound, err)
+			return
+		default:
+			hdl.HandleError(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+	c.JSON(http.StatusOK, BuildResponseBodyDTO(j))
+}
+
+// GetPipelines fetches all pipelines, optionally filters them by status.
+func (hdl *PipelineHTTPHandler) GetPipelines(c *gin.Context) {
+	var status string
+	value, ok := c.GetQuery("status")
+	if ok {
+		status = value
+	}
+	pipelines, err := hdl.pipelineService.GetPipelines(status)
+	if err != nil {
+		switch err.(type) {
+		case *apperrors.ResourceValidationErr:
+			hdl.HandleError(c, http.StatusBadRequest, err)
+			return
+		default:
+			hdl.HandleError(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+	res := map[string]interface{}{
+		"pipelines": pipelines,
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+// GetPipelineJobs fetches the jobs of a specified pipeline.
+func (hdl *PipelineHTTPHandler) GetPipelineJobs(c *gin.Context) {
+	jobs, err := hdl.pipelineService.GetPipelineJobs(c.Param("id"))
+	if err != nil {
+		switch err.(type) {
+		case *apperrors.NotFoundErr:
+			hdl.HandleError(c, http.StatusNotFound, err)
+			return
+		default:
+			hdl.HandleError(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+	res := map[string]interface{}{
+		"jobs": jobs,
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+// Update updates a pipeline.
+func (hdl *PipelineHTTPHandler) Update(c *gin.Context) {
+	body := RequestBodyDTO{}
+	c.BindJSON(&body)
+
+	err := hdl.pipelineService.Update(c.Param("id"), body.Name, body.Description)
+	if err != nil {
+		switch err.(type) {
+		case *apperrors.NotFoundErr:
+			hdl.HandleError(c, http.StatusNotFound, err)
+			return
+		default:
+			hdl.HandleError(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+	c.Writer.WriteHeader(http.StatusNoContent)
+}
+
+// Delete deletes a pipelines and all its jobs.
+func (hdl *PipelineHTTPHandler) Delete(c *gin.Context) {
+	err := hdl.pipelineService.Delete(c.Param("id"))
+	if err != nil {
+		switch err.(type) {
+		case *apperrors.NotFoundErr:
+			hdl.HandleError(c, http.StatusNotFound, err)
+			return
+		default:
+			hdl.HandleError(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+	c.Writer.WriteHeader(http.StatusNoContent)
 }

@@ -62,12 +62,12 @@ func NewRouter(
 	r.DELETE("/api/jobs/:id/results", resultHandler.Delete)
 
 	r.POST("/api/pipelines", pipelineHandler.Create)
-	// r.GET("/api/pipelines", pipelineHandler.GetPipelines)
-	// r.GET("/api/pipelines/:id", pipelineHandler.Get)
-	// r.PATCH("/api/pipelines/:id", pipelineHandler.Update)
-	// r.DELETE("/api/pipelines/:id", pipelineHandler.Delete)
+	r.GET("/api/pipelines", pipelineHandler.GetPipelines)
+	r.GET("/api/pipelines/:id", pipelineHandler.Get)
+	r.PATCH("/api/pipelines/:id", pipelineHandler.Update)
+	r.DELETE("/api/pipelines/:id", pipelineHandler.Delete)
 
-	// r.GET("/api/pipelines/:id/jobs", pipelineHandler.GetJobs)
+	r.GET("/api/pipelines/:id/jobs", pipelineHandler.GetPipelineJobs)
 
 	r.GET("/api/tasks", taskHandler.GetTasks)
 	return r
