@@ -510,7 +510,7 @@ func TestGetJobs(t *testing.T) {
 			"invalid status",
 			"not_started",
 			nil,
-			errors.New("invalid job status: \"NOT_STARTED\""),
+			errors.New("invalid status: \"NOT_STARTED\""),
 		},
 	}
 

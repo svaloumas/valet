@@ -110,17 +110,20 @@ type PipelineService interface {
 	// Create creates a new pipeline.
 	Create(name, description, runAt string, jobs []*domain.Job) (*domain.Pipeline, error)
 
-	// // Get fetches a pipeline.
-	// Get(id string) (*domain.Pipeline, error)
+	// Get fetches a pipeline.
+	Get(id string) (*domain.Pipeline, error)
 
-	// // GetPipelines fetches all pipelines, optionally filters the pipelines by status.
-	// GetPipelines(status string) ([]*domain.Pipeline, error)
+	// GetPipelines fetches all pipelines, optionally filters the pipelines by status.
+	GetPipelines(status string) ([]*domain.Pipeline, error)
 
-	// // Update updates a pipeline.
-	// Update(id, name, description string) error
+	// GetPipelineJobs fetches the jobs of a specified pipeline.
+	GetPipelineJobs(id string) ([]*domain.Job, error)
 
-	// // Delete deletes a pipeline.
-	// Delete(id string) error
+	// Update updates a pipeline.
+	Update(id, name, description string) error
+
+	// Delete deletes a pipeline.
+	Delete(id string) error
 }
 
 // WorkService represents a driver actor service interface.

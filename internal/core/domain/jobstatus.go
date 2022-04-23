@@ -58,7 +58,7 @@ func (js *JobStatus) UnmarshalJSON(data []byte) error {
 
 	jobStatus, ok := jobStatuses[unquotedJobStatus]
 	if !ok {
-		return &apperrors.ResourceValidationErr{Message: fmt.Sprintf("invalid job status: %s", string(data))}
+		return &apperrors.ResourceValidationErr{Message: fmt.Sprintf("invalid status: %s", string(data))}
 	}
 
 	*js = jobStatus

@@ -575,6 +575,21 @@ func (mr *MockPipelineServiceMockRecorder) Get(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockPipelineService)(nil).Get), id)
 }
 
+// GetPipelineJobs mocks base method.
+func (m *MockPipelineService) GetPipelineJobs(id string) ([]*domain.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPipelineJobs", id)
+	ret0, _ := ret[0].([]*domain.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPipelineJobs indicates an expected call of GetPipelineJobs.
+func (mr *MockPipelineServiceMockRecorder) GetPipelineJobs(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPipelineJobs", reflect.TypeOf((*MockPipelineService)(nil).GetPipelineJobs), id)
+}
+
 // GetPipelines mocks base method.
 func (m *MockPipelineService) GetPipelines(status string) ([]*domain.Pipeline, error) {
 	m.ctrl.T.Helper()

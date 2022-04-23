@@ -451,7 +451,7 @@ func TestGRPCGetJobs(t *testing.T) {
 		t.Errorf("failed to create task params struct: %v", err)
 	}
 
-	jobStatusValidationErr := &apperrors.ResourceValidationErr{Message: "invalid job status: \"NOT_STARTED\""}
+	jobStatusValidationErr := &apperrors.ResourceValidationErr{Message: "invalid status: \"NOT_STARTED\""}
 	jobServiceErr := errors.New("some job service error")
 
 	jobService.

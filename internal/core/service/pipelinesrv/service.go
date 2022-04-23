@@ -1,6 +1,8 @@
 package pipelinesrv
 
 import (
+	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/svaloumas/valet/internal/core/domain"
@@ -93,4 +95,75 @@ func (srv *pipelineservice) Create(name, description, runAt string, jobs []*doma
 		return nil, err
 	}
 	return p, nil
+}
+
+// Get fetches a pipeline.
+func (srv *pipelineservice) Get(id string) (*domain.Pipeline, error) {
+	p, err := srv.storage.GetPipeline(id)
+	if err != nil {
+		return nil, err
+	}
+	p.SetDuration()
+	// Do not marshal pipeline jobs cause NoSQL databases
+	// store them along with the pipeline.
+	p.Jobs = nil
+	return p, nil
+}
+
+// GetPipelineJobs fetches the jobs of a specified pipeline.
+func (srv *pipelineservice) GetPipelineJobs(id string) ([]*domain.Job, error) {
+	_, err := srv.storage.GetPipeline(id)
+	if err != nil {
+		return nil, err
+	}
+	jobs, err := srv.storage.GetJobsByPipelineID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, j := range jobs {
+		j.SetDuration()
+	}
+	return jobs, nil
+}
+
+// GetPipelines fetches all pipelines, optionally filters the pipelines by status.
+func (srv *pipelineservice) GetPipelines(status string) ([]*domain.Pipeline, error) {
+	var pipelineStatus domain.JobStatus
+	if status == "" {
+		pipelineStatus = domain.Undefined
+	} else {
+		err := json.Unmarshal([]byte("\""+strings.ToUpper(status)+"\""), &pipelineStatus)
+		if err != nil {
+			return nil, err
+		}
+	}
+	pipelines, err := srv.storage.GetPipelines(pipelineStatus)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range pipelines {
+		p.SetDuration()
+	}
+	return pipelines, nil
+}
+
+// Update updates a pipeline.
+func (srv *pipelineservice) Update(id, name, description string) error {
+	p, err := srv.storage.GetPipeline(id)
+	if err != nil {
+		return err
+	}
+	p.Name = name
+	p.Description = description
+	return srv.storage.UpdatePipeline(id, p)
+}
+
+// Delete deletes a pipeline.
+func (srv *pipelineservice) Delete(id string) error {
+	_, err := srv.storage.GetPipeline(id)
+	if err != nil {
+		return err
+	}
+	return srv.storage.DeletePipeline(id)
 }

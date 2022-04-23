@@ -412,7 +412,7 @@ func TestHTTPGetJobs(t *testing.T) {
 	completedJobs := []*domain.Job{completedJob}
 	failedJobs := []*domain.Job{failedJob}
 
-	jobStatusValidationErr := &apperrors.ResourceValidationErr{Message: "invalid job status: \"NOT_STARTED\""}
+	jobStatusValidationErr := &apperrors.ResourceValidationErr{Message: "invalid status: \"NOT_STARTED\""}
 	jobServiceErr := errors.New("some job service error")
 
 	jobService := mock.NewMockJobService(ctrl)
@@ -503,7 +503,7 @@ func TestHTTPGetJobs(t *testing.T) {
 			"not_started",
 			nil,
 			http.StatusBadRequest,
-			"invalid job status: \"NOT_STARTED\"",
+			"invalid status: \"NOT_STARTED\"",
 		},
 		{
 			"internal server error",

@@ -492,3 +492,537 @@ func TestCreateWithSchedule(t *testing.T) {
 		t.Errorf("service create returned wrong pipeline: got %#v want %#v", p, expected)
 	}
 }
+
+func TestGet(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(2)
+
+	pipelineID := "pipeline_id"
+	createdAt := freezed.Now()
+	startedAt := freezed.Now()
+	completedAt := startedAt.Add(1 * time.Minute)
+	runAt := "2022-01-02T15:04:05.999999999Z"
+	runAtTime, _ := time.Parse(time.RFC3339Nano, runAt)
+
+	expected := &domain.Pipeline{
+		ID:          pipelineID,
+		Name:        "a_pipeline",
+		Description: "some description",
+		RunAt:       &runAtTime,
+		Status:      domain.Failed,
+		CreatedAt:   &createdAt,
+		StartedAt:   &startedAt,
+		CompletedAt: &completedAt,
+	}
+
+	storageErr := errors.New("some storage error")
+	invalidID := "invalid_id"
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
+
+	storage := mock.NewMockStorage(ctrl)
+	storage.
+		EXPECT().
+		GetPipeline(expected.ID).
+		Return(expected, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetPipeline(invalidID).
+		Return(nil, storageErr).
+		Times(1)
+
+	taskrepo := taskrepo.New()
+	service := New(storage, taskrepo, uuidGen, freezed)
+
+	tests := []struct {
+		name     string
+		id       string
+		pipeline *domain.Pipeline
+		err      error
+	}{
+		{
+			"ok",
+			expected.ID,
+			expected,
+			nil,
+		},
+		{
+			"storage error",
+			invalidID,
+			nil,
+			storageErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			j, err := service.Get(tt.id)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service get returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
+			} else {
+				if eq := reflect.DeepEqual(j, tt.pipeline); !eq {
+					t.Errorf("service get returned wrong job: got %#v want %#v", j, tt.pipeline)
+				}
+			}
+		})
+	}
+}
+
+func TestGetPipelines(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(2)
+
+	pipelineID1 := "pipeline_id"
+	pipelineID2 := "another_pipeline_id"
+
+	createdAt := freezed.Now()
+	startedAt := freezed.Now()
+	completedAt := startedAt.Add(1 * time.Minute)
+	runAt := "2022-01-02T15:04:05.999999999Z"
+	runAtTime, _ := time.Parse(time.RFC3339Nano, runAt)
+
+	failedPipeline := &domain.Pipeline{
+		ID:          pipelineID1,
+		Name:        "a_pipeline",
+		Description: "some description",
+		RunAt:       &runAtTime,
+		Status:      domain.Failed,
+		CreatedAt:   &createdAt,
+		StartedAt:   &startedAt,
+		CompletedAt: &completedAt,
+	}
+
+	completedPipeline := &domain.Pipeline{
+		ID:          pipelineID2,
+		Name:        "another_pipeline",
+		Description: "some description",
+		RunAt:       &runAtTime,
+		Status:      domain.Completed,
+		CreatedAt:   &createdAt,
+		StartedAt:   &startedAt,
+		CompletedAt: &completedAt,
+	}
+
+	failedPipelines := []*domain.Pipeline{failedPipeline}
+	completedPipelines := []*domain.Pipeline{completedPipeline}
+	allPipelines := []*domain.Pipeline{failedPipeline, completedPipeline}
+
+	storageErr := errors.New("some storage error")
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
+
+	storage := mock.NewMockStorage(ctrl)
+	storage.
+		EXPECT().
+		GetPipelines(domain.Undefined).
+		Return(allPipelines, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetPipelines(failedPipeline.Status).
+		Return(failedPipelines, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetPipelines(completedPipeline.Status).
+		Return(completedPipelines, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetPipelines(failedPipeline.Status).
+		Return(nil, storageErr).
+		Times(1)
+
+	taskrepo := taskrepo.New()
+	service := New(storage, taskrepo, uuidGen, freezed)
+
+	tests := []struct {
+		name     string
+		status   string
+		expected []*domain.Pipeline
+		err      error
+	}{
+		{
+			"all",
+			"",
+			allPipelines,
+			nil,
+		},
+		{
+			"failed",
+			"failed",
+			failedPipelines,
+			nil,
+		},
+		{
+			"completed",
+			"completed",
+			completedPipelines,
+			nil,
+		},
+		{
+			"failed",
+			"failed",
+			nil,
+			storageErr,
+		},
+		{
+			"invalid status",
+			"not_started",
+			nil,
+			errors.New("invalid status: \"NOT_STARTED\""),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pipelines, err := service.GetPipelines(tt.status)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service get pipelines returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
+			} else {
+				if eq := reflect.DeepEqual(pipelines, tt.expected); !eq {
+					t.Errorf("service get pipelines returned wrong jobs: got %#v want %#v", pipelines, tt.expected)
+				}
+			}
+		})
+	}
+}
+
+func TestGetPipelineJobs(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	secondJobID := "second_job_id"
+	pipelineID := "pipeline_id"
+	createdAt := freezed.Now()
+	completedAt := createdAt.Add(1 * time.Minute)
+	job := &domain.Job{
+		ID:          "job_id",
+		Name:        "job_name",
+		TaskName:    "test_task",
+		NextJobID:   secondJobID,
+		PipelineID:  pipelineID,
+		Timeout:     10,
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:             domain.Pending,
+		UsePreviousResults: false,
+		CreatedAt:          &createdAt,
+	}
+	job.SetDuration()
+	secondJob := &domain.Job{
+		ID:          secondJobID,
+		Name:        "second_job",
+		TaskName:    "test_task",
+		NextJobID:   "",
+		PipelineID:  pipelineID,
+		RunAt:       nil,
+		Timeout:     10,
+		Description: "some description",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Status:             domain.Pending,
+		UsePreviousResults: true,
+		CreatedAt:          &createdAt,
+		StartedAt:          &createdAt,
+		CompletedAt:        &completedAt,
+	}
+	secondJob.SetDuration()
+
+	jobs := []*domain.Job{
+		job, secondJob,
+	}
+
+	p := &domain.Pipeline{
+		ID:          pipelineID,
+		Name:        "a_pipeline",
+		Description: "some description",
+		Status:      domain.Completed,
+		CreatedAt:   &createdAt,
+		StartedAt:   &createdAt,
+		CompletedAt: &completedAt,
+	}
+
+	notExistingID := "not_existing_id"
+	notFoundErr := &apperrors.NotFoundErr{ID: notExistingID, ResourceName: "pipeline"}
+	storageErr := errors.New("some storage error")
+
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
+
+	storage := mock.NewMockStorage(ctrl)
+	storage.
+		EXPECT().
+		GetPipeline(pipelineID).
+		Return(p, nil).
+		Times(2)
+	storage.
+		EXPECT().
+		GetJobsByPipelineID(pipelineID).
+		Return(jobs, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetJobsByPipelineID(pipelineID).
+		Return(nil, storageErr).
+		Times(1)
+	storage.
+		EXPECT().
+		GetPipeline(notExistingID).
+		Return(nil, notFoundErr).
+		Times(1)
+
+	taskrepo := taskrepo.New()
+	service := New(storage, taskrepo, uuidGen, freezed)
+
+	tests := []struct {
+		name     string
+		id       string
+		expected []*domain.Job
+		err      error
+	}{
+		{
+			"ok",
+			pipelineID,
+			jobs,
+			nil,
+		},
+		{
+			"storage error",
+			pipelineID,
+			nil,
+			storageErr,
+		},
+		{
+			"not found",
+			notExistingID,
+			nil,
+			notFoundErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			jobs, err := service.GetPipelineJobs(tt.id)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service get pipelines jobs returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
+			} else {
+				if eq := reflect.DeepEqual(jobs, tt.expected); !eq {
+					t.Errorf("service get pipelines jobs returned wrong jobs: got %#v want %#v", jobs, tt.expected)
+				}
+			}
+		})
+	}
+}
+func TestUpdate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	testTime := freezed.Now()
+	p := &domain.Pipeline{
+		ID:          "pipeline_id",
+		Name:        "a_pipeline",
+		Description: "some description",
+		Status:      domain.Completed,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+
+	updatedPipeline := &domain.Pipeline{}
+	*updatedPipeline = *p
+	updatedPipeline.Name = "updated pipeline_name"
+	updatedPipeline.Description = "updated description"
+
+	invalidID := "invalid_id"
+
+	storageErr := errors.New("some storage error")
+	pipelineNotFoundErr := errors.New("pipeline not found")
+
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
+
+	storage := mock.NewMockStorage(ctrl)
+	storage.
+		EXPECT().
+		GetPipeline(p.ID).
+		Return(p, nil).
+		Times(2)
+	storage.
+		EXPECT().
+		UpdatePipeline(p.ID, updatedPipeline).
+		Return(storageErr).
+		Times(1)
+	storage.
+		EXPECT().
+		UpdatePipeline(p.ID, updatedPipeline).
+		Return(nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetPipeline(invalidID).
+		Return(nil, pipelineNotFoundErr).
+		Times(1)
+
+	taskrepo := taskrepo.New()
+	service := New(storage, taskrepo, uuidGen, freezed)
+
+	tests := []struct {
+		name string
+		id   string
+		err  error
+	}{
+		{
+			"storage error",
+			p.ID,
+			storageErr,
+		},
+		{
+			"ok",
+			p.ID,
+			nil,
+		},
+		{
+			"not found",
+			invalidID,
+			pipelineNotFoundErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := service.Update(tt.id, updatedPipeline.Name, updatedPipeline.Description)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service update returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestDelete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	freezed := mock.NewMockTime(ctrl)
+	freezed.
+		EXPECT().
+		Now().
+		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
+		Times(1)
+
+	testTime := freezed.Now()
+	p := &domain.Pipeline{
+		ID:          "pipeline_id",
+		Name:        "a_pipeline",
+		Description: "some description",
+		Status:      domain.Failed,
+		CreatedAt:   &testTime,
+		StartedAt:   &testTime,
+		CompletedAt: &testTime,
+	}
+
+	invalidID := "invalid_id"
+	notExistingID := "not_existing_id"
+	notFoundErr := &apperrors.NotFoundErr{ID: invalidID, ResourceName: "pipeline"}
+	storageErr := errors.New("some storage error")
+	uuidGen := mock.NewMockUUIDGenerator(ctrl)
+
+	storage := mock.NewMockStorage(ctrl)
+	storage.
+		EXPECT().
+		GetPipeline(p.ID).
+		Return(p, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetPipeline(invalidID).
+		Return(p, nil).
+		Times(1)
+	storage.
+		EXPECT().
+		GetPipeline(notExistingID).
+		Return(nil, notFoundErr).
+		Times(1)
+	storage.
+		EXPECT().
+		DeletePipeline(p.ID).
+		Return(nil).
+		Times(1)
+	storage.
+		EXPECT().
+		DeletePipeline(invalidID).
+		Return(storageErr).
+		Times(1)
+
+	taskrepo := taskrepo.New()
+	service := New(storage, taskrepo, uuidGen, freezed)
+
+	tests := []struct {
+		name string
+		id   string
+		err  error
+	}{
+		{
+			"ok",
+			p.ID,
+			nil,
+		},
+		{
+			"not found",
+			notExistingID,
+			notFoundErr,
+		},
+		{
+			"storage error",
+			invalidID,
+			storageErr,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := service.Delete(tt.id)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("service delete returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
+			}
+		})
+	}
+}
