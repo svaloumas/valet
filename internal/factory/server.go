@@ -12,6 +12,8 @@ import (
 	"github.com/svaloumas/valet/internal/core/port"
 	"github.com/svaloumas/valet/internal/handler/jobhdl"
 	jobpb "github.com/svaloumas/valet/internal/handler/jobhdl/protobuf"
+	"github.com/svaloumas/valet/internal/handler/pipelinehdl"
+	pipelinepb "github.com/svaloumas/valet/internal/handler/pipelinehdl/protobuf"
 	"github.com/svaloumas/valet/internal/handler/resulthdl"
 	resultpb "github.com/svaloumas/valet/internal/handler/resulthdl/protobuf"
 	"github.com/svaloumas/valet/internal/handler/server"
@@ -53,9 +55,11 @@ func ServerFactory(
 	s := grpc.NewServer()
 	jobgRPCHandler := jobhdl.NewJobgRPCHandler(jobService)
 	resultgRPCHandler := resulthdl.NewResultgRPCHandler(resultService)
+	pipelinegRPCHandler := pipelinehdl.NewPipelinegRPCHandler(pipelineService, jobQueue)
 	taskgRPCHandler := taskhdl.NewTaskgRPCHandler(taskService)
 	jobpb.RegisterJobServer(s, jobgRPCHandler)
 	resultpb.RegisterJobResultServer(s, resultgRPCHandler)
+	pipelinepb.RegisterPipelineServer(s, pipelinegRPCHandler)
 	taskpb.RegisterTaskServer(s, taskgRPCHandler)
 	reflection.Register(s)
 

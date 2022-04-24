@@ -126,6 +126,26 @@ func TestGRPCCreateJob(t *testing.T) {
 		Return(nil, parseTimeErr).
 		Times(1)
 
+	req := &pb.CreateJobRequest{
+		Name:        job.Name,
+		Description: job.Description,
+		TaskName:    job.TaskName,
+		TaskParams:  taskParamsStruct,
+		Timeout:     int32(job.Timeout),
+	}
+
+	reqWithSchedule := &pb.CreateJobRequest{}
+	*reqWithSchedule = *req
+	reqWithSchedule.RunAt = "2006-01-02T15:04:05.999999999Z"
+
+	reqNoJobName := &pb.CreateJobRequest{}
+	*reqNoJobName = *req
+	reqNoJobName.Name = ""
+
+	reqInvalidRunAt := &pb.CreateJobRequest{}
+	*reqInvalidRunAt = *req
+	reqInvalidRunAt.RunAt = "invalid_timestamp_format"
+
 	tests := []struct {
 		name string
 		req  *pb.CreateJobRequest
@@ -135,13 +155,7 @@ func TestGRPCCreateJob(t *testing.T) {
 	}{
 		{
 			"ok",
-			&pb.CreateJobRequest{
-				Name:        job.Name,
-				Description: job.Description,
-				TaskName:    job.TaskName,
-				TaskParams:  taskParamsStruct,
-				Timeout:     int32(job.Timeout),
-			},
+			req,
 			&pb.CreateJobResponse{
 				Id:          job.ID,
 				Name:        job.Name,
@@ -157,14 +171,7 @@ func TestGRPCCreateJob(t *testing.T) {
 		},
 		{
 			"ok with schedule",
-			&pb.CreateJobRequest{
-				Name:        jobWithSchedule.Name,
-				Description: jobWithSchedule.Description,
-				TaskName:    jobWithSchedule.TaskName,
-				TaskParams:  taskParamsStruct,
-				Timeout:     int32(job.Timeout),
-				RunAt:       "2006-01-02T15:04:05.999999999Z",
-			},
+			reqWithSchedule,
 			&pb.CreateJobResponse{
 				Id:          jobWithSchedule.ID,
 				Name:        jobWithSchedule.Name,
@@ -181,52 +188,28 @@ func TestGRPCCreateJob(t *testing.T) {
 		},
 		{
 			"internal error",
-			&pb.CreateJobRequest{
-				Name:        job.Name,
-				Description: job.Description,
-				TaskName:    job.TaskName,
-				TaskParams:  taskParamsStruct,
-				Timeout:     int32(job.Timeout),
-			},
+			req,
 			nil,
 			codes.Internal,
 			status.Error(codes.Internal, jobServiceErr.Error()),
 		},
 		{
 			"job validation error",
-			&pb.CreateJobRequest{
-				Description: job.Description,
-				TaskName:    job.TaskName,
-				TaskParams:  taskParamsStruct,
-				Timeout:     int32(job.Timeout),
-			},
+			reqNoJobName,
 			nil,
 			codes.InvalidArgument,
 			status.Error(codes.InvalidArgument, jobValidationErr.Error()),
 		},
 		{
 			"service unavailable error",
-			&pb.CreateJobRequest{
-				Name:        job.Name,
-				Description: job.Description,
-				TaskName:    job.TaskName,
-				TaskParams:  taskParamsStruct,
-				Timeout:     int32(job.Timeout),
-			},
+			req,
 			nil,
 			codes.Unavailable,
 			status.Error(codes.Unavailable, fullQueueErr.Error()),
 		},
 		{
 			"invalid timestamp format",
-			&pb.CreateJobRequest{
-				Name:        job.Name,
-				Description: job.Description,
-				TaskName:    job.TaskName,
-				TaskParams:  taskParamsStruct,
-				Timeout:     int32(job.Timeout),
-				RunAt:       "invalid_timestamp_format",
-			},
+			reqInvalidRunAt,
 			nil,
 			codes.InvalidArgument,
 			status.Error(codes.InvalidArgument, parseTimeErr.Error()),

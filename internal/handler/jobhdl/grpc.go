@@ -50,7 +50,7 @@ func (hdl *JobgRPCHandler) Create(ctx context.Context, in *pb.CreateJobRequest) 
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-	res, err := newCreateJobResponse(j)
+	res, err := NewCreateJobResponse(j)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -67,7 +67,7 @@ func (hdl *JobgRPCHandler) Get(ctx context.Context, in *pb.GetJobRequest) (*pb.G
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-	res, err := newGetJobResponse(j)
+	res, err := NewGetJobResponse(j)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -88,7 +88,7 @@ func (hdl *JobgRPCHandler) GetJobs(ctx context.Context, in *pb.GetJobsRequest) (
 	}
 	res := &pb.GetJobsResponse{}
 	for _, j := range jobs {
-		getJobResponse, err := newGetJobResponse(j)
+		getJobResponse, err := NewGetJobResponse(j)
 		if err != nil {
 			return nil, err
 		}
@@ -135,7 +135,7 @@ func (hdl *JobgRPCHandler) Delete(ctx context.Context, in *pb.DeleteJobRequest) 
 	return res, nil
 }
 
-func newCreateJobResponse(j *domain.Job) (*pb.CreateJobResponse, error) {
+func NewCreateJobResponse(j *domain.Job) (*pb.CreateJobResponse, error) {
 	taskParamsStruct, err := structpb.NewStruct(j.TaskParams)
 	if err != nil {
 		return nil, err
@@ -163,7 +163,7 @@ func newCreateJobResponse(j *domain.Job) (*pb.CreateJobResponse, error) {
 	return res, nil
 }
 
-func newGetJobResponse(j *domain.Job) (*pb.GetJobResponse, error) {
+func NewGetJobResponse(j *domain.Job) (*pb.GetJobResponse, error) {
 	taskParamsStruct, err := structpb.NewStruct(j.TaskParams)
 	if err != nil {
 		return nil, err
