@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package pipeline;
+
+import "internal/handler/pipelinehdl/protos/pipeline_request.proto";
+import "internal/handler/pipelinehdl/protos/pipeline_response.proto";
+
+option go_package = "github.com/svaloumas/valet/internal/handler/pipelinehdl/protobuf;pb";
+
+
+// Interface exported by the service.
+service Pipeline {
+    rpc Create(CreatePipelineRequest) returns (CreatePipelineResponse) {}
+    rpc Get(GetPipelineRequest) returns (GetPipelineResponse) {}
+    rpc GetPipelines(GetPipelinesRequest) returns (GetPipelinesResponse) {}
+    rpc GetPipelineJobs(GetPipelineJobsRequest) returns (GetPipelineJobsResponse) {}
+    rpc Update(UpdatePipelineRequest) returns (UpdatePipelineResponse) {}
+    rpc Delete(DeletePipelineRequest) returns (DeletePipelineResponse) {}
+}

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package pipeline;
+
+import "internal/handler/jobhdl/protos/job_request.proto";
+
+option go_package = "github.com/svaloumas/valet/internal/handler/pipelinehdl/protobuf;pb";
+
+
+message CreatePipelineRequest {
+    string name = 1;
+    string description = 2;
+    string run_at = 3;
+    repeated job.CreateJobRequest jobs = 4;
+}
+
+message GetPipelineRequest {
+    string id = 1;
+}
+
+message GetPipelinesRequest {
+    string status = 1;
+}
+
+message GetPipelineJobsRequest {
+    string id = 1;
+}
+
+message UpdatePipelineRequest {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+message DeletePipelineRequest {
+    string id = 1;
+}
