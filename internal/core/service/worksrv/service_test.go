@@ -64,6 +64,35 @@ func TestSend(t *testing.T) {
 	}
 }
 
+func TestSendNoResultCreation(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	j := new(domain.Job)
+	j.ID = "job_id"
+	j.TaskName = "test_task"
+
+	resultChan := make(chan domain.JobResult, 1)
+	work := work.Work{Job: j, Result: resultChan}
+	// Channel closed due to some Exec error
+	close(resultChan)
+
+	freezed := mock.NewMockTime(ctrl)
+	taskrepo := &taskrepo.TaskRepository{}
+	storage := mock.NewMockStorage(ctrl)
+
+	logger := &logrus.Logger{Out: ioutil.Discard}
+	workservice := New(storage, taskrepo, freezed, time.Second, 0, 1, logger)
+	workservice.Start()
+	defer workservice.Stop()
+
+	workservice.Send(work)
+
+	if len(workservice.queue) != 1 {
+		t.Errorf("work service send did not increase the queue length: got %v want 1", len(workservice.queue))
+	}
+}
+
 func TestSendBacklogLimit(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -183,6 +212,7 @@ func TestExecJobWorkCompletedJob(t *testing.T) {
 	go func() {
 		result := <-workWithNoError.Result
 		actualResultChan <- result
+		close(actualResultChan)
 	}()
 	err := service.Exec(context.Background(), workWithNoError)
 	if err != nil {
@@ -267,6 +297,7 @@ func TestExecJobWorkFailedJob(t *testing.T) {
 	go func() {
 		result := <-workWithError.Result
 		actualResultChan <- result
+		close(actualResultChan)
 	}()
 	err := service.Exec(context.Background(), workWithError)
 	if err != nil {
@@ -350,6 +381,7 @@ func TestExecJobWorkPanicJob(t *testing.T) {
 	go func() {
 		result := <-workWithError.Result
 		actualResultChan <- result
+		close(actualResultChan)
 	}()
 	err := service.Exec(context.Background(), workWithError)
 	if err != nil {
@@ -423,7 +455,12 @@ func TestExecJobWorkJobUpdateErrorCases(t *testing.T) {
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
-	w := work.Work{
+	w1 := work.Work{
+		Job:         job,
+		Result:      make(chan domain.JobResult, 1),
+		TimeoutUnit: time.Millisecond,
+	}
+	w2 := work.Work{
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
 		TimeoutUnit: time.Millisecond,
@@ -436,25 +473,20 @@ func TestExecJobWorkJobUpdateErrorCases(t *testing.T) {
 	}{
 		{
 			"storage error",
-			w,
+			w1,
 			storageErr,
 		},
 		{
 			"storage error",
-			w,
+			w2,
 			storageErr,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actualResultChan := make(chan domain.JobResult, 1)
 			go func() {
-				select {
-				case result := <-w.Result:
-					actualResultChan <- result
-				default:
-				}
+				<-tt.work.Result
 			}()
 			err := service.Exec(context.Background(), tt.work)
 			if err != nil {
@@ -540,6 +572,7 @@ func TestExecJobWorkJobTimeoutExceeded(t *testing.T) {
 	go func() {
 		result := <-workWithError.Result
 		actualResultChan <- result
+		close(actualResultChan)
 	}()
 	err := service.Exec(context.Background(), workWithError)
 	if err != nil {
@@ -1454,7 +1487,25 @@ func TestExecPipelineWorkJobAndPipelineUpdateErrorCases(t *testing.T) {
 	logger := &logrus.Logger{Out: ioutil.Discard}
 	service := New(storage, taskrepo, freezed, time.Second, 1, 1, logger)
 
-	w := work.Work{
+	w1 := work.Work{
+		Type:        WorkTypePipeline,
+		Job:         job,
+		Result:      make(chan domain.JobResult, 1),
+		TimeoutUnit: time.Millisecond,
+	}
+	w2 := work.Work{
+		Type:        WorkTypePipeline,
+		Job:         job,
+		Result:      make(chan domain.JobResult, 1),
+		TimeoutUnit: time.Millisecond,
+	}
+	w3 := work.Work{
+		Type:        WorkTypePipeline,
+		Job:         job,
+		Result:      make(chan domain.JobResult, 1),
+		TimeoutUnit: time.Millisecond,
+	}
+	w4 := work.Work{
 		Type:        WorkTypePipeline,
 		Job:         job,
 		Result:      make(chan domain.JobResult, 1),
@@ -1468,35 +1519,30 @@ func TestExecPipelineWorkJobAndPipelineUpdateErrorCases(t *testing.T) {
 	}{
 		{
 			"get pipeline storage error",
-			w,
+			w1,
 			storageErr,
 		},
 		{
 			"update started job storage error",
-			w,
+			w2,
 			storageErr,
 		},
 		{
 			"update started pipeline storage error",
-			w,
+			w3,
 			storageErr,
 		},
 		{
 			"update completed job storage error",
-			w,
+			w4,
 			storageErr,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actualResultChan := make(chan domain.JobResult, 1)
 			go func() {
-				select {
-				case result := <-w.Result:
-					actualResultChan <- result
-				default:
-				}
+				<-tt.work.Result
 			}()
 			err := service.Exec(context.Background(), tt.work)
 			if err != nil {
@@ -1628,6 +1674,7 @@ func TestExecPipelineWorkCompletedPipelineUpdateError(t *testing.T) {
 				select {
 				case result := <-w.Result:
 					actualResultChan <- result
+					close(actualResultChan)
 				default:
 				}
 			}()

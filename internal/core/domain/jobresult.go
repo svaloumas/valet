@@ -14,6 +14,8 @@ type FutureJobResult struct {
 }
 
 // Wait waits for JobResult to become available and returns it.
-func (f FutureJobResult) Wait() JobResult {
-	return <-f.Result
+func (f FutureJobResult) Wait() (JobResult, bool) {
+	result, ok := <-f.Result
+	return result, ok
+
 }
