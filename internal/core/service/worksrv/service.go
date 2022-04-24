@@ -74,10 +74,12 @@ func (srv *workservice) Send(w work.Work) {
 	for job := w.Job; ; job, workType = job.Next, WorkTypePipeline {
 		go func() {
 			futureResult := domain.FutureJobResult{Result: w.Result}
-			result := futureResult.Wait()
+			result, ok := futureResult.Wait()
 
-			if err := srv.storage.CreateJobResult(&result); err != nil {
-				srv.logger.Errorf("could not create job result to the repository %s", err)
+			if ok {
+				if err := srv.storage.CreateJobResult(&result); err != nil {
+					srv.logger.Errorf("could not create job result to the repository %s", err)
+				}
 			}
 		}()
 
@@ -105,6 +107,9 @@ func (srv *workservice) Stop() {
 
 // ExecJobWork executes the job work.
 func (srv *workservice) ExecJobWork(ctx context.Context, w work.Work) error {
+	// Do not let the go-routines wait for result in case of early exit.
+	defer close(w.Result)
+
 	startedAt := srv.time.Now()
 	w.Job.MarkStarted(&startedAt)
 	if err := srv.storage.UpdateJob(w.Job.ID, w.Job); err != nil {
@@ -145,13 +150,15 @@ func (srv *workservice) ExecJobWork(ctx context.Context, w work.Work) error {
 		return err
 	}
 	w.Result <- jobResult
-	close(w.Result)
 
 	return nil
 }
 
 // ExecPipelineWork executes the pipeline work.
 func (srv *workservice) ExecPipelineWork(ctx context.Context, w work.Work) error {
+	// Do not let the go-routines wait for result in case of early exit.
+	defer close(w.Result)
+
 	p, err := srv.storage.GetPipeline(w.Job.PipelineID)
 	if err != nil {
 		return err
@@ -228,7 +235,6 @@ func (srv *workservice) ExecPipelineWork(ctx context.Context, w work.Work) error
 			break
 		}
 	}
-	close(w.Result)
 
 	return nil
 }
@@ -247,6 +253,7 @@ func (srv *workservice) work(
 					Error:    fmt.Errorf("%v", p).Error(),
 				}
 				jobResultChan <- result
+				close(jobResultChan)
 			}
 		}()
 		var errMsg string
