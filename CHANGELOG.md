@@ -1,4 +1,47 @@
 
+<a name="v0.8.0"></a>
+## [v0.8.0](https://github.com/svaloumas/valet/compare/v0.6.0...v0.8.0)
+
+> 2022-04-24
+
+### Chore
+
+* bump version to v0.8.0
+* update codecov coverage in CI
+* update codecov coverage in CI
+* add codecov coverage in CI
+* remove coverage from CI
+* **Makefile:** remove go tool from make report ([#8](https://github.com/svaloumas/valet/issues/8))
+* **Makefile:** update make report
+* **ci:** use current path in codecov step
+* **ci:** fix codecov step ([#7](https://github.com/svaloumas/valet/issues/7))
+* **ci:** remove codecov token
+* **protos:** add jobresult proto files
+
+### Doc
+
+* update README
+* add pipelines endpoints in swagger files
+* add CHANGELOG
+* add go report badge in README
+
+### Feat
+
+* add pipeline gRPC endpoints
+* add rest of the pipeline CRUD http endpoints
+* process pipeline works and support previous results manipulation
+* add create pipeline service and http endpoint
+* prohibit deletion for job that belongs to a pipeline
+* add pipeline branch for logging in consume func
+* remove panic branch from job result wait()
+* add pipeline CRUD storage methods
+* **domain:** add pipeline resource
+
+### Fix
+
+* **worksrv:** properly close work result channels on early exit cases
+
+
 <a name="v0.6.0"></a>
 ## [v0.6.0](https://github.com/svaloumas/valet/compare/v0.5.1...v0.6.0)
 
@@ -40,31 +83,73 @@
 * delete bin
 * rename module
 * bump version
+* update coverage badge
+* update coverage badge
 * rename postgres dsn secret in compose
+* update coverage badge
 * remove ldflags
+* update coverage badge
+* update coverage badge
+* update coverage badge
 * add test vars in Makefile for report
 * remove no zero date leftover from Makefile
+* update coverage badge
 * remove no zero date from mysql
 * add proto files
 * rephrase comment
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
 * add depends_on on valet service
+* update coverage badge
+* update coverage badge
 * remove build target from compose override
 * remove build dependency from CI
 * remove prod target from Dockerfile
 * remove build step from CI
+* update coverage badge
 * update github CI
 * update github CI
 * update github CI
 * update compose files
+* update coverage badge
 * add LICENSE
 * bump version to 0.8.0
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
 * remove codecov  from CI
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
+* update coverage badge
 * update Makefile and CI yml
+* update coverage badge
 * update CI codecov step syntax
 * change badge order
 * update CI name
 * add CI badge in README
 * update commit message for coverage badge in CI
+* Updated coverage badge.
 * add go coverage badge in CI
 * add go coverage badge in CI
 * fix upload to codecov step
