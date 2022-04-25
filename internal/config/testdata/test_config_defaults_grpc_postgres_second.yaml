@@ -1,0 +1,51 @@
+server:
+  protocol: grpc
+  http:
+    port:
+  grpc:
+    port:
+job_queue:
+  option: memory
+  memory_job_queue:
+    capacity:
+  rabbitmq:
+    queue_params:
+      name:
+      durable:
+      deleted_when_unused:
+      exclusive:
+      no_wait:
+    consume_params:
+      name:
+      auto_ack:
+      exclusive:
+      no_local:
+      no_wait:
+    publish_params:
+      exchange: 
+      routing_key:
+      mandatory:
+      immediate:
+worker_pool:
+  concurrency:
+  backlog:
+scheduler:
+  repository_polling_interval:
+consumer:
+  job_queue_polling_interval:
+repository:
+  option: postgres
+  mysql:
+    connection_max_lifetime:  3000
+    max_idle_connections: 8
+    max_open_connections: 8
+  postgres:
+    connection_max_lifetime:
+    max_idle_connections:
+    max_open_connections:
+  redis:
+    key_prefix:
+    min_idle_conns: 10
+    pool_size: 10
+timeout_unit: second
+logging_format: text

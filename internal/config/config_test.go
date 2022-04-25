@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
+	"strings"
 	"testing"
 	"time"
 )
@@ -204,6 +206,154 @@ func TestLoad(t *testing.T) {
 					t.Errorf("load returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
 				}
 			} else {
+				if eq := reflect.DeepEqual(cfg, tt.expected); !eq {
+					t.Errorf("load set wrong config: got %#v want %#v", cfg, tt.expected)
+				}
+			}
+		})
+	}
+}
+
+func TestLoadDefaultValues(t *testing.T) {
+	http := HTTP{
+		Port: "8080",
+	}
+	grpc := GRPC{
+		Port: "50051",
+	}
+	server := Server{
+		Protocol: "http",
+		HTTP:     http,
+		GRPC:     grpc,
+	}
+	memoryJobQueue := MemoryJobQueue{
+		Capacity: 100,
+	}
+	jobqueue := JobQueue{
+		Option:         "memory",
+		MemoryJobQueue: memoryJobQueue,
+	}
+	wp := WorkerPool{
+		Concurrency: runtime.NumCPU(),
+		Backlog:     runtime.NumCPU() * 2,
+	}
+	scheduler := Scheduler{
+		RepositoryPollingInterval: 60,
+	}
+	consumer := Consumer{
+		JobQueuePollingInterval: 1,
+	}
+	mysql := MySQL{
+		DSN:                   "test_dsn",
+		CaPemFile:             "",
+		ConnectionMaxLifetime: 3000,
+		MaxIdleConnections:    8,
+		MaxOpenConnections:    8,
+	}
+	postgres := Postgres{
+		DSN:                   "test_dsn",
+		ConnectionMaxLifetime: 3000,
+		MaxIdleConnections:    8,
+		MaxOpenConnections:    8,
+	}
+	redis := Redis{
+		KeyPrefix:    "",
+		PoolSize:     10,
+		MinIdleConns: 10,
+	}
+	repository := Repository{
+		Option:   "mysql",
+		MySQL:    mysql,
+		Redis:    redis,
+		Postgres: postgres,
+	}
+	config := &Config{
+		Server:            server,
+		JobQueue:          jobqueue,
+		WorkerPool:        wp,
+		Scheduler:         scheduler,
+		Consumer:          consumer,
+		Repository:        repository,
+		LoggingFormat:     "text",
+		TimeoutUnitOption: "second",
+		TimeoutUnit:       time.Second,
+	}
+	tests := []struct {
+		name        string
+		mysqlDSN    string
+		postgresDSN string
+		redisURL    string
+		filepath    string
+		expected    *Config
+		err         error
+	}{
+		{
+			"http mysql second",
+			"test_dsn",
+			"",
+			"",
+			"./testdata/test_config_defaults_http_mysql_second.yaml",
+			config,
+			nil,
+		},
+		{
+			"grpc postgres second",
+			"",
+			"test_dsn",
+			"",
+			"./testdata/test_config_defaults_grpc_postgres_second.yaml",
+			config,
+			nil,
+		},
+		{
+			"redis millisecond",
+			"",
+			"",
+			"test_url",
+			"./testdata/test_config_defaults_grpc_redis_millisecond.yaml",
+			config,
+			nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Setenv("MYSQL_DSN", tt.mysqlDSN)
+			os.Setenv("POSTGRES_DSN", tt.postgresDSN)
+			os.Setenv("REDIS_URL", tt.redisURL)
+			filepath, _ := filepath.Abs(tt.filepath)
+			cfg := new(Config)
+			err := cfg.Load(filepath)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("load returned wrong error: got %#v want %#v", err.Error(), tt.err.Error())
+				}
+			} else {
+				if strings.Contains(tt.name, "postgres") {
+					tt.expected.Repository.Option = "postgres"
+					tt.expected.Repository.MySQL.DSN = ""
+					tt.expected.Repository.Postgres.DSN = tt.postgresDSN
+				}
+				if strings.Contains(tt.name, "mysql") {
+					tt.expected.Repository.Option = "mysql"
+					tt.expected.Repository.Postgres.DSN = ""
+					tt.expected.Repository.MySQL.DSN = tt.mysqlDSN
+				}
+				if strings.Contains(tt.name, "grpc") {
+					tt.expected.Server.Protocol = "grpc"
+				}
+				if strings.Contains(tt.name, "redis") {
+					tt.expected.Repository.Option = "redis"
+					tt.expected.Repository.MySQL.DSN = ""
+					tt.expected.Repository.Postgres.DSN = ""
+					tt.expected.Repository.Redis.URL = tt.redisURL
+				}
+				if strings.Contains(tt.name, "millisecond") {
+					tt.expected.Scheduler.RepositoryPollingInterval = 60000
+					tt.expected.Consumer.JobQueuePollingInterval = 1000
+					tt.expected.TimeoutUnitOption = "millisecond"
+					tt.expected.TimeoutUnit = time.Millisecond
+				}
 				if eq := reflect.DeepEqual(cfg, tt.expected); !eq {
 					t.Errorf("load set wrong config: got %#v want %#v", cfg, tt.expected)
 				}

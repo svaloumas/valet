@@ -64,6 +64,96 @@ func TestSend(t *testing.T) {
 	}
 }
 
+func TestSendMergedJobs(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	secondJobID := "second_job_id"
+	thirdJobID := "third_job_id"
+	job := new(domain.Job)
+	job.ID = "job_id"
+	job.TaskName = "test_task"
+	job.NextJobID = secondJobID
+
+	secondJob := new(domain.Job)
+	*secondJob = *job
+	secondJob.ID = secondJobID
+	secondJob.NextJobID = thirdJobID
+
+	thirdJob := new(domain.Job)
+	*thirdJob = *secondJob
+	thirdJob.ID = thirdJobID
+	thirdJob.NextJobID = ""
+
+	job.Next = secondJob
+	job.Next.Next = thirdJob
+
+	// Use a capacity of 3 to send the results in the buffered chan before testing.
+	work := work.Work{Job: job, Result: make(chan domain.JobResult, 3)}
+
+	result := domain.JobResult{
+		JobID:    job.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+	secondResult := domain.JobResult{
+		JobID:    secondJob.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+	thirdResult := domain.JobResult{
+		JobID:    thirdJob.ID,
+		Metadata: "some metadata",
+		Error:    "some task error",
+	}
+
+	work.Result <- result
+	work.Result <- secondResult
+	work.Result <- thirdResult
+
+	freezed := mock.NewMockTime(ctrl)
+	taskrepo := &taskrepo.TaskRepository{}
+	storage := mock.NewMockStorage(ctrl)
+	wg.Add(1)
+	storage.
+		EXPECT().
+		CreateJobResult(&result).
+		DoAndReturn(func(result *domain.JobResult) error {
+			wg.Done()
+			return nil
+		})
+	wg.Add(1)
+	storage.
+		EXPECT().
+		CreateJobResult(&secondResult).
+		DoAndReturn(func(result *domain.JobResult) error {
+			wg.Done()
+			return nil
+		})
+	wg.Add(1)
+	storage.
+		EXPECT().
+		CreateJobResult(&thirdResult).
+		DoAndReturn(func(result *domain.JobResult) error {
+			wg.Done()
+			return nil
+		})
+
+	logger := &logrus.Logger{Out: ioutil.Discard}
+	workservice := New(storage, taskrepo, freezed, time.Second, 0, 1, logger)
+	workservice.Start()
+	defer workservice.Stop()
+
+	workservice.Send(work)
+
+	if len(workservice.queue) != 1 {
+		t.Errorf("work service send did not increase the queue length: got %v want 1", len(workservice.queue))
+	}
+}
+
 func TestSendNoResultCreation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
