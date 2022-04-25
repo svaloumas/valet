@@ -255,7 +255,8 @@ by including them in the request body.
     "task_name": "dummytask",
     "task_params": {
         "url": "www.some-url.com"
-    }
+    },
+    "timeout": 10,
 }
 ```
 
@@ -269,7 +270,8 @@ To schedule a new job to run at a specific time in the future, add `run_at` fiel
     "run_at": "2022-06-06T15:04:05.999",
     "task_params": {
         "url": "www.some-url.com"
-    }
+    },
+    "timeout": 10,
 }
 ```
 
@@ -299,7 +301,8 @@ just like with the jobs.
             "task_params": {
                 "url": "www.some-url.com"
             },
-            "use_previous_results": true
+            "use_previous_results": true,
+            "timeout": 10,
         },
         {
             "name": "the last job",
