@@ -76,3 +76,18 @@ func TestRegister(t *testing.T) {
 		t.Errorf("task repository Register did not register the task properly, got %v want %v", taskFuncName, expected)
 	}
 }
+
+func TestGetTaskFuncTaskNotRegistered(t *testing.T) {
+	taskrepo := New()
+	_, err := taskrepo.GetTaskFunc("sometask")
+
+	expected := errors.New("task with name: sometask is not registered")
+	if err == nil {
+		t.Errorf("get task func did not return expected error: got nil, want %v", expected)
+	}
+	if err != nil {
+		if err.Error() != expected.Error() {
+			t.Errorf("get task func returned wrong error: got %v, want %v", err, expected)
+		}
+	}
+}
