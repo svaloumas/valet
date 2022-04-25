@@ -1,4 +1,29 @@
 
+<a name="v0.8.1"></a>
+## [v0.8.1](https://github.com/svaloumas/valet/compare/v0.8.0...v0.8.1)
+
+> 2022-04-25
+
+### Chore
+
+* bump version to v0.8.1
+
+### Doc
+
+* update README
+* update README
+
+### Feat
+
+* add valet stop method and test run
+
+### Test
+
+* add config load default values test cases, add worksrv send merged jobs test
+* **taskrepo:** add get task repository test
+* **tasksrv:** add get task func test case
+
+
 <a name="v0.8.0"></a>
 ## [v0.8.0](https://github.com/svaloumas/valet/compare/v0.6.0...v0.8.0)
 
@@ -20,6 +45,7 @@
 
 ### Doc
 
+* update CHANGELOG
 * update README
 * add pipelines endpoints in swagger files
 * add CHANGELOG
