@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	version = "v0.8.0"
+	version = "v0.8.1"
 )
 
 // NewRouter initializes and returns a new gin.Engine instance.
