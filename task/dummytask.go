@@ -16,13 +16,10 @@ func DummyTask(args ...interface{}) (interface{}, error) {
 	valet.DecodeTaskParams(args, dummyParams)
 	valet.DecodePreviousJobResults(args, &resultsMetadata)
 
-	metadata, err := downloadContent(dummyParams.URL, resultsMetadata)
-	if err != nil {
-		return nil, err
-	}
+	metadata := downloadContent(dummyParams.URL, resultsMetadata)
 	return metadata, nil
 }
 
-func downloadContent(URL, bucket string) (string, error) {
-	return "some metadata", nil
+func downloadContent(URL, bucket string) string {
+	return "some metadata"
 }

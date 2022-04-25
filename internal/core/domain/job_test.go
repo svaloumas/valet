@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -191,5 +192,33 @@ func TestBelongsToPipeline(t *testing.T) {
 	}
 	if !pipelineJob.BelongsToPipeline() {
 		t.Errorf("BelongsToPipeline returned wrong value: got %t, want true", pipelineJob.BelongsToPipeline())
+	}
+}
+
+func TestNewJob(t *testing.T) {
+	testTime := time.Now()
+
+	expected := &Job{
+		ID:       "job_id",
+		Name:     "job_name",
+		TaskName: "test_task",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Description:        "some description",
+		PipelineID:         "pipeline_id",
+		Status:             Pending,
+		NextJobID:          "next_job_id",
+		Timeout:            10,
+		RunAt:              &testTime,
+		CreatedAt:          &testTime,
+		UsePreviousResults: true,
+	}
+	job := NewJob(
+		expected.ID, expected.Name, expected.TaskName, expected.Description, expected.PipelineID,
+		expected.NextJobID, expected.Timeout, expected.RunAt, expected.CreatedAt, expected.UsePreviousResults, expected.TaskParams)
+
+	if eq := reflect.DeepEqual(job, expected); !eq {
+		t.Errorf("new job returned wrong job: got %v want %v", job, expected)
 	}
 }

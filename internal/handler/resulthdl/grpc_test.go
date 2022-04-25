@@ -40,9 +40,7 @@ func TestGRPCGetJobResult(t *testing.T) {
 
 	resultService := mock.NewMockResultService(ctrl)
 
-	handler := &ResultgRPCHandler{
-		resultService: resultService,
-	}
+	handler := NewResultgRPCHandler(resultService)
 	pb.RegisterJobResultServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -151,9 +149,7 @@ func TestGRPCDeleteJobResult(t *testing.T) {
 
 	resultService := mock.NewMockResultService(ctrl)
 
-	handler := &ResultgRPCHandler{
-		resultService: resultService,
-	}
+	handler := NewResultgRPCHandler(resultService)
 	pb.RegisterJobResultServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {

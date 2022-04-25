@@ -48,9 +48,7 @@ func TestGRPCCreateJob(t *testing.T) {
 		Times(1)
 	jobService := mock.NewMockJobService(ctrl)
 
-	handler := &JobgRPCHandler{
-		jobService: jobService,
-	}
+	handler := NewJobgRPCHandler(jobService)
 	pb.RegisterJobServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -254,9 +252,7 @@ func TestGRPCGetJob(t *testing.T) {
 		Times(1)
 	jobService := mock.NewMockJobService(ctrl)
 
-	handler := &JobgRPCHandler{
-		jobService: jobService,
-	}
+	handler := NewJobgRPCHandler(jobService)
 	pb.RegisterJobServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -392,9 +388,7 @@ func TestGRPCGetJobs(t *testing.T) {
 		Times(1)
 	jobService := mock.NewMockJobService(ctrl)
 
-	handler := &JobgRPCHandler{
-		jobService: jobService,
-	}
+	handler := NewJobgRPCHandler(jobService)
 	pb.RegisterJobServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -529,9 +523,7 @@ func TestGRPCUpdateJob(t *testing.T) {
 
 	jobService := mock.NewMockJobService(ctrl)
 
-	handler := &JobgRPCHandler{
-		jobService: jobService,
-	}
+	handler := NewJobgRPCHandler(jobService)
 	pb.RegisterJobServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -642,9 +634,7 @@ func TestGRPCDeleteJob(t *testing.T) {
 
 	jobService := mock.NewMockJobService(ctrl)
 
-	handler := &JobgRPCHandler{
-		jobService: jobService,
-	}
+	handler := NewJobgRPCHandler(jobService)
 	pb.RegisterJobServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {

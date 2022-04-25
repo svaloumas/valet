@@ -875,7 +875,7 @@ func TestMemoryDBGetPipeline(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pipeline, err := memorydb.GetJob(tt.id)
+			pipeline, err := memorydb.GetPipeline(tt.id)
 			if err != nil {
 				errValue, ok := err.(*apperrors.NotFoundErr)
 				if !ok {

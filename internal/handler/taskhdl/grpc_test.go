@@ -35,9 +35,7 @@ func TestGRPCGetTasks(t *testing.T) {
 
 	taskService := mock.NewMockTaskService(ctrl)
 
-	handler := &TaskgRPCHandler{
-		taskService: taskService,
-	}
+	handler := NewTaskgRPCHandler(taskService)
 	pb.RegisterTaskServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {

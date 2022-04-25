@@ -50,10 +50,7 @@ func TestGRPCCreatePipeline(t *testing.T) {
 	pipelineService := mock.NewMockPipelineService(ctrl)
 	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	handler := &PipelinegRPCHandler{
-		pipelineService: pipelineService,
-		jobQueue:        jobQueue,
-	}
+	handler := NewPipelinegRPCHandler(pipelineService, jobQueue)
 	pb.RegisterPipelineServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -380,10 +377,9 @@ func TestGRPCGetPipeline(t *testing.T) {
 		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
 		Times(2)
 	pipelineService := mock.NewMockPipelineService(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	handler := &PipelinegRPCHandler{
-		pipelineService: pipelineService,
-	}
+	handler := NewPipelinegRPCHandler(pipelineService, jobQueue)
 	pb.RegisterPipelineServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -512,10 +508,9 @@ func TestGRPCGetPipelines(t *testing.T) {
 		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
 		Times(2)
 	pipelineService := mock.NewMockPipelineService(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	handler := &PipelinegRPCHandler{
-		pipelineService: pipelineService,
-	}
+	handler := NewPipelinegRPCHandler(pipelineService, jobQueue)
 	pb.RegisterPipelineServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -649,10 +644,9 @@ func TestGRPCGetPipelineJobs(t *testing.T) {
 		Return(time.Date(1985, 05, 04, 04, 32, 53, 651387234, time.UTC)).
 		Times(2)
 	pipelineService := mock.NewMockPipelineService(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	handler := &PipelinegRPCHandler{
-		pipelineService: pipelineService,
-	}
+	handler := NewPipelinegRPCHandler(pipelineService, jobQueue)
 	pb.RegisterPipelineServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -795,10 +789,9 @@ func TestGRPCUpdatePipeline(t *testing.T) {
 	s := grpc.NewServer()
 
 	pipelineService := mock.NewMockPipelineService(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	handler := &PipelinegRPCHandler{
-		pipelineService: pipelineService,
-	}
+	handler := NewPipelinegRPCHandler(pipelineService, jobQueue)
 	pb.RegisterPipelineServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
@@ -908,10 +901,9 @@ func TestGRPCDeletePipeline(t *testing.T) {
 	s := grpc.NewServer()
 
 	pipelineService := mock.NewMockPipelineService(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	handler := &PipelinegRPCHandler{
-		pipelineService: pipelineService,
-	}
+	handler := NewPipelinegRPCHandler(pipelineService, jobQueue)
 	pb.RegisterPipelineServer(s, handler)
 	go func() {
 		if err := s.Serve(lis); err != nil {
