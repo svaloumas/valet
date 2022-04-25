@@ -2,6 +2,7 @@ package tasksrv
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"runtime"
 	"testing"
@@ -22,5 +23,16 @@ func TestRegister(t *testing.T) {
 
 	if taskFuncName != expected {
 		t.Errorf("task repository Register did not register the task properly, got %v want %v", taskFuncName, expected)
+	}
+}
+
+func TestGetTaskRepository(t *testing.T) {
+	taskService := New()
+	taskrepo := taskService.GetTaskRepository()
+
+	expectedTypeName := "&taskrepo.TaskRepository{}"
+	actualTypeName := fmt.Sprintf("%#v", taskrepo)
+	if actualTypeName != expectedTypeName {
+		t.Errorf("service get task repository did not return the expected type: got %v want %v", actualTypeName, expectedTypeName)
 	}
 }
