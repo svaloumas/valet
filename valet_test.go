@@ -1,7 +1,9 @@
 package valet
 
 import (
+	"net/http"
 	"testing"
+	"time"
 )
 
 func TestValetRegisterTask(t *testing.T) {
@@ -67,4 +69,19 @@ func TestDecodePreviousJobResults(t *testing.T) {
 	if results != "some metadata" {
 		t.Errorf("DecodePreviousJobResults decoded wrong results: got %#v want %#v", results, "some metadata")
 	}
+}
+
+func TestRun(t *testing.T) {
+	v := New("internal/config/testdata/test_config.yaml")
+	go v.Run()
+	// Give some time for the server to run.
+	time.Sleep(200 * time.Millisecond)
+	res, err := http.Get("http://localhost:8080/api/status")
+	if err != nil {
+		t.Errorf("error calling valet status endpoint: %s", err)
+	}
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("valet server responded with wrong status code: got %v want %v", res.StatusCode, http.StatusOK)
+	}
+	v.Stop()
 }

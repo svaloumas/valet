@@ -28,16 +28,19 @@ import (
 )
 
 type valet struct {
-	configPath  string
-	taskService port.TaskService
+	configPath       string
+	taskService      port.TaskService
+	gracefulTermChan chan os.Signal
 }
 
 // New initializes and returns a new valet instance.
 func New(configPath string) *valet {
 	taskService := tasksrv.New()
+	gracefulTerm := make(chan os.Signal, 1)
 	return &valet{
-		configPath:  configPath,
-		taskService: taskService,
+		configPath:       configPath,
+		taskService:      taskService,
+		gracefulTermChan: gracefulTerm,
 	}
 }
 
@@ -90,15 +93,19 @@ func (v *valet) Run() {
 	server.Serve()
 	logger.Infof("initialized [%s] server", cfg.Server.Protocol)
 
-	gracefulTerm := make(chan os.Signal, 1)
-	signal.Notify(gracefulTerm, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-gracefulTerm
+	signal.Notify(v.gracefulTermChan, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-v.gracefulTermChan
 	logger.Printf("server notified %+v", sig)
 	server.GracefullyStop()
 
 	jobQueue.Close()
 	workService.Stop()
 	storage.Close()
+}
+
+// Stop sends an INT signal to valet, which notifies the service to stop.
+func (v *valet) Stop() {
+	v.gracefulTermChan <- os.Interrupt
 }
 
 // RegisterTask registers a tack callback to the task repository under the specified name.
