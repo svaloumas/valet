@@ -29,11 +29,14 @@ func New() *memorydb {
 
 // CheckHealth checks if the storage is alive.
 func (mem *memorydb) CheckHealth() bool {
-	return mem.jobdb != nil && mem.jobresultdb != nil
+	return mem.jobdb != nil && mem.jobresultdb != nil && mem.pipelinedb != nil
 }
 
 // Close terminates any storage connections gracefully.
 func (mem *memorydb) Close() error {
+	mem.jobdb = nil
+	mem.jobresultdb = nil
+	mem.pipelinedb = nil
 	return nil
 }
 

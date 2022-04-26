@@ -1171,3 +1171,19 @@ func TestMemoryDBDeletePipeline(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckHealth(t *testing.T) {
+	memorydb := New()
+
+	healthy := memorydb.CheckHealth()
+	if !healthy {
+		t.Errorf("check health returned wrong response: got %v want true", healthy)
+	}
+	memorydb.Close()
+
+	healthy = memorydb.CheckHealth()
+
+	if healthy {
+		t.Errorf("check health returned wrong response: got %v want false", healthy)
+	}
+}
