@@ -1,6 +1,7 @@
 # Valet
 [![CI](https://github.com/svaloumas/valet/actions/workflows/ci.yml/badge.svg)](https://github.com/svaloumas/valet/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/svaloumas/valet/branch/main/graph/badge.svg?token=9CI4Q74JJK)](https://codecov.io/gh/svaloumas/valet)
+[![Go Report Card](https://goreportcard.com/badge/github.com/svaloumas/valet)](https://goreportcard.com/report/github.com/svaloumas/valet)
 [![Go Reference](https://pkg.go.dev/badge/github.com/svaloumas/valet.svg)](https://pkg.go.dev/github.com/svaloumas/valet)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/svaloumas/valet/blob/develop/LICENSE)
 
