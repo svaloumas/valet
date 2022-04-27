@@ -1,4 +1,29 @@
 
+<a name="v0.8.2"></a>
+## [v0.8.2](https://github.com/svaloumas/valet/compare/v0.8.1...v0.8.2)
+
+> 2022-04-27
+
+### Chore
+
+* add go report badge
+* update badges
+
+### Doc
+
+* update README secrets
+
+### Feat
+
+* merge consumer into scheduler
+* **memorydb:** update check health func
+
+### Test
+
+* add dispatch pipeline test case
+* minor refactor tests
+
+
 <a name="v0.8.1"></a>
 ## [v0.8.1](https://github.com/svaloumas/valet/compare/v0.8.0...v0.8.1)
 
@@ -10,6 +35,7 @@
 
 ### Doc
 
+* update CHANGELOG
 * update README
 * update README
 

@@ -62,7 +62,7 @@ So far, `valet` provides the following interfaces and can be configured accordin
 
 #### API
 
-* HTTP
+* HTTP - Find the swagger files under `doc/swagger/`.
 * gRPC
 
 #### Repository
