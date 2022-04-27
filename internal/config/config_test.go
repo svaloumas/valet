@@ -62,9 +62,7 @@ func TestLoad(t *testing.T) {
 	}
 	scheduler := Scheduler{
 		RepositoryPollingInterval: 70,
-	}
-	consumer := Consumer{
-		JobQueuePollingInterval: 2,
+		JobQueuePollingInterval:   2,
 	}
 	mysql := MySQL{
 		DSN:                   "test_dsn",
@@ -95,7 +93,6 @@ func TestLoad(t *testing.T) {
 		JobQueue:          jobqueue,
 		WorkerPool:        wp,
 		Scheduler:         scheduler,
-		Consumer:          consumer,
 		Repository:        repository,
 		LoggingFormat:     "text",
 		TimeoutUnitOption: "second",
@@ -239,9 +236,7 @@ func TestLoadDefaultValues(t *testing.T) {
 	}
 	scheduler := Scheduler{
 		RepositoryPollingInterval: 60,
-	}
-	consumer := Consumer{
-		JobQueuePollingInterval: 1,
+		JobQueuePollingInterval:   1,
 	}
 	mysql := MySQL{
 		DSN:                   "test_dsn",
@@ -272,7 +267,6 @@ func TestLoadDefaultValues(t *testing.T) {
 		JobQueue:          jobqueue,
 		WorkerPool:        wp,
 		Scheduler:         scheduler,
-		Consumer:          consumer,
 		Repository:        repository,
 		LoggingFormat:     "text",
 		TimeoutUnitOption: "second",
@@ -350,7 +344,7 @@ func TestLoadDefaultValues(t *testing.T) {
 				}
 				if strings.Contains(tt.name, "millisecond") {
 					tt.expected.Scheduler.RepositoryPollingInterval = 60000
-					tt.expected.Consumer.JobQueuePollingInterval = 1000
+					tt.expected.Scheduler.JobQueuePollingInterval = 1000
 					tt.expected.TimeoutUnitOption = "millisecond"
 					tt.expected.TimeoutUnit = time.Millisecond
 				}

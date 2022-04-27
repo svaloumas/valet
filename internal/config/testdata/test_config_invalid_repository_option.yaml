@@ -31,7 +31,6 @@ worker_pool:
   backlog: 8
 scheduler:
   repository_polling_interval: 70
-consumer:
   job_queue_polling_interval: 2
 repository:
   option: storage

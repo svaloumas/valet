@@ -15,6 +15,80 @@ import (
 	"github.com/svaloumas/valet/mock"
 )
 
+func TestDispatch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	j := new(domain.Job)
+	j.ID = "job_1"
+	j.TaskName = "test_task"
+	j.Status = domain.Pending
+	j.RunAt = nil
+
+	w := work.Work{
+		Job:         j,
+		TimeoutUnit: time.Millisecond,
+	}
+	logger := &logrus.Logger{Out: ioutil.Discard}
+
+	freezed := mock.NewMockTime(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
+	jobQueue.
+		EXPECT().
+		Pop().
+		Return(j).
+		Times(1)
+	workService := mock.NewMockWorkService(ctrl)
+	workService.
+		EXPECT().
+		Send(w).
+		Return().
+		Times(1)
+	workService.
+		EXPECT().
+		CreateWork(j).
+		Return(w).
+		Times(1)
+	storage := mock.NewMockStorage(ctrl)
+
+	schedulerService := New(jobQueue, storage, workService, freezed, logger)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	schedulerService.Dispatch(ctx, 8*time.Millisecond)
+
+	// give some time for the scheduler to consume the job
+	time.Sleep(12 * time.Millisecond)
+}
+
+func TestDispatchJobJobInQueue(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	logger := &logrus.Logger{Out: ioutil.Discard}
+
+	freezed := mock.NewMockTime(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
+	jobQueue.
+		EXPECT().
+		Pop().
+		Return(nil).
+		Times(2)
+	storage := mock.NewMockStorage(ctrl)
+	workService := mock.NewMockWorkService(ctrl)
+
+	schedulerService := New(jobQueue, storage, workService, freezed, logger)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	schedulerService.Dispatch(ctx, 8*time.Millisecond)
+
+	// give some time for the scheduler to try to consume two jobs
+	time.Sleep(20 * time.Millisecond)
+}
+
 func TestSchedule(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -62,8 +136,9 @@ func TestSchedule(t *testing.T) {
 		CreateWork(j).
 		Return(w).
 		Times(1)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	schedulerService := New(storage, workService, freezed, logger)
+	schedulerService := New(jobQueue, storage, workService, freezed, logger)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -129,8 +204,9 @@ func TestScheduleErrorCases(t *testing.T) {
 		CreateWork(j).
 		Return(w).
 		Times(1)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	schedulerService := New(storage, workService, freezed, logger)
+	schedulerService := New(jobQueue, storage, workService, freezed, logger)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -201,8 +277,9 @@ func TestSchedulePipeline(t *testing.T) {
 		CreateWork(j).
 		Return(w).
 		Times(1)
+	jobQueue := mock.NewMockJobQueue(ctrl)
 
-	schedulerService := New(storage, workService, freezed, logger)
+	schedulerService := New(jobQueue, storage, workService, freezed, logger)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

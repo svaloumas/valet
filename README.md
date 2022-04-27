@@ -21,7 +21,7 @@ Stateless Go server responsible for executing tasks asynchronously and concurren
 
 ## Overview
 
-At its core, `valet` is a simple job queuing system and asynchronous task executor. A task is a user-defined `func` that is executed as a callback by the service.
+At its core, `valet` is a simple job queuing system and an asynchronous task executor. A task is a user-defined `func` that is run as a callback by the service.
 
 <a name="job"/>
 
@@ -39,15 +39,24 @@ After the tasks have been executed, their results along with the errors (if any)
 
 A `pipeline` is a sequence of jobs that need to be executed in a specified order, one by one. Every job in the pipeline can be assigned with a different task
 and parameters, and each task callback can optionally use the results of the previous task in the job sequence. A pipeline can also be scheduled to be executed
-some time in the future, or run immediately.
+sometime in the future, or run immediately.
 
 <a name="architecture"/>
 
 ## Architecture
 
-The user-defined callback functions can live in any repo and should be registered to your own build of `valet`. To unlock this level of flexibility,
-the service is provided as a Go `pkg` rather than a `cmd`, enabling the callbacks registration before building the executable.
-Its design strives to follow the hexagonal architecture pattern and to support modularity and extendability. 
+Your callback functions can live in any repo and should be registered to your own build of `valet`. To unlock this level of flexibility,
+the service is provided as a Go `pkg` rather than a `cmd`, enabling the task registration before building the executable.
+
+Internally, the service consists of the following components.
+
+* Server - Exposes a RESTful API to enable communication with the outer world.
+* Job queue - A FIFO queue that supports the job queuing mechanism of the service.
+* Scheduler - Responsible for dispatching the jobs from the job queue to the worker pool and of course for scheduling the tasks for future execution.
+* Worker pool - A number of available go-routines, responsible for the concurrent execution of the jobs.
+* Repository - The storage system where jobs and their results persist.
+
+The design strives to follow the hexagonal architecture pattern and to support modularity and extendability. 
 
 So far, `valet` provides the following interfaces and can be configured accordingly to function with any of the listed technologies.
 
@@ -68,8 +77,6 @@ So far, `valet` provides the following interfaces and can be configured accordin
 * In memory job queue.
 * RabbitMQ
 
-Internally, the built-in concurrency support of the language is leveraged, to distribute the load in a configurable number of go-routines working at the same time.
-
 <a name="installation"/>
 
 ## Installation
@@ -80,7 +87,7 @@ Internally, the built-in concurrency support of the language is leveraged, to di
 go get github.com/svaloumas/valet
 ```
 
-2. Define your own task callbacks in your repo by implementing the type `func(...interface{}) (interface{}, error)`.
+2. Define your own task functions in your repo by implementing the type `func(...interface{}) (interface{}, error)`.
 
 ```go
 package somepkg
@@ -114,9 +121,10 @@ func downloadContent(URL string) (string, error) {
 ```
 
 > `args[0]` holds the task parameters as they were given through the API call for the job/pipeline creation. `args[1]` holds the results of the 
-> previous task only in case of a pipeline execution. Prefer to safely access the arguments by using `valet.DecodeTaskParams` and `valet.DecodePreviousJobResults`.
+> previous task only in case of a pipeline execution. Prefer to safely access the arguments by using `valet.DecodeTaskParams` and `valet.DecodePreviousJobResults`
+> to decode them into your custom task param structs.
 
-3. Copy `config.yaml` from the repo and set your own configuration.
+3. Copy `config.yaml` from the repo and set a configuration according to your needs.
 
 4. Initialize `valet` in a `main` function under your repo, register your tasks to the service and run it.
 
@@ -209,10 +217,8 @@ worker_pool:
   backlog:                          # int
 # Scheduler config section
 scheduler:
-  repository_polling_interval: 60   # int
-# Consumer config section
-consumer:
   job_queue_polling_interval: 5     # int
+  repository_polling_interval: 60   # int
 # Repository config section
 repository:
   option: memory                    # string - options:  memory, mysql, postgres, redis
@@ -237,17 +243,19 @@ logging_format: text                # string - options: text, json
 
 ## Secrets
 
-Currently, the only secrets would be the MySQL DSN, PostgreSQL DSN and the RabbitMQ URI.
-MySQL DSN can be provided as an environment variable named as `MYSQL_DSN`, or a Docker secret named as `valet-mysql-dsn`.
-PostgreSQL DSN can be provided as an environment variable named as `POSTGRES_DSN`, or a Docker secret named as `valet-postgres-dsn`.
-Redis URL can be provided as an environment variable named as `REDIS_DSN`, or a Docker secret named as `valet-redis-url`.
-RabbitMQ URI can be provided as an environment variable named as `RABBITMQ_URI`, or a Docker secret named as `valet-rabbitmq-uri`.
+Currently, secrets are the MySQL DSN, PostgreSQL DSN, Redis URL and the RabbitMQ URI. Each can be provided as an environment variable. 
+Alternatively, if you choose to use the provided Docker compose files, you can create the corresponding Docker secrets.
+
+* Env var `MYSQL_DSN`, Docker secret name `valet-mysql-dsn`.
+* Env var `POSTGRES_DSN`, Docker secret name `valet-postgres-dsn`.
+* Env var `REDIS_DSN`, Docker secret name `valet-redis-url`.
+* End var `RABBITMQ_URI`, Docker secret name `valet-rabbitmq-uri`.
 
 <a name="usage"/>
 
 ## Usage
 
-Create a new job by making a POST HTTP call to `/jobs` or via gRPC `job.Job.Create` service method. You can inject arbitrary parameters for your task to run
+Create a new job by making a POST HTTP call to `/jobs` or via gRPC to `job.Job.Create` service method. You can inject arbitrary parameters for your task to run
 by including them in the request body.
 
 ```json
@@ -256,7 +264,7 @@ by including them in the request body.
     "description": "what this job is all about, but briefly",
     "task_name": "dummytask",
     "task_params": {
-        "url": "www.some-url.com"
+        "url": "www.some-fake-url.com"
     },
     "timeout": 10
 }
@@ -271,15 +279,15 @@ To schedule a new job to run at a specific time in the future, add `run_at` fiel
     "task_name": "dummytask",
     "run_at": "2022-06-06T15:04:05.999",
     "task_params": {
-        "url": "www.some-url.com"
+        "url": "www.some-fake-url.com"
     },
     "timeout": 10
 }
 ```
 
-Create a new pipeline by making a POST HTTP call to `/pipelines` or via gRPC `pipeline.Pipeline.Create` service method. You can inject arbitrary parameters
+Create a new pipeline by making a POST HTTP call to `/pipelines` or via gRPC to `pipeline.Pipeline.Create` service method. You can inject arbitrary parameters
 for your tasks to run by including them in the request body. Optionally, you can tune your tasks to use any results of the previous task in the pipeline, creating
-a `bask`-like job pipeline. Pipelines can also be scheduled for execution in some time in the future, by adding `run_at` field to the request payload
+a `bash`-like command pipeline. Pipelines can also be scheduled for execution in some time in the future, by adding `run_at` field to the request payload
 just like with the jobs.
 
 ```json
@@ -293,15 +301,15 @@ just like with the jobs.
             "description": "some job description",
             "task_name": "dummytask",
             "task_params": {
-                "url": "www.some-url.com"
+                "url": "www.some-fake-url.com"
             }
         },
         {
-            "name": "the second job",
+            "name": "a second job",
             "description": "some job description",
-            "task_name": "dummytask",
+            "task_name": "anothertask",
             "task_params": {
-                "url": "www.some-url.com"
+                "url": "www.some-fake-url.com"
             },
             "use_previous_results": true,
             "timeout": 10
@@ -311,7 +319,7 @@ just like with the jobs.
             "description": "some job description",
             "task_name": "dummytask",
             "task_params": {
-                "url": "www.some-url.com"
+                "url": "www.some-fake-url.com"
             },
             "use_previous_results": true
         }

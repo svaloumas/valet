@@ -12,7 +12,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/svaloumas/valet/internal/config"
 	"github.com/svaloumas/valet/internal/core/port"
-	"github.com/svaloumas/valet/internal/core/service/consumersrv"
 	"github.com/svaloumas/valet/internal/core/service/jobsrv"
 	"github.com/svaloumas/valet/internal/core/service/pipelinesrv"
 	"github.com/svaloumas/valet/internal/core/service/resultsrv"
@@ -79,13 +78,10 @@ func (v *valet) Run() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	consumerLogger := vlog.NewLogger("consumer", cfg.LoggingFormat)
-	consumerService := consumersrv.New(jobQueue, workService, consumerLogger)
-	consumerService.Consume(ctx, time.Duration(cfg.Consumer.JobQueuePollingInterval)*cfg.TimeoutUnit)
-
 	schedulerLogger := vlog.NewLogger("scheduler", cfg.LoggingFormat)
-	schedulerService := schedulersrv.New(storage, workService, rtime.New(), schedulerLogger)
+	schedulerService := schedulersrv.New(jobQueue, storage, workService, rtime.New(), schedulerLogger)
 	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
+	schedulerService.Dispatch(ctx, time.Duration(cfg.Scheduler.JobQueuePollingInterval)*cfg.TimeoutUnit)
 
 	server := factory.ServerFactory(
 		cfg.Server, jobService, pipelineService, resultService,

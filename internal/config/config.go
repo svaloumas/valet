@@ -97,10 +97,7 @@ type WorkerPool struct {
 
 type Scheduler struct {
 	RepositoryPollingInterval int `yaml:"repository_polling_interval"`
-}
-
-type Consumer struct {
-	JobQueuePollingInterval int `yaml:"job_queue_polling_interval"`
+	JobQueuePollingInterval   int `yaml:"job_queue_polling_interval"`
 }
 
 type Repository struct {
@@ -137,7 +134,6 @@ type Config struct {
 	JobQueue          JobQueue   `yaml:"job_queue"`
 	WorkerPool        WorkerPool `yaml:"worker_pool"`
 	Scheduler         Scheduler  `yaml:"scheduler"`
-	Consumer          Consumer   `yaml:"consumer"`
 	Repository        Repository `yaml:"repository"`
 	TimeoutUnitOption string     `yaml:"timeout_unit"`
 	LoggingFormat     string     `yaml:"logging_format"`
@@ -167,7 +163,6 @@ func (cfg *Config) Load(filepath string) error {
 		return err
 	}
 	cfg.setSchedulerConfig()
-	cfg.setConsumerConfig()
 	err = cfg.setLoggingFormatConfig()
 	if err != nil {
 		return err
@@ -228,18 +223,10 @@ func (cfg *Config) setSchedulerConfig() {
 	if cfg.Scheduler.RepositoryPollingInterval == 0 {
 		if cfg.TimeoutUnit == time.Second {
 			cfg.Scheduler.RepositoryPollingInterval = 60
+			cfg.Scheduler.JobQueuePollingInterval = 1
 		} else {
 			cfg.Scheduler.RepositoryPollingInterval = 60000
-		}
-	}
-}
-
-func (cfg *Config) setConsumerConfig() {
-	if cfg.Consumer.JobQueuePollingInterval == 0 {
-		if cfg.TimeoutUnit == time.Second {
-			cfg.Consumer.JobQueuePollingInterval = 1
-		} else {
-			cfg.Consumer.JobQueuePollingInterval = 1000
+			cfg.Scheduler.JobQueuePollingInterval = 1000
 		}
 	}
 }

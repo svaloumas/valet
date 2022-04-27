@@ -31,7 +31,6 @@ worker_pool:
   backlog:
 scheduler:
   repository_polling_interval: 60
-consumer:
   job_queue_polling_interval: 5
 repository:
   option: redis

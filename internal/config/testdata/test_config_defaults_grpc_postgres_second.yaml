@@ -31,7 +31,6 @@ worker_pool:
   backlog:
 scheduler:
   repository_polling_interval:
-consumer:
   job_queue_polling_interval:
 repository:
   option: postgres
