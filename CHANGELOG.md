@@ -6,6 +6,7 @@
 
 ### Chore
 
+* bump version to v0.8.2
 * add go report badge
 * update badges
 
