@@ -62,6 +62,63 @@ func TestDispatch(t *testing.T) {
 	time.Sleep(12 * time.Millisecond)
 }
 
+func TestDispatchPipeline(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	secondJob := &domain.Job{
+		ID:         "second_job_id",
+		PipelineID: "pipeline_id",
+		TaskName:   "some task",
+	}
+
+	runAt := time.Now()
+	j := &domain.Job{
+		ID:         "due_job_id",
+		PipelineID: "pipeline_id",
+		NextJobID:  secondJob.ID,
+		Next:       secondJob,
+		TaskName:   "some task",
+		RunAt:      &runAt,
+	}
+
+	w := work.Work{
+		Job:         j,
+		TimeoutUnit: time.Millisecond,
+	}
+	logger := &logrus.Logger{Out: ioutil.Discard}
+
+	freezed := mock.NewMockTime(ctrl)
+	jobQueue := mock.NewMockJobQueue(ctrl)
+	jobQueue.
+		EXPECT().
+		Pop().
+		Return(j).
+		Times(1)
+	workService := mock.NewMockWorkService(ctrl)
+	workService.
+		EXPECT().
+		Send(w).
+		Return().
+		Times(1)
+	workService.
+		EXPECT().
+		CreateWork(j).
+		Return(w).
+		Times(1)
+	storage := mock.NewMockStorage(ctrl)
+
+	schedulerService := New(jobQueue, storage, workService, freezed, logger)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	schedulerService.Dispatch(ctx, 8*time.Millisecond)
+
+	// give some time for the scheduler to consume the job
+	time.Sleep(12 * time.Millisecond)
+}
+
 func TestDispatchJobJobInQueue(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
