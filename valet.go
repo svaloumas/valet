@@ -72,7 +72,7 @@ func (v *valet) Run() {
 	workpoolLogger := vlog.NewLogger("workerpool", cfg.LoggingFormat)
 	workService := worksrv.New(
 		storage, taskrepo, rtime.New(), cfg.TimeoutUnit,
-		cfg.WorkerPool.Concurrency, cfg.WorkerPool.Backlog, workpoolLogger)
+		cfg.WorkerPool.Workers, cfg.WorkerPool.QueueCapacity, workpoolLogger)
 	workService.Start()
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -27,8 +27,8 @@ job_queue:
       mandatory: false
       immediate: false
 worker_pool:
-  concurrency: 4
-  backlog: 8
+  workers: 4
+  queue_capacity: 8
 scheduler:
   repository_polling_interval: 70
   job_queue_polling_interval: 2

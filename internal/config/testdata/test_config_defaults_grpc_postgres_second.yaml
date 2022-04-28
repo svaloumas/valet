@@ -27,8 +27,8 @@ job_queue:
       mandatory:
       immediate:
 worker_pool:
-  concurrency:
-  backlog:
+  workers:
+  queue_capacity:
 scheduler:
   repository_polling_interval:
   job_queue_polling_interval:

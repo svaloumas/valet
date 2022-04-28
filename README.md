@@ -212,8 +212,8 @@ job_queue:
       immediate: false              # boolean
 # Workerpool config section
 worker_pool:
-  concurrency:                      # int
-  backlog:                          # int
+  workers: 4                        # int
+  queue_capacity: 4                 # int
 # Scheduler config section
 scheduler:
   job_queue_polling_interval: 5     # int

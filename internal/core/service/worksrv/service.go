@@ -24,11 +24,10 @@ const (
 var _ port.WorkService = &workservice{}
 
 type workservice struct {
-	// The fixed amount of goroutines that will be handling running jobs.
-	concurrency int
-	// The maximum capacity of the worker pool queue. If exceeded, sending new
-	// tasks to the pool will return an error.
-	backlog int
+	// The number of go-routines that will operate concurrently.
+	workers int
+	// The capacity of the worker pool queue.
+	queue_capacity int
 	// The time unit for the calculation of the timeout interval for each task.
 	timeoutUnit time.Duration
 
@@ -45,27 +44,27 @@ func New(
 	storage port.Storage,
 	taskrepo *taskrepo.TaskRepository,
 	time rtime.Time, timeoutUnit time.Duration,
-	concurrency, backlog int, logger *logrus.Logger) *workservice {
+	workers, queue_capacity int, logger *logrus.Logger) *workservice {
 
 	return &workservice{
-		storage:     storage,
-		taskrepo:    taskrepo,
-		concurrency: concurrency,
-		backlog:     backlog,
-		timeoutUnit: timeoutUnit,
-		queue:       make(chan work.Work, backlog),
-		time:        time,
-		logger:      logger,
+		storage:        storage,
+		taskrepo:       taskrepo,
+		workers:        workers,
+		queue_capacity: queue_capacity,
+		timeoutUnit:    timeoutUnit,
+		queue:          make(chan work.Work, queue_capacity),
+		time:           time,
+		logger:         logger,
 	}
 }
 
 // Start starts the worker pool.
 func (srv *workservice) Start() {
-	for i := 0; i < srv.concurrency; i++ {
+	for i := 0; i < srv.workers; i++ {
 		srv.wg.Add(1)
 		go srv.startWorker(i, srv.queue, &srv.wg)
 	}
-	srv.logger.Infof("set up %d workers with a queue of backlog %d", srv.concurrency, srv.backlog)
+	srv.logger.Infof("set up %d workers with a queue of capacity %d", srv.workers, srv.queue_capacity)
 }
 
 // Dispatch dispatches a work to the worker pool.

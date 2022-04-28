@@ -91,8 +91,8 @@ type JobQueue struct {
 }
 
 type WorkerPool struct {
-	Concurrency int `yaml:"concurrency"`
-	Backlog     int `yaml:"backlog"`
+	Workers       int `yaml:"workers"`
+	QueueCapacity int `yaml:"queue_capacity"`
 }
 
 type Scheduler struct {
@@ -200,13 +200,12 @@ func (cfg *Config) setJobQueueConfig() error {
 }
 
 func (cfg *Config) setWorkerPoolConfig() {
-	if cfg.WorkerPool.Concurrency == 0 {
-		// Work is CPU bound so number of cores should be fine.
-		cfg.WorkerPool.Concurrency = runtime.NumCPU()
+	if cfg.WorkerPool.Workers == 0 {
+		// Defaults to number of cores.
+		cfg.WorkerPool.Workers = runtime.NumCPU()
 	}
-	if cfg.WorkerPool.Backlog == 0 {
-		// By default allow a request spike double the worker capacity
-		cfg.WorkerPool.Backlog = cfg.WorkerPool.Concurrency * 2
+	if cfg.WorkerPool.QueueCapacity == 0 {
+		cfg.WorkerPool.QueueCapacity = cfg.WorkerPool.Workers * 2
 	}
 }
 

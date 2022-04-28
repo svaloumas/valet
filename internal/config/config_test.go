@@ -57,8 +57,8 @@ func TestLoad(t *testing.T) {
 		RabbitMQ:       rabbitMQ,
 	}
 	wp := WorkerPool{
-		Concurrency: 4,
-		Backlog:     8,
+		Workers:       4,
+		QueueCapacity: 8,
 	}
 	scheduler := Scheduler{
 		RepositoryPollingInterval: 70,
@@ -231,8 +231,8 @@ func TestLoadDefaultValues(t *testing.T) {
 		MemoryJobQueue: memoryJobQueue,
 	}
 	wp := WorkerPool{
-		Concurrency: runtime.NumCPU(),
-		Backlog:     runtime.NumCPU() * 2,
+		Workers:       runtime.NumCPU(),
+		QueueCapacity: runtime.NumCPU() * 2,
 	}
 	scheduler := Scheduler{
 		RepositoryPollingInterval: 60,
