@@ -1,4 +1,32 @@
 
+<a name="v0.8.3"></a>
+## [v0.8.3](https://github.com/svaloumas/valet/compare/v0.8.2...v0.8.3)
+
+> 2022-04-28
+
+### Chore
+
+* bump version to v0.8.3
+
+### Doc
+
+* update CHANGELOG
+
+### Feat
+
+* add redis job queue adapter
+
+### Refactor
+
+* **jobqueue:** move redis client to separate pkg
+* **worksrv:** rename worker pool properties
+* **worksrv:** rename dispatch method
+
+### Test
+
+* **config:** add no redis url jobqueue test case
+
+
 <a name="v0.8.2"></a>
 ## [v0.8.2](https://github.com/svaloumas/valet/compare/v0.8.1...v0.8.2)
 
@@ -13,6 +41,10 @@
 ### Doc
 
 * update README secrets
+
+### Docs
+
+* update CHANGELOG
 
 ### Feat
 
