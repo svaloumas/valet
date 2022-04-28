@@ -68,14 +68,12 @@ func (srv *workservice) Start() {
 	srv.logger.Infof("set up %d workers with a queue of backlog %d", srv.concurrency, srv.backlog)
 }
 
-// Send sends a work to the worker pool.
-func (srv *workservice) Send(w work.Work) {
+// Dispatch dispatches a work to the worker pool.
+func (srv *workservice) Dispatch(w work.Work) {
 	workType := WorkTypeTask
 	for job := w.Job; ; job, workType = job.Next, WorkTypePipeline {
 		go func() {
-			futureResult := domain.FutureJobResult{Result: w.Result}
-			result, ok := futureResult.Wait()
-
+			result, ok := <-w.Result
 			if ok {
 				if err := srv.storage.CreateJobResult(&result); err != nil {
 					srv.logger.Errorf("could not create job result to the repository %s", err)

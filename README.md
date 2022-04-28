@@ -5,7 +5,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/svaloumas/valet.svg)](https://pkg.go.dev/github.com/svaloumas/valet)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/svaloumas/valet/blob/develop/LICENSE)
 
-Stateless Go server responsible for executing tasks asynchronously and concurrently.
+Stateless Go server responsible for running tasks asynchronously and concurrently.
 
 * [Overview](#overview)
   * [Job](#job)
@@ -21,7 +21,7 @@ Stateless Go server responsible for executing tasks asynchronously and concurren
 
 ## Overview
 
-At its core, `valet` is a simple job queuing system and an asynchronous task executor. A task is a user-defined `func` that is run as a callback by the service.
+At its core, `valet` is a simple job queuing system and an asynchronous task runner. A task is a user-defined `func` that is run as a callback by the service.
 
 <a name="job"/>
 
@@ -38,8 +38,7 @@ After the tasks have been executed, their results along with the errors (if any)
 ### Pipeline
 
 A `pipeline` is a sequence of jobs that need to be executed in a specified order, one by one. Every job in the pipeline can be assigned with a different task
-and parameters, and each task callback can optionally use the results of the previous task in the job sequence. A pipeline can also be scheduled to be executed
-sometime in the future, or run immediately.
+and parameters, and each task callback can optionally use the results of the previous task in the job sequence. A pipeline can also be scheduled to run sometime in the future, or run immediately.
 
 <a name="architecture"/>
 
@@ -270,7 +269,7 @@ by including them in the request body.
 }
 ```
 
-To schedule a new job to run at a specific time in the future, add `run_at` field to the request body.
+To schedule a new job to run at a specific time, add `run_at` field to the request body.
 
 ```json
 {
@@ -287,7 +286,7 @@ To schedule a new job to run at a specific time in the future, add `run_at` fiel
 
 Create a new pipeline by making a POST HTTP call to `/pipelines` or via gRPC to `pipeline.Pipeline.Create` service method. You can inject arbitrary parameters
 for your tasks to run by including them in the request body. Optionally, you can tune your tasks to use any results of the previous task in the pipeline, creating
-a `bash`-like command pipeline. Pipelines can also be scheduled for execution in some time in the future, by adding `run_at` field to the request payload
+a `bash`-like command pipeline. Pipelines can also be scheduled for execution at a specific time, by adding `run_at` field to the request payload
 just like with the jobs.
 
 ```json

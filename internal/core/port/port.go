@@ -134,8 +134,8 @@ type WorkService interface {
 	// Stop signals the workers to stop working gracefully.
 	Stop()
 
-	// Send sends a work to the worker pool.
-	Send(w work.Work)
+	// Dispatch dispatches a work to the worker pool.
+	Dispatch(w work.Work)
 
 	// CreateWork creates and return a new Work instance.
 	CreateWork(j *domain.Job) work.Work

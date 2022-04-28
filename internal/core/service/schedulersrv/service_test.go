@@ -41,7 +41,7 @@ func TestDispatch(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Send(w).
+		Dispatch(w).
 		Return().
 		Times(1)
 	workService.
@@ -98,7 +98,7 @@ func TestDispatchPipeline(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Send(w).
+		Dispatch(w).
 		Return().
 		Times(1)
 	workService.
@@ -185,7 +185,7 @@ func TestSchedule(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Send(w).
+		Dispatch(w).
 		Return().
 		Times(1)
 	workService.
@@ -253,7 +253,7 @@ func TestScheduleErrorCases(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Send(w).
+		Dispatch(w).
 		Return().
 		Times(1)
 	workService.
@@ -326,7 +326,7 @@ func TestSchedulePipeline(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Send(w).
+		Dispatch(w).
 		Return().
 		Times(1)
 	workService.

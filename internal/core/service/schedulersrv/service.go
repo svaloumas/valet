@@ -56,7 +56,7 @@ func (srv *schedulerservice) Dispatch(ctx context.Context, duration time.Duratio
 				}
 				w := srv.workService.CreateWork(j)
 				// Blocks until worker pool backlog has some space.
-				srv.workService.Send(w)
+				srv.workService.Dispatch(w)
 				message := fmt.Sprintf("job with ID: %s", j.ID)
 				if j.BelongsToPipeline() {
 					message = fmt.Sprintf("pipeline with ID: %s", j.PipelineID)
@@ -95,7 +95,7 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 					}
 					w := srv.workService.CreateWork(j)
 					// Blocks until worker pool backlog has some space.
-					srv.workService.Send(w)
+					srv.workService.Dispatch(w)
 
 					scheduledAt := srv.time.Now()
 					j.MarkScheduled(&scheduledAt)

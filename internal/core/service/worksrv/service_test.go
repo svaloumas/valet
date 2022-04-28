@@ -19,7 +19,7 @@ import (
 	"github.com/svaloumas/valet/mock"
 )
 
-func TestSend(t *testing.T) {
+func TestDispatch(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -57,14 +57,14 @@ func TestSend(t *testing.T) {
 	workservice.Start()
 	defer workservice.Stop()
 
-	workservice.Send(work)
+	workservice.Dispatch(work)
 
 	if len(workservice.queue) != 1 {
 		t.Errorf("work service send did not increase the queue length: got %v want 1", len(workservice.queue))
 	}
 }
 
-func TestSendMergedJobs(t *testing.T) {
+func TestDispatchMergedJobs(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -147,14 +147,14 @@ func TestSendMergedJobs(t *testing.T) {
 	workservice.Start()
 	defer workservice.Stop()
 
-	workservice.Send(work)
+	workservice.Dispatch(work)
 
 	if len(workservice.queue) != 1 {
 		t.Errorf("work service send did not increase the queue length: got %v want 1", len(workservice.queue))
 	}
 }
 
-func TestSendNoResultCreation(t *testing.T) {
+func TestDispatchNoResultCreation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -176,14 +176,14 @@ func TestSendNoResultCreation(t *testing.T) {
 	workservice.Start()
 	defer workservice.Stop()
 
-	workservice.Send(work)
+	workservice.Dispatch(work)
 
 	if len(workservice.queue) != 1 {
 		t.Errorf("work service send did not increase the queue length: got %v want 1", len(workservice.queue))
 	}
 }
 
-func TestSendBacklogLimit(t *testing.T) {
+func TestDispatchBacklogLimit(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -206,7 +206,7 @@ func TestSendBacklogLimit(t *testing.T) {
 	workservice.Start()
 	defer workservice.Stop()
 
-	workservice.Send(w)
+	workservice.Dispatch(w)
 
 	if len(workservice.queue) != 1 {
 		t.Errorf("work service send did not increase the queue length: got %v want 1", len(workservice.queue))
@@ -221,7 +221,7 @@ func TestSendBacklogLimit(t *testing.T) {
 			}
 		}()
 		// This should block forever.
-		workservice.Send(workDeemedToBlock)
+		workservice.Dispatch(workDeemedToBlock)
 	}()
 
 	if len(workservice.queue) != 1 {

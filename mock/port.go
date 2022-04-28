@@ -656,6 +656,18 @@ func (mr *MockWorkServiceMockRecorder) CreateWork(j interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWork", reflect.TypeOf((*MockWorkService)(nil).CreateWork), j)
 }
 
+// Dispatch mocks base method.
+func (m *MockWorkService) Dispatch(w work.Work) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Dispatch", w)
+}
+
+// Dispatch indicates an expected call of Dispatch.
+func (mr *MockWorkServiceMockRecorder) Dispatch(w interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockWorkService)(nil).Dispatch), w)
+}
+
 // Exec mocks base method.
 func (m *MockWorkService) Exec(ctx context.Context, w work.Work) error {
 	m.ctrl.T.Helper()
@@ -668,18 +680,6 @@ func (m *MockWorkService) Exec(ctx context.Context, w work.Work) error {
 func (mr *MockWorkServiceMockRecorder) Exec(ctx, w interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockWorkService)(nil).Exec), ctx, w)
-}
-
-// Send mocks base method.
-func (m *MockWorkService) Send(w work.Work) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Send", w)
-}
-
-// Send indicates an expected call of Send.
-func (mr *MockWorkServiceMockRecorder) Send(w interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockWorkService)(nil).Send), w)
 }
 
 // Start mocks base method.
