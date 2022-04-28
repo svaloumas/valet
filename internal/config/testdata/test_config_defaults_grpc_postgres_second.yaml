@@ -26,6 +26,10 @@ job_queue:
       routing_key:
       mandatory:
       immediate:
+  redis:
+    key_prefix:
+    min_idle_conns:
+    pool_size:
 worker_pool:
   workers:
   queue_capacity:
@@ -44,7 +48,7 @@ repository:
     max_open_connections:
   redis:
     key_prefix:
-    min_idle_conns: 10
-    pool_size: 10
+    min_idle_conns:
+    pool_size:
 timeout_unit: second
 logging_format: text

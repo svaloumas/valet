@@ -30,6 +30,7 @@ var (
 	validJobQueueOptions = map[string]bool{
 		"memory":   true,
 		"rabbitmq": true,
+		"redis":    true,
 	}
 	validProtocolOptions = map[string]bool{
 		"http": true,
@@ -88,6 +89,7 @@ type JobQueue struct {
 	Option         string         `yaml:"option"`
 	MemoryJobQueue MemoryJobQueue `yaml:"memory_job_queue"`
 	RabbitMQ       RabbitMQ       `yaml:"rabbitmq"`
+	Redis          Redis          `yaml:"redis"`
 }
 
 type WorkerPool struct {
@@ -194,6 +196,20 @@ func (cfg *Config) setJobQueueConfig() error {
 	if cfg.JobQueue.Option == "memory" {
 		if cfg.JobQueue.MemoryJobQueue.Capacity == 0 {
 			cfg.JobQueue.MemoryJobQueue.Capacity = 100
+		}
+	}
+	if cfg.JobQueue.Option == "redis" {
+		url := env.LoadVar("REDIS_URL")
+		if url == "" {
+			return errors.New("Redis URL not provided")
+		}
+		cfg.JobQueue.Redis.URL = url
+
+		if cfg.JobQueue.Redis.PoolSize == 0 {
+			cfg.JobQueue.Redis.PoolSize = 10
+		}
+		if cfg.JobQueue.Redis.MinIdleConns == 0 {
+			cfg.JobQueue.Redis.MinIdleConns = 10
 		}
 	}
 	return nil

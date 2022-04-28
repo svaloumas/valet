@@ -75,6 +75,7 @@ So far, `valet` provides the following interfaces and can be configured accordin
 
 * In memory job queue.
 * RabbitMQ
+* Redis
 
 <a name="installation"/>
 
@@ -189,7 +190,7 @@ server:
     port: 50051                     # string
 # Job queue config section
 job_queue:
-  option: rabbitmq                  # string - options: memory, rabbitmq
+  option: rabbitmq                  # string - options: memory, rabbitmq, redis
   memory_job_queue:
     capacity: 100                   # int
   rabbitmq:
@@ -210,6 +211,10 @@ job_queue:
       routing_key: job              # string
       mandatory: false              # boolean
       immediate: false              # boolean
+  redis:
+    key_prefix: valet               # string
+    min_idle_conns: 10              # int
+    pool_size: 10                   # int
 # Workerpool config section
 worker_pool:
   workers: 4                        # int

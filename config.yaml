@@ -26,6 +26,10 @@ job_queue:
       routing_key: job
       mandatory: false
       immediate: false
+  redis:
+    key_prefix: valet
+    min_idle_conns: 10
+    pool_size: 10
 worker_pool:
   workers:
   queue_capacity:

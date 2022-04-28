@@ -95,7 +95,7 @@ func TestRabbitMQPop(t *testing.T) {
 		t.Errorf("rabbitmq could not push job to queue: got %#v want nil", err)
 	}
 	// give some time for the AMQP call
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(300 * time.Millisecond)
 	job := jobqueue.Pop()
 	if job == nil {
 		t.Errorf("rabbitmq pop did not return job: got nil want %#v", job)
@@ -132,6 +132,6 @@ func TestRabbitMQClose(t *testing.T) {
 
 	jobqueue.Close()
 	if err := jobqueue.Push(expected); err == nil {
-		t.Errorf("rabbitmq pushed  on closed queue: got %#v want some err", err)
+		t.Errorf("rabbitmq pushed on closed queue: got %#v want some err", err)
 	}
 }

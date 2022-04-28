@@ -51,10 +51,16 @@ func TestLoad(t *testing.T) {
 		ConsumeParams: consumeParams,
 		PublishParams: publishParams,
 	}
+	redis := Redis{
+		KeyPrefix:    "somekey",
+		PoolSize:     10,
+		MinIdleConns: 10,
+	}
 	jobqueue := JobQueue{
 		Option:         "rabbitmq",
 		MemoryJobQueue: memoryJobQueue,
 		RabbitMQ:       rabbitMQ,
+		Redis:          redis,
 	}
 	wp := WorkerPool{
 		Workers:       4,
@@ -76,11 +82,6 @@ func TestLoad(t *testing.T) {
 		ConnectionMaxLifetime: 1000,
 		MaxIdleConnections:    8,
 		MaxOpenConnections:    8,
-	}
-	redis := Redis{
-		KeyPrefix:    "somekey",
-		PoolSize:     10,
-		MinIdleConns: 10,
 	}
 	repository := Repository{
 		Option:   "mysql",
@@ -177,7 +178,7 @@ func TestLoad(t *testing.T) {
 			"test_url",
 			"./testdata/test_config_invalid_job_queue_option.yaml",
 			nil,
-			errors.New("queueX is not a valid job queue option, valid options: map[memory:true rabbitmq:true]"),
+			errors.New("queueX is not a valid job queue option, valid options: map[memory:true rabbitmq:true redis:true]"),
 		},
 		{
 			"wrong protovol option",
@@ -226,9 +227,13 @@ func TestLoadDefaultValues(t *testing.T) {
 	memoryJobQueue := MemoryJobQueue{
 		Capacity: 100,
 	}
+	redis := Redis{
+		KeyPrefix: "",
+	}
 	jobqueue := JobQueue{
 		Option:         "memory",
 		MemoryJobQueue: memoryJobQueue,
+		Redis:          redis,
 	}
 	wp := WorkerPool{
 		Workers:       runtime.NumCPU(),
@@ -250,11 +255,6 @@ func TestLoadDefaultValues(t *testing.T) {
 		ConnectionMaxLifetime: 3000,
 		MaxIdleConnections:    8,
 		MaxOpenConnections:    8,
-	}
-	redis := Redis{
-		KeyPrefix:    "",
-		PoolSize:     10,
-		MinIdleConns: 10,
 	}
 	repository := Repository{
 		Option:   "mysql",
@@ -341,6 +341,13 @@ func TestLoadDefaultValues(t *testing.T) {
 					tt.expected.Repository.MySQL.DSN = ""
 					tt.expected.Repository.Postgres.DSN = ""
 					tt.expected.Repository.Redis.URL = tt.redisURL
+					tt.expected.JobQueue.Option = "redis"
+					tt.expected.JobQueue.Redis.URL = tt.redisURL
+					tt.expected.JobQueue.Redis.MinIdleConns = 10
+					tt.expected.JobQueue.Redis.PoolSize = 10
+					tt.expected.Repository.Redis.MinIdleConns = 10
+					tt.expected.Repository.Redis.PoolSize = 10
+					tt.expected.JobQueue.MemoryJobQueue.Capacity = 0
 				}
 				if strings.Contains(tt.name, "millisecond") {
 					tt.expected.Scheduler.RepositoryPollingInterval = 60000
