@@ -41,7 +41,7 @@ func TestCheckHealthRedis(t *testing.T) {
 }
 
 func TestRedisCreateJob(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -75,7 +75,7 @@ func TestRedisCreateJob(t *testing.T) {
 		t.Fatalf("unexpected error when creating test job: %#v", err)
 	}
 
-	dbJob, err := redisTest.client.Get(ctx, jobKey).Result()
+	dbJob, err := redisTest.Get(ctx, jobKey).Result()
 	if err != nil {
 		t.Errorf("get job returned unexpected error: got %#v want nil", err)
 	} else {
@@ -86,7 +86,7 @@ func TestRedisCreateJob(t *testing.T) {
 }
 
 func TestRedisGetJob(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -153,7 +153,7 @@ func TestRedisGetJob(t *testing.T) {
 }
 
 func TestRedisGetJobs(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -315,7 +315,7 @@ func TestRedisGetJobs(t *testing.T) {
 	}
 }
 func TestRedisGetJobsByPipelineID(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	createdAt := testTime
 	runAt := testTime
@@ -422,7 +422,7 @@ func TestRedisGetJobsByPipelineID(t *testing.T) {
 }
 
 func TestRedisUpdateJob(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -465,7 +465,7 @@ func TestRedisUpdateJob(t *testing.T) {
 		t.Fatalf("unexpected error when marshalling job: %#v", err)
 	}
 
-	dbJob, err := redisTest.client.Get(ctx, jobKey).Result()
+	dbJob, err := redisTest.Get(ctx, jobKey).Result()
 	if err != nil {
 		t.Errorf("get job returned unexpected error: got %#v want nil", err)
 	} else {
@@ -476,7 +476,7 @@ func TestRedisUpdateJob(t *testing.T) {
 }
 
 func TestRedisDeleteJob(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	completedAt := testTime.Add(1 * time.Minute)
 	job := &domain.Job{
@@ -510,7 +510,7 @@ func TestRedisDeleteJob(t *testing.T) {
 		t.Fatalf("unexpected error when deleting test job: %#v", err)
 	}
 
-	_, err = redisTest.client.Get(ctx, jobKey).Result()
+	_, err = redisTest.Get(ctx, jobKey).Result()
 	if err == nil {
 		t.Errorf("get job did not return expected error: got %#v want nil", err)
 	} else {
@@ -521,7 +521,7 @@ func TestRedisDeleteJob(t *testing.T) {
 }
 
 func TestRedisGetDueJobs(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	duejob1 := &domain.Job{
 		Name:        "due_job_1",
@@ -634,7 +634,7 @@ func TestRedisGetDueJobs(t *testing.T) {
 }
 
 func TestRedisCreateJobResult(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	result := &domain.JobResult{
 		Metadata: "some metadata",
@@ -655,7 +655,7 @@ func TestRedisCreateJobResult(t *testing.T) {
 		t.Fatalf("unexpected error when creating test job result: %#v", err)
 	}
 
-	dbJobResult, err := redisTest.client.Get(ctx, jobresultKey).Result()
+	dbJobResult, err := redisTest.Get(ctx, jobresultKey).Result()
 	if err != nil {
 		t.Errorf("get job returned unexpected error: got %#v want nil", err)
 	} else {
@@ -666,7 +666,7 @@ func TestRedisCreateJobResult(t *testing.T) {
 }
 
 func TestRedisGetJobResult(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	result := &domain.JobResult{
 		Metadata: "some metadata",
@@ -720,7 +720,7 @@ func TestRedisGetJobResult(t *testing.T) {
 }
 
 func TestRedisUpdateJobResult(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	result := &domain.JobResult{
 		Metadata: "some metadata",
@@ -749,7 +749,7 @@ func TestRedisUpdateJobResult(t *testing.T) {
 		t.Fatalf("unexpected error when marshalling job result: %#v", err)
 	}
 
-	dbJobResult, err := redisTest.client.Get(ctx, jobResultKey).Result()
+	dbJobResult, err := redisTest.Get(ctx, jobResultKey).Result()
 	if err != nil {
 		t.Errorf("get job returned unexpected error: got %#v want nil", err)
 	} else {
@@ -760,7 +760,7 @@ func TestRedisUpdateJobResult(t *testing.T) {
 }
 
 func TestRedisDeleteJobResult(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	result := &domain.JobResult{
 		Metadata: "some metadata",
@@ -781,7 +781,7 @@ func TestRedisDeleteJobResult(t *testing.T) {
 		t.Fatalf("unexpected error when deleting test job result: %#v", err)
 	}
 
-	_, err = redisTest.client.Get(ctx, jobResultKey).Result()
+	_, err = redisTest.Get(ctx, jobResultKey).Result()
 	if err == nil {
 		t.Errorf("get job did not return expected error: got %#v want nil", err)
 	} else {
@@ -792,7 +792,7 @@ func TestRedisDeleteJobResult(t *testing.T) {
 }
 
 func TestRedisCreatePipeline(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	pipelineUUID, _ := uuidGenerator.GenerateRandomUUIDString()
 	jobUUID, _ := uuidGenerator.GenerateRandomUUIDString()
@@ -863,7 +863,7 @@ func TestRedisCreatePipeline(t *testing.T) {
 	jobKey := fmt.Sprintf("job:%s", job.ID)
 	secondJobKey := fmt.Sprintf("job:%s", secondJob.ID)
 
-	dbJob, err := redisTest.client.Get(ctx, jobKey).Result()
+	dbJob, err := redisTest.Get(ctx, jobKey).Result()
 	if err != nil {
 		t.Errorf("get job returned unexpected error: got %#v want nil", err)
 	} else {
@@ -872,7 +872,7 @@ func TestRedisCreatePipeline(t *testing.T) {
 		}
 	}
 
-	dbSecondJob, err := redisTest.client.Get(ctx, secondJobKey).Result()
+	dbSecondJob, err := redisTest.Get(ctx, secondJobKey).Result()
 	if err != nil {
 		t.Errorf("get job returned unexpected error: got %#v want nil", err)
 	} else {
@@ -881,7 +881,7 @@ func TestRedisCreatePipeline(t *testing.T) {
 		}
 	}
 
-	dbPipeline, err := redisTest.client.Get(ctx, pipelineKey).Result()
+	dbPipeline, err := redisTest.Get(ctx, pipelineKey).Result()
 	if err != nil {
 		t.Errorf("get pipeline returned unexpected error: got %#v want nil", err)
 	} else {
@@ -892,7 +892,7 @@ func TestRedisCreatePipeline(t *testing.T) {
 }
 
 func TestRedisGetPipeline(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	p := &domain.Pipeline{
 		Name:        "pipeline_name",
@@ -951,7 +951,7 @@ func TestRedisGetPipeline(t *testing.T) {
 }
 
 func TestRedisGetPipelines(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	createdAt := testTime
 	runAt := testTime
@@ -1035,7 +1035,7 @@ func TestRedisGetPipelines(t *testing.T) {
 }
 
 func TestRedisUpdatePipeline(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	p := &domain.Pipeline{
 		Name:        "pipeline_name",
@@ -1070,7 +1070,7 @@ func TestRedisUpdatePipeline(t *testing.T) {
 		t.Fatalf("unexpected error when marshalling job: %#v", err)
 	}
 
-	dbPipeline, err := redisTest.client.Get(ctx, pipelineKey).Result()
+	dbPipeline, err := redisTest.Get(ctx, pipelineKey).Result()
 	if err != nil {
 		t.Errorf("get pipeline returned unexpected error: got %#v want nil", err)
 	} else {
@@ -1081,7 +1081,7 @@ func TestRedisUpdatePipeline(t *testing.T) {
 }
 
 func TestRedisDeletePipeline(t *testing.T) {
-	defer redisTest.client.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	pipelineUUID, _ := uuidGenerator.GenerateRandomUUIDString()
 	jobUUID, _ := uuidGenerator.GenerateRandomUUIDString()
@@ -1168,7 +1168,7 @@ func TestRedisDeletePipeline(t *testing.T) {
 	}
 
 	// Should CASCADE
-	_, err = redisTest.client.Get(ctx, pipelineKey).Result()
+	_, err = redisTest.Get(ctx, pipelineKey).Result()
 	if err == nil {
 		t.Errorf("get pipeline did not return expected error: got %#v want nil", err)
 	} else {
@@ -1177,7 +1177,7 @@ func TestRedisDeletePipeline(t *testing.T) {
 		}
 	}
 
-	_, err = redisTest.client.Get(ctx, jobKey).Result()
+	_, err = redisTest.Get(ctx, jobKey).Result()
 	if err == nil {
 		t.Errorf("get job did not return expected error: got %#v want nil", err)
 	} else {
@@ -1186,7 +1186,7 @@ func TestRedisDeletePipeline(t *testing.T) {
 		}
 	}
 
-	_, err = redisTest.client.Get(ctx, secondJobKey).Result()
+	_, err = redisTest.Get(ctx, secondJobKey).Result()
 	if err == nil {
 		t.Errorf("get job did not return expected error: got %#v want nil", err)
 	} else {
@@ -1195,7 +1195,7 @@ func TestRedisDeletePipeline(t *testing.T) {
 		}
 	}
 
-	_, err = redisTest.client.Get(ctx, result1Key).Result()
+	_, err = redisTest.Get(ctx, result1Key).Result()
 	if err == nil {
 		t.Errorf("get job result did not return expected error: got %#v want nil", err)
 	} else {
@@ -1204,7 +1204,7 @@ func TestRedisDeletePipeline(t *testing.T) {
 		}
 	}
 
-	_, err = redisTest.client.Get(ctx, result2Key).Result()
+	_, err = redisTest.Get(ctx, result2Key).Result()
 	if err == nil {
 		t.Errorf("get job result did not return expected error: got %#v want nil", err)
 	} else {
