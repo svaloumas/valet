@@ -5,7 +5,7 @@ server:
   grpc:
     port:
 job_queue:
-  option: memory
+  option: redis
   memory_job_queue:
     capacity:
   rabbitmq:
@@ -26,6 +26,10 @@ job_queue:
       routing_key:
       mandatory:
       immediate:
+  redis:
+    key_prefix:
+    min_idle_conns:
+    pool_size:
 worker_pool:
   workers:
   queue_capacity:

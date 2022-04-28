@@ -10,5 +10,8 @@ func JobQueueFactory(cfg config.JobQueue, loggingFormat string) port.JobQueue {
 	if cfg.Option == "memory" {
 		return jobqueue.NewFIFOQueue(cfg.MemoryJobQueue.Capacity)
 	}
+	if cfg.Option == "redis" {
+		return jobqueue.NewRedisQueue(cfg.Redis, loggingFormat)
+	}
 	return jobqueue.NewRabbitMQ(cfg.RabbitMQ, loggingFormat)
 }

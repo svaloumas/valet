@@ -26,6 +26,10 @@ job_queue:
       routing_key: test
       mandatory: false
       immediate: false
+  redis:
+    key_prefix: somekey
+    min_idle_conns: 10
+    pool_size: 10
 worker_pool:
   workers: 4
   queue_capacity: 8

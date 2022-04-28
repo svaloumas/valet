@@ -26,7 +26,7 @@ type rabbitmq struct {
 	logger        *logrus.Logger
 }
 
-// NewRabbitMQ creates and returns a new fifoqueue instance.
+// NewRabbitMQ creates and returns a new rabbitmq instance.
 func NewRabbitMQ(cfg config.RabbitMQ, loggingFormat string) *rabbitmq {
 	logger := log.NewLogger("rabbitmq", loggingFormat)
 	rabbitmqURI := env.LoadVar("RABBITMQ_URI")
