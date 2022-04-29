@@ -153,17 +153,13 @@ type TaskService interface {
 	GetTaskRepository() *taskrepo.TaskRepository
 }
 
-// Consumer represents a domain event listener.
-type Consumer interface {
-	// Consume listens to the job queue for messages, consumes them and
-	// schedules the job items for execution.
-	Consume(ctx context.Context, duration time.Duration)
-}
-
 // Scheduler represents a domain event listener.
 type Scheduler interface {
 	// Schedule polls the repository in given interval and schedules due jobs for execution.
 	Schedule(ctx context.Context, duration time.Duration)
+	// Dispatch listens to the job queue for messages, consumes them and
+	// dispatches the jobs for execution.
+	Dispatch(ctx context.Context, duration time.Duration)
 }
 
 // Server represents a driver actor service interface.

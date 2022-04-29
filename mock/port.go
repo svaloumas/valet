@@ -755,41 +755,6 @@ func (mr *MockTaskServiceMockRecorder) Register(name, taskFunc interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockTaskService)(nil).Register), name, taskFunc)
 }
 
-// MockConsumer is a mock of Consumer interface.
-type MockConsumer struct {
-	ctrl     *gomock.Controller
-	recorder *MockConsumerMockRecorder
-}
-
-// MockConsumerMockRecorder is the mock recorder for MockConsumer.
-type MockConsumerMockRecorder struct {
-	mock *MockConsumer
-}
-
-// NewMockConsumer creates a new mock instance.
-func NewMockConsumer(ctrl *gomock.Controller) *MockConsumer {
-	mock := &MockConsumer{ctrl: ctrl}
-	mock.recorder = &MockConsumerMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockConsumer) EXPECT() *MockConsumerMockRecorder {
-	return m.recorder
-}
-
-// Consume mocks base method.
-func (m *MockConsumer) Consume(ctx context.Context, duration time.Duration) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Consume", ctx, duration)
-}
-
-// Consume indicates an expected call of Consume.
-func (mr *MockConsumerMockRecorder) Consume(ctx, duration interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Consume", reflect.TypeOf((*MockConsumer)(nil).Consume), ctx, duration)
-}
-
 // MockScheduler is a mock of Scheduler interface.
 type MockScheduler struct {
 	ctrl     *gomock.Controller
@@ -811,6 +776,18 @@ func NewMockScheduler(ctrl *gomock.Controller) *MockScheduler {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockScheduler) EXPECT() *MockSchedulerMockRecorder {
 	return m.recorder
+}
+
+// Dispatch mocks base method.
+func (m *MockScheduler) Dispatch(ctx context.Context, duration time.Duration) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Dispatch", ctx, duration)
+}
+
+// Dispatch indicates an expected call of Dispatch.
+func (mr *MockSchedulerMockRecorder) Dispatch(ctx, duration interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockScheduler)(nil).Dispatch), ctx, duration)
 }
 
 // Schedule mocks base method.
