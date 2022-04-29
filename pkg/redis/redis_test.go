@@ -10,7 +10,7 @@ var redisTest *RedisClient
 func TestMain(m *testing.M) {
 
 	redisURL := os.Getenv("REDIS_URL")
-	redisTest = New(redisURL, 1, 5, "some-prefixed-key")
+	redisTest = New(redisURL, 1, 5, "some-prefixed-key", nil)
 	defer redisTest.Close()
 
 	m.Run()
@@ -25,7 +25,7 @@ func TestCheckHealth(t *testing.T) {
 
 func TestGetRedisPrefixedKey(t *testing.T) {
 	redisURL := os.Getenv("REDIS_URL")
-	rcWithoutPrefixedKey := New(redisURL, 1, 5, "")
+	rcWithoutPrefixedKey := New(redisURL, 1, 5, "", nil)
 	defer rcWithoutPrefixedKey.Close()
 
 	tests := []struct {

@@ -24,7 +24,7 @@ type redisqueue struct {
 // NewRedisQueue returns a redis queue.
 func NewRedisQueue(cfg config.Redis, loggingFormat string) *redisqueue {
 	logger := log.NewLogger("redisqueue", loggingFormat)
-	client := rs.New(cfg.URL, cfg.PoolSize, cfg.MinIdleConns, cfg.KeyPrefix)
+	client := rs.New(cfg.URL, cfg.PoolSize, cfg.MinIdleConns, cfg.KeyPrefix, logger)
 	rs := &redisqueue{
 		RedisClient: client,
 		logger:      logger,

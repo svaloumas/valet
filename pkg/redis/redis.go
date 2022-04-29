@@ -2,10 +2,10 @@ package redis
 
 import (
 	"context"
-	"fmt"
-	"math/rand"
+	"io/ioutil"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/sirupsen/logrus"
 )
 
 var ctx = context.Background()
@@ -14,10 +14,14 @@ var ctx = context.Background()
 type RedisClient struct {
 	*redis.Client
 	KeyPrefix string
+	logger    *logrus.Logger
 }
 
 // New returns a redis client.
-func New(url string, poolSize, minIdleConns int, keyPrefix string) *RedisClient {
+func New(
+	url string, poolSize, minIdleConns int,
+	keyPrefix string, logger *logrus.Logger) *RedisClient {
+
 	rs := new(RedisClient)
 
 	opt, err := redis.ParseURL(url)
@@ -26,6 +30,11 @@ func New(url string, poolSize, minIdleConns int, keyPrefix string) *RedisClient 
 	}
 
 	rs.KeyPrefix = keyPrefix
+	if logger != nil {
+		rs.logger = logger
+	} else {
+		rs.logger = &logrus.Logger{Out: ioutil.Discard}
+	}
 
 	rs.Client = redis.NewClient(&redis.Options{
 		Addr:         opt.Addr,
@@ -40,30 +49,12 @@ func New(url string, poolSize, minIdleConns int, keyPrefix string) *RedisClient 
 
 // CheckHealth checks if the job queue is alive.
 func (rs *RedisClient) CheckHealth() bool {
-
-	randomNum := rand.Intn(10000)
-	key := fmt.Sprintf("health:%d", randomNum)
-
-	prefixedKey := rs.GetRedisPrefixedKey(key)
-
-	val, err := rs.Get(ctx, prefixedKey).Result()
-	if err != redis.Nil || val != "" {
+	res, err := rs.Ping(ctx).Result()
+	if err != nil {
+		rs.logger.Errorf("ping returned error: %s", err)
 		return false
 	}
-
-	rs.Set(ctx, prefixedKey, "1", 0)
-	val, err = rs.Get(ctx, prefixedKey).Result()
-	if err != redis.Nil && val != "1" {
-		return false
-	}
-
-	rs.Del(ctx, prefixedKey)
-	val, err = rs.Get(ctx, prefixedKey).Result()
-	if err != redis.Nil || val != "" {
-		return false
-	}
-
-	return true
+	return res == "PONG"
 }
 
 // Close terminates any storage connections gracefully.

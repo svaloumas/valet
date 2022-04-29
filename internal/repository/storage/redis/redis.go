@@ -24,7 +24,7 @@ type Redis struct {
 
 // New returns a redis client.
 func New(url string, poolSize, minIdleConns int, keyPrefix string) *Redis {
-	client := rs.New(url, poolSize, minIdleConns, keyPrefix)
+	client := rs.New(url, poolSize, minIdleConns, keyPrefix, nil)
 	rs := &Redis{
 		RedisClient: client,
 	}
