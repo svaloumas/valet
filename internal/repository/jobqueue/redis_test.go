@@ -1,7 +1,6 @@
 package jobqueue
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -16,9 +15,7 @@ import (
 	"github.com/svaloumas/valet/mock"
 )
 
-var (
-	jobqueue *redisqueue
-)
+var redisTest *redisqueue
 
 func TestMain(m *testing.M) {
 	redisURL := os.Getenv("REDIS_URL")
@@ -28,15 +25,15 @@ func TestMain(m *testing.M) {
 		PoolSize:     1,
 		MinIdleConns: 5,
 	}
-	jobqueue = NewRedisQueue(cfg, "text")
-	jobqueue.logger = &logrus.Logger{Out: ioutil.Discard}
-	defer jobqueue.Close()
+	redisTest = NewRedisQueue(cfg, "text")
+	redisTest.logger = &logrus.Logger{Out: ioutil.Discard}
+	defer redisTest.Close()
 
 	m.Run()
 }
 
 func TestRedisQueuePush(t *testing.T) {
-	defer jobqueue.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -54,31 +51,27 @@ func TestRedisQueuePush(t *testing.T) {
 		Name:        "job_name",
 		TaskName:    "test_task",
 		Description: "some description",
+		Timeout:     10,
 		TaskParams: map[string]interface{}{
 			"url": "some-url.com",
 		},
-		Status:    domain.Pending,
+		Status:    domain.InProgress,
 		CreatedAt: &createdAt,
+		StartedAt: &createdAt,
 	}
 	secondJob := &domain.Job{}
 	*secondJob = *job
 	secondJob.Name = "second_job"
 
-	if err := jobqueue.Push(job); err != nil {
+	if err := redisTest.Push(job); err != nil {
 		t.Errorf("redisqueue could not push job to queue: got %#v want nil", err)
 	}
-	if err := jobqueue.Push(secondJob); err != nil {
+	if err := redisTest.Push(secondJob); err != nil {
 		t.Errorf("redisqueue could not push job to queue: got %#v want nil", err)
 	}
 
-	queueJobBytes, _ := jobqueue.Client.RPop(ctx, "job-queue").Bytes()
-	queueSecondJobBytes, _ := jobqueue.Client.RPop(ctx, "job-queue").Bytes()
-
-	queueJob := &domain.Job{}
-	queueSecondJob := &domain.Job{}
-
-	json.Unmarshal(queueJobBytes, queueJob)
-	json.Unmarshal(queueSecondJobBytes, queueSecondJob)
+	queueJob := redisTest.Pop()
+	queueSecondJob := redisTest.Pop()
 
 	if eq := reflect.DeepEqual(queueJob, job); !eq {
 		t.Errorf("redisqueue returned wrong job: got %v want %v", queueJob, job)
@@ -89,7 +82,7 @@ func TestRedisQueuePush(t *testing.T) {
 }
 
 func TestRedisQueuePop(t *testing.T) {
-	defer jobqueue.FlushDB(ctx)
+	defer redisTest.FlushDB(ctx)
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -117,16 +110,14 @@ func TestRedisQueuePop(t *testing.T) {
 	*secondJob = *job
 	secondJob.Name = "second_job"
 
-	if err := jobqueue.Push(job); err != nil {
+	if err := redisTest.Push(job); err != nil {
 		t.Errorf("redisqueue could not push job to queue: got %#v want nil", err)
 	}
-	if err := jobqueue.Push(secondJob); err != nil {
+	if err := redisTest.Push(secondJob); err != nil {
 		t.Errorf("redisqueue could not push job to queue: got %#v want nil", err)
 	}
 
-	// give some time for the AMQP call
-	time.Sleep(300 * time.Millisecond)
-	queueJob := jobqueue.Pop()
+	queueJob := redisTest.Pop()
 	if queueJob == nil {
 		t.Errorf("redisqueue pop did not return job: got nil want %#v", queueJob)
 	} else {
@@ -135,7 +126,7 @@ func TestRedisQueuePop(t *testing.T) {
 		}
 	}
 
-	queueSecondJob := jobqueue.Pop()
+	queueSecondJob := redisTest.Pop()
 	if queueSecondJob == nil {
 		t.Errorf("redisqueue pop did not return job: got nil want %#v", queueSecondJob)
 	} else {
@@ -164,11 +155,11 @@ func TestRedisQueueClose(t *testing.T) {
 		PoolSize:     1,
 		MinIdleConns: 5,
 	}
-	redisTestClose := NewRedisQueue(cfg, "text")
-	redisTestClose.logger = &logrus.Logger{Out: ioutil.Discard}
-	redisTestClose.Close()
+	redis := NewRedisQueue(cfg, "text")
+	redis.logger = &logrus.Logger{Out: ioutil.Discard}
+	redis.Close()
 
-	if err := redisTestClose.Push(expected); err == nil {
+	if err := redis.Push(expected); err == nil {
 		t.Errorf("redisqueue pushed on closed queue: got %#v want some err", err)
 	}
 }

@@ -95,7 +95,7 @@ func TestRabbitMQPop(t *testing.T) {
 		t.Errorf("rabbitmq could not push job to queue: got %#v want nil", err)
 	}
 	// give some time for the AMQP call
-	time.Sleep(300 * time.Millisecond)
+	time.Sleep(600 * time.Millisecond)
 	job := jobqueue.Pop()
 	if job == nil {
 		t.Errorf("rabbitmq pop did not return job: got nil want %#v", job)
@@ -103,6 +103,26 @@ func TestRabbitMQPop(t *testing.T) {
 		if eq := reflect.DeepEqual(job, expected); !eq {
 			t.Errorf("rabbitmq pop returned wrong job: got %#v want %#v", job, expected)
 		}
+	}
+}
+
+func TestRabbitMQCheckHealth(t *testing.T) {
+
+	cfg := config.RabbitMQ{
+		QueueParams: config.QueueParams{
+			Name: "test",
+		},
+		PublishParams: config.PublishParams{
+			RoutingKey: "test",
+		},
+	}
+	jobqueue := NewRabbitMQ(cfg, "text")
+	defer jobqueue.Close()
+	jobqueue.logger = &logrus.Logger{Out: ioutil.Discard}
+
+	healthy := jobqueue.CheckHealth()
+	if !healthy {
+		t.Errorf("rabbitmq check health returned wrong answer: got %#v want true", healthy)
 	}
 }
 

@@ -33,13 +33,6 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestCheckHealthRedis(t *testing.T) {
-	result := redisTest.CheckHealth()
-	if result != true {
-		t.Fatalf("expected true got %#v instead", result)
-	}
-}
-
 func TestRedisCreateJob(t *testing.T) {
 	defer redisTest.FlushDB(ctx)
 

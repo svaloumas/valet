@@ -74,6 +74,9 @@ type JobQueue interface {
 	// Pop removes and returns the head job from the queue.
 	Pop() *domain.Job
 
+	// CheckHealth checks if the job queue is alive.
+	CheckHealth() bool
+
 	// Close liberates the bound resources of the job queue.
 	Close()
 }

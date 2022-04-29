@@ -320,6 +320,20 @@ func (m *MockJobQueue) EXPECT() *MockJobQueueMockRecorder {
 	return m.recorder
 }
 
+// CheckHealth mocks base method.
+func (m *MockJobQueue) CheckHealth() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckHealth")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// CheckHealth indicates an expected call of CheckHealth.
+func (mr *MockJobQueueMockRecorder) CheckHealth() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckHealth", reflect.TypeOf((*MockJobQueue)(nil).CheckHealth))
+}
+
 // Close mocks base method.
 func (m *MockJobQueue) Close() {
 	m.ctrl.T.Helper()

@@ -85,6 +85,15 @@ func TestFIFOQueuePop(t *testing.T) {
 	}
 }
 
+func TestFIFOQueueCheckHealth(t *testing.T) {
+	q := NewFIFOQueue(1)
+	healthy := q.CheckHealth()
+
+	if healthy != true {
+		t.Errorf("expected true, got %v instead", healthy)
+	}
+}
+
 func TestFIFOQueueClose(t *testing.T) {
 	defer func() {
 		if p := recover(); p == nil {

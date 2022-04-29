@@ -41,6 +41,11 @@ func (q *fifoqueue) Pop() *domain.Job {
 	}
 }
 
+// CheckHealth checks if the job queue is alive.
+func (q *fifoqueue) CheckHealth() bool {
+	return q.jobs != nil
+}
+
 // Close liberates the bound resources of the job queue.
 func (q *fifoqueue) Close() {
 	close(q.jobs)

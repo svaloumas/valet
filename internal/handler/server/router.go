@@ -50,7 +50,7 @@ func NewRouter(
 	// CORS: Allow all origins - Revisit this.
 	r.Use(cors.Default())
 
-	r.GET("/api/status", HandleStatus(storage))
+	r.GET("/api/status", HandleStatus(jobQueue, storage))
 
 	r.POST("/api/jobs", jobHandler.Create)
 	r.GET("/api/jobs", jobHandler.GetJobs)
@@ -75,13 +75,14 @@ func NewRouter(
 
 // HandleStatus is an endpoint providing information and the status of the server,
 // usually pinged for healthchecks by other services.
-func HandleStatus(storage port.Storage) gin.HandlerFunc {
+func HandleStatus(jobQueue port.JobQueue, storage port.Storage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		now := time.Now().UTC()
 		res := map[string]interface{}{
-			"storage_healthy": storage.CheckHealth(),
-			"time":            now,
-			"version":         version,
+			"job_queue_healthy": jobQueue.CheckHealth(),
+			"storage_healthy":   storage.CheckHealth(),
+			"time":              now,
+			"version":           version,
 		}
 		c.JSON(http.StatusOK, res)
 	}

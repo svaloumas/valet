@@ -1,8 +1,14 @@
 package redis
 
 import (
+	"context"
+	"fmt"
+	"math/rand"
+
 	"github.com/go-redis/redis/v8"
 )
+
+var ctx = context.Background()
 
 // RedisClient represents a redis client.
 type RedisClient struct {
@@ -30,6 +36,34 @@ func New(url string, poolSize, minIdleConns int, keyPrefix string) *RedisClient 
 		TLSConfig:    opt.TLSConfig,
 	})
 	return rs
+}
+
+// CheckHealth checks if the job queue is alive.
+func (rs *RedisClient) CheckHealth() bool {
+
+	randomNum := rand.Intn(10000)
+	key := fmt.Sprintf("health:%d", randomNum)
+
+	prefixedKey := rs.GetRedisPrefixedKey(key)
+
+	val, err := rs.Get(ctx, prefixedKey).Result()
+	if err != redis.Nil || val != "" {
+		return false
+	}
+
+	rs.Set(ctx, prefixedKey, "1", 0)
+	val, err = rs.Get(ctx, prefixedKey).Result()
+	if err != redis.Nil && val != "1" {
+		return false
+	}
+
+	rs.Del(ctx, prefixedKey)
+	val, err = rs.Get(ctx, prefixedKey).Result()
+	if err != redis.Nil || val != "" {
+		return false
+	}
+
+	return true
 }
 
 // Close terminates any storage connections gracefully.

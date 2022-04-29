@@ -5,10 +5,28 @@ import (
 	"testing"
 )
 
+var redisTest *RedisClient
+
+func TestMain(m *testing.M) {
+
+	redisURL := os.Getenv("REDIS_URL")
+	redisTest = New(redisURL, 1, 5, "some-prefixed-key")
+	defer redisTest.Close()
+
+	m.Run()
+}
+
+func TestCheckHealth(t *testing.T) {
+	result := redisTest.CheckHealth()
+	if result != true {
+		t.Fatalf("expected true got %#v instead", result)
+	}
+}
+
 func TestGetRedisPrefixedKey(t *testing.T) {
 	redisURL := os.Getenv("REDIS_URL")
-	rcWithPrefixedKey := New(redisURL, 1, 5, "some-prefixed-key")
 	rcWithoutPrefixedKey := New(redisURL, 1, 5, "")
+	defer rcWithoutPrefixedKey.Close()
 
 	tests := []struct {
 		name     string
@@ -20,7 +38,7 @@ func TestGetRedisPrefixedKey(t *testing.T) {
 			"with prefixed key",
 			"test",
 			"some-prefixed-key:test",
-			rcWithPrefixedKey,
+			redisTest,
 		},
 		{
 			"no prefixed key",

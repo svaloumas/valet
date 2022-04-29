@@ -39,9 +39,9 @@ func (q *redisqueue) Push(j *domain.Job) error {
 		q.logger.Errorf("could not marshal job: %s", err)
 		return err
 	}
-	itemsPushed, err := q.LPush(ctx, key, value).Result()
-	if err != nil && itemsPushed != 1 {
-		q.logger.Errorf("error while LPUSH job message: %s, pushed: %d", err, itemsPushed)
+	_, err = q.LPush(ctx, key, value).Result()
+	if err != nil {
+		q.logger.Errorf("error while LPUSH job message: %s", err)
 		return err
 	}
 	return nil

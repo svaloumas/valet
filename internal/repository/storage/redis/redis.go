@@ -3,8 +3,6 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"math/rand"
 	"sort"
 	"time"
 
@@ -31,36 +29,6 @@ func New(url string, poolSize, minIdleConns int, keyPrefix string) *Redis {
 		RedisClient: client,
 	}
 	return rs
-}
-
-// CheckHealth returns the status of redis.
-func (rs *Redis) CheckHealth() bool {
-
-	randomNum := rand.Intn(10000)
-	key := fmt.Sprintf("health:%d", randomNum)
-
-	if rs.KeyPrefix != "" {
-		key = rs.KeyPrefix + ":" + key
-	}
-
-	val, err := rs.Get(ctx, key).Result()
-	if err != redis.Nil || val != "" {
-		return false
-	}
-
-	rs.Set(ctx, key, "1", 0)
-	val, err = rs.Get(ctx, key).Result()
-	if err != redis.Nil && val != "1" {
-		return false
-	}
-
-	rs.Del(ctx, key)
-	val, err = rs.Get(ctx, key).Result()
-	if err != redis.Nil || val != "" {
-		return false
-	}
-
-	return true
 }
 
 // CreateJob adds a new job to the repository.
