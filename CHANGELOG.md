@@ -1,4 +1,24 @@
 
+<a name="v0.8.4"></a>
+## [v0.8.4](https://github.com/svaloumas/valet/compare/v0.8.3...v0.8.4)
+
+> 2022-04-29
+
+### Chore
+
+* bump version to v0.8.4
+* add codecov config
+
+### Feat
+
+* add job queue healthcheck
+* remove consumer port
+
+### Refactor
+
+* use redis ping for health check
+
+
 <a name="v0.8.3"></a>
 ## [v0.8.3](https://github.com/svaloumas/valet/compare/v0.8.2...v0.8.3)
 
