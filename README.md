@@ -151,13 +151,13 @@ func main() {
 
 5. Build and run the service.
 
-    * To run the service and its dependencies as Docker containers, use the `Dockerfile`, `docker-compose` and `Makefile` files provided.
+* To run the service and its dependencies as Docker containers, use the `Dockerfile`, `docker-compose` and `Makefile` files provided.
 
     ```bash
     docker-compose up -d --build
     ```
 
-    * Build and run the service as a standalone binary.
+* Build and run the service as a standalone binary.
 
     > Optionally set the corresponding environment variables depending on your configuration options.
 
@@ -165,7 +165,7 @@ func main() {
     export POSTGRES_DSN=
     export RABBITMQ_URI=
     export MYSQL_DSN=
-    export REDIS_DSN=
+    export REDIS_URL=
     ```
 
     ```bash
