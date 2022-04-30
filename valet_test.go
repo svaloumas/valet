@@ -1,9 +1,13 @@
 package valet
 
 import (
+	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func TestValetRegisterTask(t *testing.T) {
@@ -72,7 +76,14 @@ func TestDecodePreviousJobResults(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
+	gin.SetMode(gin.ReleaseMode)
 	v := New("internal/config/testdata/test_config.yaml")
+	v.logger = &logrus.Logger{Out: ioutil.Discard}
+
+	v.RegisterTask("dummytask", func(i ...interface{}) (interface{}, error) {
+		return "some_metadata", nil
+	})
+
 	go v.Run()
 	// Give some time for the server to run.
 	time.Sleep(200 * time.Millisecond)

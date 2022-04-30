@@ -2,7 +2,6 @@ package valet
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/sirupsen/logrus"
 	"github.com/svaloumas/valet/internal/config"
 	"github.com/svaloumas/valet/internal/core/port"
 	"github.com/svaloumas/valet/internal/core/service/jobsrv"
@@ -26,20 +26,25 @@ import (
 	_ "github.com/svaloumas/valet/doc/swagger"
 )
 
+var defaultLoggingFormat = "text"
+
 type valet struct {
 	configPath       string
 	taskService      port.TaskService
 	gracefulTermChan chan os.Signal
+	logger           *logrus.Logger
 }
 
 // New initializes and returns a new valet instance.
 func New(configPath string) *valet {
 	taskService := tasksrv.New()
 	gracefulTerm := make(chan os.Signal, 1)
+	logger := vlog.NewLogger("valet", defaultLoggingFormat)
 	return &valet{
 		configPath:       configPath,
 		taskService:      taskService,
 		gracefulTermChan: gracefulTerm,
+		logger:           logger,
 	}
 }
 
@@ -48,22 +53,24 @@ func (v *valet) Run() {
 	cfg := new(config.Config)
 	filepath, _ := filepath.Abs(v.configPath)
 	if err := cfg.Load(filepath); err != nil {
-		log.Fatalf("could not load config: %s", err)
+		v.logger.Fatalf("could not load config: %s", err)
 	}
 
-	logger := vlog.NewLogger("valet", cfg.LoggingFormat)
+	if cfg.LoggingFormat != defaultLoggingFormat {
+		v.logger = vlog.NewLogger("valet", cfg.LoggingFormat)
+	}
 
 	taskrepo := v.taskService.GetTaskRepository()
 
 	for _, name := range taskrepo.GetTaskNames() {
-		logger.Infof("registered task with name: %s", name)
+		v.logger.Infof("registered task with name: %s", name)
 	}
 
 	jobQueue := factory.JobQueueFactory(cfg.JobQueue, cfg.LoggingFormat)
-	logger.Infof("initialized [%s] as a job queue", cfg.JobQueue.Option)
+	v.logger.Infof("initialized [%s] as a job queue", cfg.JobQueue.Option)
 
 	storage := factory.StorageFactory(cfg.Repository)
-	logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
+	v.logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
 
 	pipelineService := pipelinesrv.New(storage, taskrepo, uuidgen.New(), rtime.New())
 	jobService := jobsrv.New(storage, taskrepo, uuidgen.New(), rtime.New())
@@ -85,13 +92,13 @@ func (v *valet) Run() {
 
 	server := factory.ServerFactory(
 		cfg.Server, jobService, pipelineService, resultService,
-		v.taskService, jobQueue, storage, cfg.LoggingFormat, logger)
+		v.taskService, jobQueue, storage, cfg.LoggingFormat, v.logger)
 	server.Serve()
-	logger.Infof("initialized [%s] server", cfg.Server.Protocol)
+	v.logger.Infof("initialized [%s] server", cfg.Server.Protocol)
 
 	signal.Notify(v.gracefulTermChan, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-v.gracefulTermChan
-	logger.Printf("server notified %+v", sig)
+	v.logger.Printf("server notified %+v", sig)
 	server.GracefullyStop()
 
 	jobQueue.Close()
