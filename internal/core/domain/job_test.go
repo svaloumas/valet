@@ -222,3 +222,32 @@ func TestNewJob(t *testing.T) {
 		t.Errorf("new job returned wrong job: got %v want %v", job, expected)
 	}
 }
+
+func TestNewJobRunAtIsZero(t *testing.T) {
+	testTime := time.Now()
+	runAt := time.Time{}
+
+	expected := &Job{
+		ID:       "job_id",
+		Name:     "job_name",
+		TaskName: "test_task",
+		TaskParams: map[string]interface{}{
+			"url": "some-url.com",
+		},
+		Description:        "some description",
+		PipelineID:         "pipeline_id",
+		Status:             Pending,
+		NextJobID:          "next_job_id",
+		Timeout:            10,
+		RunAt:              &runAt,
+		CreatedAt:          &testTime,
+		UsePreviousResults: true,
+	}
+	job := NewJob(
+		expected.ID, expected.Name, expected.TaskName, expected.Description, expected.PipelineID,
+		expected.NextJobID, expected.Timeout, expected.RunAt, expected.CreatedAt, expected.UsePreviousResults, expected.TaskParams)
+
+	if job.RunAt != nil {
+		t.Errorf("new job with zero run_at time returned wrong run_at value: got %v want nil", job.RunAt)
+	}
+}

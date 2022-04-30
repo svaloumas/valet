@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 	createDB(psqlDSN, dbName)
 	defer func() {
 		dropTestDB()
-		psqlTest.DB.Close()
+		psqlTest.Close()
 	}()
 	m.Run()
 }
@@ -119,6 +119,20 @@ func dropTestDB() {
 	if err != nil {
 		panic(err)
 	}
+}
+func TestPanicWithInvalidDSN(t *testing.T) {
+	psqlDSN := "invalid_dsn"
+	defer func() {
+		if p := recover(); p == nil {
+			t.Errorf("New did not panic with invalid URL")
+		} else {
+			panicMsg := "invalid connection protocol: "
+			if err := fmt.Errorf("%s", p); err.Error() != panicMsg {
+				t.Errorf("New paniced with unexpected panic message: got %v want %v", err.Error(), panicMsg)
+			}
+		}
+	}()
+	New(psqlDSN, &relational.DBOptions{})
 }
 
 func TestCheckHealth(t *testing.T) {

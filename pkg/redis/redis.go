@@ -24,16 +24,16 @@ func New(
 
 	rs := new(RedisClient)
 
-	opt, err := redis.ParseURL(url)
-	if err != nil {
-		panic(err)
-	}
-
 	rs.KeyPrefix = keyPrefix
 	if logger != nil {
 		rs.logger = logger
 	} else {
 		rs.logger = &logrus.Logger{Out: ioutil.Discard}
+	}
+
+	opt, err := redis.ParseURL(url)
+	if err != nil {
+		panic(err)
 	}
 
 	rs.Client = redis.NewClient(&redis.Options{

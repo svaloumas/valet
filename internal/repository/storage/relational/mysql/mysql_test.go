@@ -39,7 +39,7 @@ func TestMain(m *testing.M) {
 	createDB(config.FormatDSN(), config.DBName)
 	defer func() {
 		dropTestDB()
-		mysqlTest.DB.Close()
+		mysqlTest.Close()
 	}()
 	m.Run()
 }
@@ -98,6 +98,20 @@ func dropTestDB() {
 	if err := tx.Commit(); err != nil {
 		panic(err)
 	}
+}
+func TestPanicWithInvalidDSN(t *testing.T) {
+	mysqlDSN := "invalid_dsn"
+	defer func() {
+		if p := recover(); p == nil {
+			t.Errorf("New did not panic with invalid URL")
+		} else {
+			panicMsg := "invalid DSN: missing the slash separating the database name"
+			if err := fmt.Errorf("%s", p); err.Error() != panicMsg {
+				t.Errorf("New paniced with unexpected panic message: got %v want %v", err.Error(), panicMsg)
+			}
+		}
+	}()
+	New(mysqlDSN, "", &relational.DBOptions{})
 }
 
 func TestCheckHealth(t *testing.T) {

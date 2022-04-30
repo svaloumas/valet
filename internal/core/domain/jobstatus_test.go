@@ -3,6 +3,8 @@ package domain
 import (
 	"reflect"
 	"testing"
+
+	"github.com/svaloumas/valet/pkg/apperrors"
 )
 
 func TestJobStatusString(t *testing.T) {
@@ -86,6 +88,39 @@ func TestJobStatusMarshalJSON(t *testing.T) {
 			marshaledJobStatus, _ := tt.js.MarshalJSON()
 			if eq := reflect.DeepEqual(marshaledJobStatus, tt.expected); !eq {
 				t.Fatalf("JobStatus MarshalJSON returned wrong []byte: got %s want %s", marshaledJobStatus, tt.expected)
+			}
+		})
+	}
+}
+
+func TestJobStatusUnmarshalJSONErrorCases(t *testing.T) {
+	tests := []struct {
+		name string
+		data []byte
+		err  error
+	}{
+		{
+			"unquoting error",
+			[]byte("\"PENDING"),
+			&apperrors.ResourceValidationErr{Message: "unquoting job status data returned error: invalid syntax"},
+		},
+		{
+			"invalid status",
+			[]byte("\"SUCCESS\""),
+			&apperrors.ResourceValidationErr{Message: "invalid status: \"SUCCESS\""},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			js := JobStatus(0)
+			err := js.UnmarshalJSON(tt.data)
+			if err == nil {
+				t.Errorf("JobStatus UnmarshalJSON did not return expected error: got nil want %v", err)
+			} else {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("JobStatus UnmarshalJSON returned wrong error: got %v want %v", err, tt.err)
+				}
 			}
 		})
 	}

@@ -102,6 +102,19 @@ func TestPipelineValidate(t *testing.T) {
 	taskService := tasksrv.New()
 	taskService.Register("test_task", taskFunc)
 
+	jobs := []*Job{
+		{
+			Name:     "job_name",
+			TaskName: "test_task",
+		},
+		{
+			Name:     "another_job",
+			TaskName: "test_task",
+		},
+	}
+	createdAt := time.Now()
+	validPipeline := NewPipeline("pipeline_id", "pipeline_name", "some description", jobs, &createdAt)
+
 	tests := []struct {
 		name     string
 		pipeline *Pipeline
@@ -116,6 +129,7 @@ func TestPipelineValidate(t *testing.T) {
 			&Pipeline{Name: "pipeline_name", Jobs: []*Job{{Name: "job_name", TaskName: "test_task"}, {Name: "another_job", TaskName: "test_task"}}, Status: 7},
 			"7 is not a valid job status, valid statuses: map[PENDING:1 SCHEDULED:2 IN_PROGRESS:3 COMPLETED:4 FAILED:5]",
 		},
+		{"ok", validPipeline, ""},
 	}
 
 	for _, tt := range tests {

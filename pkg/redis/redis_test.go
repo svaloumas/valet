@@ -1,8 +1,11 @@
 package redis
 
 import (
+	"fmt"
 	"os"
 	"testing"
+
+	vlog "github.com/svaloumas/valet/pkg/log"
 )
 
 var redisTest *RedisClient
@@ -21,6 +24,33 @@ func TestCheckHealth(t *testing.T) {
 	if result != true {
 		t.Fatalf("expected true got %#v instead", result)
 	}
+}
+
+func TestCheckHealthNotHealthy(t *testing.T) {
+	redisURL := os.Getenv("REDIS_URL")
+	notHealthyRedis := New(redisURL, 1, 5, "", nil)
+	notHealthyRedis.Close()
+
+	result := redisTest.CheckHealth()
+	if result != true {
+		t.Fatalf("expected false got %#v instead", result)
+	}
+}
+
+func TestPanicWithInvalidURL(t *testing.T) {
+	logger := vlog.NewLogger("redis", "text")
+	redisURL := "invalid_url"
+	defer func() {
+		if p := recover(); p == nil {
+			t.Errorf("New did not panic with invalid URL")
+		} else {
+			panicMsg := "redis: invalid URL scheme: "
+			if err := fmt.Errorf("%s", p); err.Error() != panicMsg {
+				t.Errorf("New paniced with unexpected panic message: got %v want %v", err.Error(), panicMsg)
+			}
+		}
+	}()
+	New(redisURL, 1, 5, "", logger)
 }
 
 func TestGetRedisPrefixedKey(t *testing.T) {
