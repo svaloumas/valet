@@ -4,4 +4,14 @@ coverage:
   precision: 2
   status:
     project:
-      patch: false
+      default:
+        # basic
+        target: auto
+        threshold: 5%
+        base: auto
+    patch:
+      default:
+        # basic
+        target: auto
+        threshold: 5%
+        base: auto
