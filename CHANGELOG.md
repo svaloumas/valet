@@ -1,4 +1,27 @@
 
+<a name="v0.8.5"></a>
+## [v0.8.5](https://github.com/svaloumas/valet/compare/v0.8.4...v0.8.5)
+
+> 2022-04-30
+
+### Chore
+
+* bump version to v0.8.5
+* update codecov config
+
+### Doc
+
+* update README
+
+### Feat
+
+* add logger in valet struct
+
+### Test
+
+* add job, jobstatus, pipeline and repository tests
+
+
 <a name="v0.8.4"></a>
 ## [v0.8.4](https://github.com/svaloumas/valet/compare/v0.8.3...v0.8.4)
 
@@ -8,6 +31,10 @@
 
 * bump version to v0.8.4
 * add codecov config
+
+### Docs
+
+* update CHANGELOG
 
 ### Feat
 
