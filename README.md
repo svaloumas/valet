@@ -29,7 +29,7 @@ At its core, `valet` is a simple job queuing system and an asynchronous task run
 
 The implementation uses the notion of `job`, which describes the work that needs to be done and carries information about the task that will run for the
 specific job. User-defined tasks are assigned to jobs. Every job can be assigned with a different task, a JSON payload with the data required for the task
-to be executed, and an optional timeout interval. Jobs can be scheduled to run at a specified time or immediately.
+to be executed, and an optional timeout interval. Jobs can be scheduled to run at a specified time or instantly.
 
 After the tasks have been executed, their results along with the errors (if any) are stored into a repository.
 
@@ -38,7 +38,7 @@ After the tasks have been executed, their results along with the errors (if any)
 ### Pipeline
 
 A `pipeline` is a sequence of jobs that need to be executed in a specified order, one by one. Every job in the pipeline can be assigned with a different task
-and parameters, and each task callback can optionally use the results of the previous task in the job sequence. A pipeline can also be scheduled to run sometime in the future, or run immediately.
+and parameters, and each task callback can optionally use the results of the previous task in the job sequence. A pipeline can also be scheduled to run sometime in the future, or immediately.
 
 <a name="architecture"/>
 
@@ -49,13 +49,13 @@ the service is provided as a Go `pkg` rather than a `cmd`, enabling the task reg
 
 Internally, the service consists of the following components.
 
-* Server - Exposes a RESTful API to enable communication with the outer world.
+* Server - Exposes a RESTful API to enable communication with external services.
 * Job queue - A FIFO queue that supports the job queuing mechanism of the service.
 * Scheduler - Responsible for dispatching the jobs from the job queue to the worker pool and of course for scheduling the tasks for future execution.
 * Worker pool - A number of available go-routines, responsible for the concurrent execution of the jobs.
 * Repository - The storage system where jobs and their results persist.
 
-The design strives to follow the hexagonal architecture pattern and to support modularity and extendability. 
+The design intends to follow the hexagonal architecture pattern and to support modularity and extendability. 
 
 So far, `valet` provides the following interfaces and can be configured accordingly to function with any of the listed technologies.
 
@@ -66,14 +66,14 @@ So far, `valet` provides the following interfaces and can be configured accordin
 
 #### Repository
 
-* In memory key-value storage.
+* In-memory key-value storage.
 * MySQL
 * PostgreSQL
 * Redis
 
 #### Message queue
 
-* In memory job queue.
+* In-memory job queue.
 * RabbitMQ
 * Redis
 
@@ -106,7 +106,7 @@ func DummyTask(args ...interface{}) (interface{}, error) {
 	dummyParams := &DummyParams{}
 	var previousResultsMetadata string
 	valet.DecodeTaskParams(args, dummyParams)
-	valet.DecodePreviousJobResults(args, &resultsMetadata) // Applies for pipelines.
+	valet.DecodePreviousJobResults(args, &resultsMetadata) // Applies to pipelines.
 
 	metadata, err := downloadContent(params.URL)
 	if err != nil {
@@ -151,13 +151,13 @@ func main() {
 
 5. Build and run the service.
 
-    5.1. To run the service and its dependencies as Docker containers, use the `Dockerfile`, `docker-compose` and `Makefile` files provided.
+    * To run the service and its dependencies as Docker containers, use the `Dockerfile`, `docker-compose` and `Makefile` files provided.
 
     ```bash
     docker-compose up -d --build
     ```
 
-    5.2. Build and run the service as a standalone binary.
+    * Build and run the service as a standalone binary.
 
     > Optionally set the corresponding environment variables depending on your configuration options.
 
@@ -165,7 +165,7 @@ func main() {
     export POSTGRES_DSN=
     export RABBITMQ_URI=
     export MYSQL_DSN=
-    export REDIS_URL=
+    export REDIS_DSN=
     ```
 
     ```bash
@@ -185,9 +185,9 @@ All configuration is set through `config.yaml`, which lives under the project's 
 server:
   protocol: http                    # string - options: http, grpc
   http:
-    port: 8080                      # string
+    port: 8080                      # int
   grpc:
-    port: 50051                     # string
+    port: 50051                     # int
 # Job queue config section
 job_queue:
   option: rabbitmq                  # string - options: memory, rabbitmq, redis
@@ -247,13 +247,16 @@ logging_format: text                # string - options: text, json
 
 ## Secrets
 
-Currently, secrets are the MySQL DSN, PostgreSQL DSN, Redis URL and the RabbitMQ URI. Each can be provided as an environment variable. 
-Alternatively, if you choose to use the provided Docker compose files, you can create the corresponding Docker secrets.
+Currently, the secrets depending on the configuration are the following: MySQL DSN, PostgreSQL DSN, Redis URL and the RabbitMQ URI.
+Each can be provided as an environment variable. Alternatively, if you choose to use the provided Docker compose files, you can create the
+corresponding Docker secrets.
 
-* Env var `MYSQL_DSN`, Docker secret name `valet-mysql-dsn`.
-* Env var `POSTGRES_DSN`, Docker secret name `valet-postgres-dsn`.
-* Env var `REDIS_DSN`, Docker secret name `valet-redis-url`.
-* End var `RABBITMQ_URI`, Docker secret name `valet-rabbitmq-uri`.
+| Env variable   | Docker secret        |
+| -------------- | -------------------- |
+| `MYSQL_DSN`    | `valet-mysql-dsn`    |
+| `POSTGRES_DSN` | `valet-postgres-dsn` |
+| `REDIS_URL`    | `valet-redis-url`    |
+| `RABBITMQ_URI` | `valet-rabbitmq-uri` |
 
 <a name="usage"/>
 
@@ -292,7 +295,7 @@ To schedule a new job to run at a specific time, add `run_at` field to the reque
 Create a new pipeline by making a POST HTTP call to `/pipelines` or via gRPC to `pipeline.Pipeline.Create` service method. You can inject arbitrary parameters
 for your tasks to run by including them in the request body. Optionally, you can tune your tasks to use any results of the previous task in the pipeline, creating
 a `bash`-like command pipeline. Pipelines can also be scheduled for execution at a specific time, by adding `run_at` field to the request payload
-just like with the jobs.
+just like it's done with the jobs.
 
 ```json
 {
