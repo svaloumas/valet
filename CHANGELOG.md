@@ -1,4 +1,23 @@
 
+<a name="v0.8.6"></a>
+## [v0.8.6](https://github.com/svaloumas/valet/compare/v0.8.5...v0.8.6)
+
+> 2022-05-01
+
+### Chore
+
+* bump version to v0.8.6
+
+### Doc
+
+* update README
+
+### Feat
+
+* optimize nosql repository queries
+* add relational storage indexes
+
+
 <a name="v0.8.5"></a>
 ## [v0.8.5](https://github.com/svaloumas/valet/compare/v0.8.4...v0.8.5)
 
@@ -11,6 +30,7 @@
 
 ### Doc
 
+* update CHANGELOG
 * update README
 
 ### Feat
