@@ -61,7 +61,7 @@ So far, `valet` provides the following interfaces and can be configured accordin
 
 #### API
 
-* HTTP - Find the swagger files under `doc/swagger/`.
+* HTTP - Powered by [gin](https://github.com/gin-gonic/gin). Find the swagger files under `doc/swagger/`.
 * gRPC
 
 #### Repository

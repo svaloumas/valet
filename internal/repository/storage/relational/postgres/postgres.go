@@ -60,6 +60,11 @@ const (
 		CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES job (id)
 		);
 	`
+	createIndexes = `
+	    CREATE INDEX IF NOT EXISTS idx_job_status ON job(status);
+	    CREATE INDEX IF NOT EXISTS idx_job_pipeline_id ON job(pipeline_id);
+	    CREATE INDEX IF NOT EXISTS idx_pipeline_status ON pipeline(status);
+	`
 )
 
 var _ port.Storage = &PostgreSQL{}
@@ -680,6 +685,15 @@ func createDB(parsedDSN, dbName string) {
 	// Create jobresult table
 	query.Reset()
 	query.WriteString(createJobResultTableMigration)
+	_, err = tx.Exec(query.String())
+	if err != nil {
+		tx.Rollback()
+		panic(err)
+	}
+
+	// Create indexes
+	query.Reset()
+	query.WriteString(createIndexes)
 	_, err = tx.Exec(query.String())
 	if err != nil {
 		tx.Rollback()

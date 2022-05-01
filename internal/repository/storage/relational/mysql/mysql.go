@@ -30,7 +30,8 @@ const (
 		created_at timestamp NOT NULL DEFAULT current_timestamp(),
 		started_at timestamp NULL,
 		completed_at timestamp NULL,
-		PRIMARY KEY (` + "`id`" + `)
+		PRIMARY KEY (` + "`id`" + `),
+		INDEX (` + "`status`" + `)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 	`
 	createJobTableMigration = `
@@ -51,7 +52,9 @@ const (
 		created_at timestamp NOT NULL DEFAULT current_timestamp(),
 		started_at timestamp NULL,
 		completed_at timestamp NULL,
-		PRIMARY KEY (` + "`id`" + `)
+		PRIMARY KEY (` + "`id`" + `),
+		INDEX (` + "`status`" + `),
+		INDEX (` + "`pipeline_id`" + `)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 	`
 	createJobResultTableMigration = `
