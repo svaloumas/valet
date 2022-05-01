@@ -123,6 +123,7 @@ func (srv *pipelineservice) GetPipelineJobs(id string) ([]*domain.Job, error) {
 
 	for _, j := range jobs {
 		j.SetDuration()
+		j.Next = nil
 	}
 	return jobs, nil
 }
@@ -144,7 +145,11 @@ func (srv *pipelineservice) GetPipelines(status string) ([]*domain.Pipeline, err
 	}
 	for _, p := range pipelines {
 		p.SetDuration()
+		// Do not marshal pipeline jobs cause NoSQL databases
+		// store them along with the pipeline.
+		p.Jobs = nil
 	}
+
 	return pipelines, nil
 }
 

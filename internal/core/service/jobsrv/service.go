@@ -76,6 +76,8 @@ func (srv *jobservice) Get(id string) (*domain.Job, error) {
 		return nil, err
 	}
 	j.SetDuration()
+	// Do not marshal job next, cause it's stored in NoSQL databases.
+	j.Next = nil
 	return j, nil
 }
 
@@ -96,6 +98,8 @@ func (srv *jobservice) GetJobs(status string) ([]*domain.Job, error) {
 	}
 	for _, j := range jobs {
 		j.SetDuration()
+		// Do not marshal job next, cause it's stored in NoSQL databases.
+		j.Next = nil
 	}
 	return jobs, nil
 }

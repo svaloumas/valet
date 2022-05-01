@@ -103,6 +103,25 @@ func (mem *memorydb) UpdateJob(id string, j *domain.Job) error {
 		return err
 	}
 	mem.jobdb[j.ID] = serializedJob
+
+	if j.BelongsToPipeline() {
+		// Sync pipeline job
+		serializedPipeline := mem.pipelinedb[j.PipelineID]
+		p := &domain.Pipeline{}
+		if err := json.Unmarshal(serializedPipeline, p); err != nil {
+			return err
+		}
+		for i, job := range p.Jobs {
+			if job.ID == j.ID {
+				p.Jobs[i] = j
+			}
+		}
+		serializedPipeline, err := json.Marshal(p)
+		if err != nil {
+			return err
+		}
+		mem.pipelinedb[p.ID] = serializedPipeline
+	}
 	return nil
 }
 

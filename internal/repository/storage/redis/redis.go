@@ -101,47 +101,63 @@ func (rs *Redis) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
 
 // GetJobsByPipelineID fetches the jobs of the specified pipeline.
 func (rs *Redis) GetJobsByPipelineID(pipelineID string) ([]*domain.Job, error) {
-	var keys []string
-	key := rs.GetRedisPrefixedKey("job:*")
-	iter := rs.Scan(ctx, 0, key, 0).Iterator()
-	for iter.Next(ctx) {
-		keys = append(keys, iter.Val())
-	}
-	if err := iter.Err(); err != nil {
+	key := rs.getRedisKeyForPipeline(pipelineID)
+	val, err := rs.Get(ctx, key).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			// Mimic the relational storages behavior.
+			return []*domain.Job{}, nil
+		}
 		return nil, err
 	}
 
-	jobs := []*domain.Job{}
-	for _, key := range keys {
-		value, err := rs.Get(ctx, key).Bytes()
-		if err != nil {
-			return nil, err
-		}
-		j := &domain.Job{}
-		if err := json.Unmarshal(value, j); err != nil {
-			return nil, err
-		}
-		if j.PipelineID == pipelineID {
-			jobs = append(jobs, j)
-		}
+	var p *domain.Pipeline
+	err = json.Unmarshal(val, &p)
+	if err != nil {
+		return nil, err
 	}
 
-	// ORDER BY created_at ASC
-	sort.Slice(jobs, func(i, j int) bool {
-		return jobs[i].CreatedAt.Before(*jobs[j].CreatedAt)
-	})
-	return jobs, nil
+	return p.Jobs, nil
 }
 
-// UpdateJob adds a new job to the repository.
+// UpdateJob updates a job to the repository.
 func (rs *Redis) UpdateJob(id string, j *domain.Job) error {
-	key := rs.getRedisKeyForJob(id)
-	value, err := json.Marshal(j)
-	if err != nil {
-		return err
-	}
+	err := rs.Watch(ctx, func(tx *redis.Tx) error {
+		key := rs.getRedisKeyForJob(id)
+		value, err := json.Marshal(j)
+		if err != nil {
+			return err
+		}
 
-	err = rs.Set(ctx, key, value, 0).Err()
+		err = rs.Set(ctx, key, value, 0).Err()
+		if err != nil {
+			return err
+		}
+		if j.BelongsToPipeline() {
+			// Sync pipeline job.
+			pipelineKey := rs.getRedisKeyForPipeline(j.PipelineID)
+			val, err := rs.Get(ctx, pipelineKey).Bytes()
+			if err != nil {
+				return err
+			}
+
+			var p *domain.Pipeline
+			err = json.Unmarshal(val, &p)
+			if err != nil {
+				return err
+			}
+			for i, job := range p.Jobs {
+				if job.ID == j.ID {
+					p.Jobs[i] = j
+				}
+			}
+			err = rs.UpdatePipeline(p.ID, p)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
