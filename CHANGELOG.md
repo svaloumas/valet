@@ -6,11 +6,16 @@
 
 ### Chore
 
+* update codecov config
 * bump version to v0.8.6
 
 ### Doc
 
 * update README
+
+### Docs
+
+* update CHANGELOG
 
 ### Feat
 
