@@ -31,7 +31,7 @@ func New(url string, poolSize, minIdleConns int, keyPrefix string) *Redis {
 	return rs
 }
 
-// CreateJob adds a new job to the repository.
+// CreateJob adds a new job to the storage.
 func (rs *Redis) CreateJob(j *domain.Job) error {
 	key := rs.getRedisKeyForJob(j.ID)
 	value, err := json.Marshal(j)
@@ -46,7 +46,7 @@ func (rs *Redis) CreateJob(j *domain.Job) error {
 	return nil
 }
 
-// GetJob fetches a job from the repository.
+// GetJob fetches a job from the storage.
 func (rs *Redis) GetJob(id string) (*domain.Job, error) {
 	key := rs.getRedisKeyForJob(id)
 	val, err := rs.Get(ctx, key).Bytes()
@@ -65,7 +65,7 @@ func (rs *Redis) GetJob(id string) (*domain.Job, error) {
 	return j, nil
 }
 
-// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
+// GetJobs fetches all jobs from the storage, optionally filters the jobs by status.
 func (rs *Redis) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
 	var keys []string
 	key := rs.GetRedisPrefixedKey("job:*")
@@ -120,7 +120,7 @@ func (rs *Redis) GetJobsByPipelineID(pipelineID string) ([]*domain.Job, error) {
 	return p.Jobs, nil
 }
 
-// UpdateJob updates a job to the repository.
+// UpdateJob updates a job to the storage.
 func (rs *Redis) UpdateJob(id string, j *domain.Job) error {
 	err := rs.Watch(ctx, func(tx *redis.Tx) error {
 		key := rs.getRedisKeyForJob(id)
@@ -164,7 +164,7 @@ func (rs *Redis) UpdateJob(id string, j *domain.Job) error {
 	return nil
 }
 
-// DeleteJob deletes a job from the repository.
+// DeleteJob deletes a job from the storage.
 func (rs *Redis) DeleteJob(id string) error {
 	key := rs.getRedisKeyForJob(id)
 	_, err := rs.Del(ctx, key).Result()
@@ -210,7 +210,7 @@ func (rs *Redis) GetDueJobs() ([]*domain.Job, error) {
 	return dueJobs, nil
 }
 
-// CreateJobResult adds a new job result to the repository.
+// CreateJobResult adds a new job result to the storage.
 func (rs *Redis) CreateJobResult(result *domain.JobResult) error {
 	key := rs.getRedisKeyForJobResult(result.JobID)
 	value, err := json.Marshal(result)
@@ -225,7 +225,7 @@ func (rs *Redis) CreateJobResult(result *domain.JobResult) error {
 	return nil
 }
 
-// GetJobResult fetches a job result from the repository.
+// GetJobResult fetches a job result from the storage.
 func (rs *Redis) GetJobResult(jobID string) (*domain.JobResult, error) {
 	key := rs.getRedisKeyForJobResult(jobID)
 	val, err := rs.Get(ctx, key).Bytes()
@@ -244,7 +244,7 @@ func (rs *Redis) GetJobResult(jobID string) (*domain.JobResult, error) {
 	return result, nil
 }
 
-// UpdateJobResult updates a job result to the repository.
+// UpdateJobResult updates a job result to the storage.
 func (rs *Redis) UpdateJobResult(jobID string, result *domain.JobResult) error {
 	key := rs.getRedisKeyForJobResult(jobID)
 	value, err := json.Marshal(result)
@@ -259,7 +259,7 @@ func (rs *Redis) UpdateJobResult(jobID string, result *domain.JobResult) error {
 	return nil
 }
 
-// DeleteJobResult deletes a job result from the repository.
+// DeleteJobResult deletes a job result from the storage.
 func (rs *Redis) DeleteJobResult(jobID string) error {
 	key := rs.getRedisKeyForJobResult(jobID)
 	_, err := rs.Del(ctx, key).Result()
@@ -269,7 +269,7 @@ func (rs *Redis) DeleteJobResult(jobID string) error {
 	return nil
 }
 
-// CreatePipeline adds a new pipeline and of its jobs to the repository.
+// CreatePipeline adds a new pipeline and of its jobs to the storage.
 func (rs *Redis) CreatePipeline(p *domain.Pipeline) error {
 	err := rs.Watch(ctx, func(tx *redis.Tx) error {
 
@@ -304,7 +304,7 @@ func (rs *Redis) CreatePipeline(p *domain.Pipeline) error {
 	return nil
 }
 
-// GetPipeline fetches a pipeline from the repository.
+// GetPipeline fetches a pipeline from the storage.
 func (rs *Redis) GetPipeline(id string) (*domain.Pipeline, error) {
 	key := rs.getRedisKeyForPipeline(id)
 	val, err := rs.Get(ctx, key).Bytes()
@@ -323,7 +323,7 @@ func (rs *Redis) GetPipeline(id string) (*domain.Pipeline, error) {
 	return p, nil
 }
 
-// GetPipelines fetches all pipelines from the repository, optionally filters the pipelines by status.
+// GetPipelines fetches all pipelines from the storage, optionally filters the pipelines by status.
 func (rs *Redis) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, error) {
 	var keys []string
 	key := rs.GetRedisPrefixedKey("pipeline:*")
@@ -358,7 +358,7 @@ func (rs *Redis) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, erro
 
 }
 
-// UpdatePipeline updates a pipeline to the repository.
+// UpdatePipeline updates a pipeline to the storage.
 func (rs *Redis) UpdatePipeline(id string, p *domain.Pipeline) error {
 	key := rs.getRedisKeyForPipeline(id)
 	value, err := json.Marshal(p)
@@ -373,7 +373,7 @@ func (rs *Redis) UpdatePipeline(id string, p *domain.Pipeline) error {
 	return nil
 }
 
-// DeletePipeline deletes a pipeline and all its jobs from the repository.
+// DeletePipeline deletes a pipeline and all its jobs from the storage.
 func (rs *Redis) DeletePipeline(id string) error {
 	err := rs.Watch(ctx, func(tx *redis.Tx) error {
 		var keys []string

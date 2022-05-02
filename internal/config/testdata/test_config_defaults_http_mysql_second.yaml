@@ -34,9 +34,9 @@ worker_pool:
   workers:
   queue_capacity:
 scheduler:
-  repository_polling_interval:
+  storage_polling_interval:
   job_queue_polling_interval:
-repository:
+storage:
   option: mysql
   mysql:
     connection_max_lifetime: 

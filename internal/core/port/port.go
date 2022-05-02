@@ -9,15 +9,15 @@ import (
 	"github.com/svaloumas/valet/internal/core/service/worksrv/work"
 )
 
-// Storage represents a driven actor repository interface.
+// Storage represents a driven actor storage interface.
 type Storage interface {
-	// CreateJob adds a new job to the repository.
+	// CreateJob adds a new job to the storage.
 	CreateJob(j *domain.Job) error
 
-	// GetJob fetches a job from the repository.
+	// GetJob fetches a job from the storage.
 	GetJob(id string) (*domain.Job, error)
 
-	// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
+	// GetJobs fetches all jobs from the storage, optionally filters the jobs by status.
 	GetJobs(status domain.JobStatus) ([]*domain.Job, error)
 
 	// GetDueJobs fetches all jobs scheduled to run before now and have not been scheduled yet.
@@ -26,37 +26,37 @@ type Storage interface {
 	// GetJobsByPipelineID fetches the jobs of the specified pipeline.
 	GetJobsByPipelineID(pipelineID string) ([]*domain.Job, error)
 
-	// UpdateJob updates a job to the repository.
+	// UpdateJob updates a job to the storage.
 	UpdateJob(id string, j *domain.Job) error
 
-	// DeleteJob deletes a job from the repository.
+	// DeleteJob deletes a job from the storage.
 	DeleteJob(id string) error
 
-	// CreateJobResult adds a new job result to the repository.
+	// CreateJobResult adds a new job result to the storage.
 	CreateJobResult(result *domain.JobResult) error
 
-	// GetJobResult fetches a job result from the repository.
+	// GetJobResult fetches a job result from the storage.
 	GetJobResult(jobID string) (*domain.JobResult, error)
 
-	// UpdateJobResult updates a job result to the repository.
+	// UpdateJobResult updates a job result to the storage.
 	UpdateJobResult(jobID string, result *domain.JobResult) error
 
-	// DeleteJobResult deletes a job result from the repository.
+	// DeleteJobResult deletes a job result from the storage.
 	DeleteJobResult(jobID string) error
 
-	// CreatePipeline adds a new pipeline and of its jobs to the repository.
+	// CreatePipeline adds a new pipeline and of its jobs to the storage.
 	CreatePipeline(p *domain.Pipeline) error
 
-	// GetPipeline fetches a pipeline from the repository.
+	// GetPipeline fetches a pipeline from the storage.
 	GetPipeline(id string) (*domain.Pipeline, error)
 
-	// GetPipelines fetches all pipelines from the repository, optionally filters the pipelines by status.
+	// GetPipelines fetches all pipelines from the storage, optionally filters the pipelines by status.
 	GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, error)
 
-	// UpdatePipeline updates a pipeline to the repository.
+	// UpdatePipeline updates a pipeline to the storage.
 	UpdatePipeline(id string, p *domain.Pipeline) error
 
-	// DeletePipeline deletes a pipeline and all its jobs from the repository.
+	// DeletePipeline deletes a pipeline and all its jobs from the storage.
 	DeletePipeline(id string) error
 
 	// CheckHealth checks if the storage is alive.
@@ -158,7 +158,7 @@ type TaskService interface {
 
 // Scheduler represents a domain event listener.
 type Scheduler interface {
-	// Schedule polls the repository in given interval and schedules due jobs for execution.
+	// Schedule polls the storage in given interval and schedules due jobs for execution.
 	Schedule(ctx context.Context, duration time.Duration)
 	// Dispatch listens to the job queue for messages, consumes them and
 	// dispatches the jobs for execution.

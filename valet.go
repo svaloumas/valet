@@ -69,8 +69,8 @@ func (v *valet) Run() {
 	jobQueue := factory.JobQueueFactory(cfg.JobQueue, cfg.LoggingFormat)
 	v.logger.Infof("initialized [%s] as a job queue", cfg.JobQueue.Option)
 
-	storage := factory.StorageFactory(cfg.Repository)
-	v.logger.Infof("initialized [%s] as a repository", cfg.Repository.Option)
+	storage := factory.StorageFactory(cfg.Storage)
+	v.logger.Infof("initialized [%s] as a storage", cfg.Storage.Option)
 
 	pipelineService := pipelinesrv.New(storage, taskrepo, uuidgen.New(), rtime.New())
 	jobService := jobsrv.New(storage, taskrepo, uuidgen.New(), rtime.New())
@@ -87,7 +87,7 @@ func (v *valet) Run() {
 
 	schedulerLogger := vlog.NewLogger("scheduler", cfg.LoggingFormat)
 	schedulerService := schedulersrv.New(jobQueue, storage, workService, rtime.New(), schedulerLogger)
-	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.RepositoryPollingInterval)*cfg.TimeoutUnit)
+	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.StoragePollingInterval)*cfg.TimeoutUnit)
 	schedulerService.Dispatch(ctx, time.Duration(cfg.Scheduler.JobQueuePollingInterval)*cfg.TimeoutUnit)
 
 	server := factory.ServerFactory(

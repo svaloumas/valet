@@ -31,7 +31,7 @@ The implementation uses the notion of `job`, which describes the work that needs
 specific job. User-defined tasks are assigned to jobs. Every job can be assigned with a different task, a JSON payload with the data required for the task
 to be executed, and an optional timeout interval. Jobs can be scheduled to run at a specified time or instantly.
 
-After the tasks have been executed, their results along with the errors (if any) are stored into a repository.
+After the tasks have been executed, their results along with the errors (if any) are stored into a storage system.
 
 <a name="pipeline"/>
 
@@ -53,7 +53,7 @@ Internally, the service consists of the following components.
 * Job queue - A FIFO queue that supports the job queuing mechanism of the service.
 * Scheduler - Responsible for dispatching the jobs from the job queue to the worker pool and of course for scheduling the tasks for future execution.
 * Worker pool - A number of available go-routines, responsible for the concurrent execution of the jobs.
-* Repository - The storage system where jobs and their results persist.
+* Storage - The storage system where jobs and their results persist.
 
 The design intends to follow the hexagonal architecture pattern and to support modularity and extendability. 
 
@@ -64,14 +64,14 @@ So far, `valet` provides the following interfaces and can be configured accordin
 * HTTP - Powered by [gin](https://github.com/gin-gonic/gin). Find the swagger files under `doc/swagger/`.
 * gRPC
 
-#### Repository
+#### Storage
 
 * In-memory key-value storage.
 * MySQL
 * PostgreSQL
 * Redis
 
-#### Message queue
+#### Job queue
 
 * In-memory job queue.
 * RabbitMQ
@@ -222,9 +222,9 @@ worker_pool:
 # Scheduler config section
 scheduler:
   job_queue_polling_interval: 5     # int
-  repository_polling_interval: 60   # int
-# Repository config section
-repository:
+  storage_polling_interval: 60      # int
+# Storage config section
+storage:
   option: memory                    # string - options:  memory, mysql, postgres, redis
   mysql:
     connection_max_lifetime:        # int

@@ -75,7 +75,7 @@ func (srv *workservice) Dispatch(w work.Work) {
 			result, ok := <-w.Result
 			if ok {
 				if err := srv.storage.CreateJobResult(&result); err != nil {
-					srv.logger.Errorf("could not create job result to the repository %s", err)
+					srv.logger.Errorf("could not create job result to the storage %s", err)
 				}
 			}
 		}()

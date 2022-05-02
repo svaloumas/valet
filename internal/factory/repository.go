@@ -10,7 +10,7 @@ import (
 	"github.com/svaloumas/valet/internal/repository/storage/relational/postgres"
 )
 
-func StorageFactory(cfg config.Repository) port.Storage {
+func StorageFactory(cfg config.Storage) port.Storage {
 	if cfg.Option == "memory" {
 		return memorydb.New()
 	}

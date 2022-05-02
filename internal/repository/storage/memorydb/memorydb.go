@@ -40,7 +40,7 @@ func (mem *memorydb) Close() error {
 	return nil
 }
 
-// CreateJob adds a new job to the repository.
+// CreateJob adds a new job to the storage.
 func (mem *memorydb) CreateJob(j *domain.Job) error {
 	serializedJob, err := json.Marshal(j)
 	if err != nil {
@@ -50,7 +50,7 @@ func (mem *memorydb) CreateJob(j *domain.Job) error {
 	return nil
 }
 
-// GetJob fetches a job from the repository.
+// GetJob fetches a job from the storage.
 func (mem *memorydb) GetJob(id string) (*domain.Job, error) {
 	serializedJob, ok := mem.jobdb[id]
 	if !ok {
@@ -63,7 +63,7 @@ func (mem *memorydb) GetJob(id string) (*domain.Job, error) {
 	return j, nil
 }
 
-// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
+// GetJobs fetches all jobs from the storage, optionally filters the jobs by status.
 func (mem *memorydb) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
 	jobs := []*domain.Job{}
 	for _, serializedJob := range mem.jobdb {
@@ -96,7 +96,7 @@ func (mem *memorydb) GetJobsByPipelineID(pipelineID string) ([]*domain.Job, erro
 	return p.Jobs, nil
 }
 
-// UpdateJob updates a job to the repository.
+// UpdateJob updates a job to the storage.
 func (mem *memorydb) UpdateJob(id string, j *domain.Job) error {
 	serializedJob, err := json.Marshal(j)
 	if err != nil {
@@ -125,7 +125,7 @@ func (mem *memorydb) UpdateJob(id string, j *domain.Job) error {
 	return nil
 }
 
-// DeleteJob deletes a job from the repository.
+// DeleteJob deletes a job from the storage.
 func (mem *memorydb) DeleteJob(id string) error {
 	if _, ok := mem.jobdb[id]; !ok {
 		return &apperrors.NotFoundErr{ID: id, ResourceName: "job"}
@@ -157,7 +157,7 @@ func (mem *memorydb) GetDueJobs() ([]*domain.Job, error) {
 	return dueJobs, nil
 }
 
-// CreateJobResult adds new job result to the repository.
+// CreateJobResult adds new job result to the storage.
 func (mem *memorydb) CreateJobResult(result *domain.JobResult) error {
 	serializedJobResult, err := json.Marshal(result)
 	if err != nil {
@@ -167,7 +167,7 @@ func (mem *memorydb) CreateJobResult(result *domain.JobResult) error {
 	return nil
 }
 
-// GetJobResult fetches a job result from the repository.
+// GetJobResult fetches a job result from the storage.
 func (mem *memorydb) GetJobResult(jobID string) (*domain.JobResult, error) {
 	serializedJobResult, ok := mem.jobresultdb[jobID]
 	if !ok {
@@ -178,7 +178,7 @@ func (mem *memorydb) GetJobResult(jobID string) (*domain.JobResult, error) {
 	return result, nil
 }
 
-// UpdateJobResult updates a job result to the repository.
+// UpdateJobResult updates a job result to the storage.
 func (mem *memorydb) UpdateJobResult(jobID string, result *domain.JobResult) error {
 	serializedJobResult, err := json.Marshal(result)
 	if err != nil {
@@ -188,7 +188,7 @@ func (mem *memorydb) UpdateJobResult(jobID string, result *domain.JobResult) err
 	return nil
 }
 
-// DeleteJobResult deletes a job result from the repository.
+// DeleteJobResult deletes a job result from the storage.
 func (mem *memorydb) DeleteJobResult(id string) error {
 	if _, ok := mem.jobresultdb[id]; !ok {
 		return &apperrors.NotFoundErr{ID: id, ResourceName: "job result"}
@@ -197,7 +197,7 @@ func (mem *memorydb) DeleteJobResult(id string) error {
 	return nil
 }
 
-// CreatePipeline adds a new pipeline and of its jobs to the repository.
+// CreatePipeline adds a new pipeline and of its jobs to the storage.
 func (mem *memorydb) CreatePipeline(p *domain.Pipeline) error {
 	serializedPipeline, err := json.Marshal(p)
 	if err != nil {
@@ -214,7 +214,7 @@ func (mem *memorydb) CreatePipeline(p *domain.Pipeline) error {
 	return nil
 }
 
-// GetPipeline fetches a pipeline from the repository.
+// GetPipeline fetches a pipeline from the storage.
 func (mem *memorydb) GetPipeline(id string) (*domain.Pipeline, error) {
 	serializedPipeline, ok := mem.pipelinedb[id]
 	if !ok {
@@ -227,7 +227,7 @@ func (mem *memorydb) GetPipeline(id string) (*domain.Pipeline, error) {
 	return p, nil
 }
 
-// GetPipelines fetches all pipelines from the repository, optionally filters the pipelines by status.
+// GetPipelines fetches all pipelines from the storage optionally filters the pipelines by status.
 func (mem *memorydb) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, error) {
 	pipelines := []*domain.Pipeline{}
 	for _, serializedPipeline := range mem.pipelinedb {
@@ -246,7 +246,7 @@ func (mem *memorydb) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, 
 	return pipelines, nil
 }
 
-// UpdatePipeline updates a pipeline to the repository.
+// UpdatePipeline updates a pipeline to the storage.
 func (mem *memorydb) UpdatePipeline(id string, p *domain.Pipeline) error {
 	serializedPipeline, err := json.Marshal(p)
 	if err != nil {
@@ -256,7 +256,7 @@ func (mem *memorydb) UpdatePipeline(id string, p *domain.Pipeline) error {
 	return nil
 }
 
-// DeletePipeline deletes a pipeline and all its jobs from the repository.
+// DeletePipeline deletes a pipeline and all its jobs from the storage.
 func (mem *memorydb) DeletePipeline(id string) error {
 	serializedPipeline, ok := mem.pipelinedb[id]
 	if !ok {

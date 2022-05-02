@@ -518,7 +518,7 @@ func TestExecJobWorkJobUpdateErrorCases(t *testing.T) {
 	completedJob.Status = domain.Completed
 	completedJob.CompletedAt = &completedAt
 
-	storageErr := errors.New("some repository error")
+	storageErr := errors.New("some storage error")
 
 	storage := mock.NewMockStorage(ctrl)
 	storage.
@@ -1524,7 +1524,7 @@ func TestExecPipelineWorkJobAndPipelineUpdateErrorCases(t *testing.T) {
 	startedPipeline.Status = domain.InProgress
 	startedPipeline.StartedAt = &startedAt
 
-	storageErr := errors.New("some repository error")
+	storageErr := errors.New("some storage error")
 
 	storage := mock.NewMockStorage(ctrl)
 	storage.
@@ -1700,7 +1700,7 @@ func TestExecPipelineWorkCompletedPipelineUpdateError(t *testing.T) {
 	completedPipeline.Status = domain.Completed
 	completedPipeline.CompletedAt = &completedAt
 
-	storageErr := errors.New("some repository error")
+	storageErr := errors.New("some storage error")
 
 	storage := mock.NewMockStorage(ctrl)
 

@@ -67,8 +67,8 @@ func TestLoad(t *testing.T) {
 		QueueCapacity: 8,
 	}
 	scheduler := Scheduler{
-		RepositoryPollingInterval: 70,
-		JobQueuePollingInterval:   2,
+		StoragePollingInterval:  70,
+		JobQueuePollingInterval: 2,
 	}
 	mysql := MySQL{
 		DSN:                   "test_dsn",
@@ -83,7 +83,7 @@ func TestLoad(t *testing.T) {
 		MaxIdleConnections:    8,
 		MaxOpenConnections:    8,
 	}
-	repository := Repository{
+	storage := Storage{
 		Option:   "mysql",
 		MySQL:    mysql,
 		Redis:    redis,
@@ -94,7 +94,7 @@ func TestLoad(t *testing.T) {
 		JobQueue:          jobqueue,
 		WorkerPool:        wp,
 		Scheduler:         scheduler,
-		Repository:        repository,
+		Storage:           storage,
 		LoggingFormat:     "text",
 		TimeoutUnitOption: "second",
 		TimeoutUnit:       time.Second,
@@ -136,7 +136,7 @@ func TestLoad(t *testing.T) {
 			errors.New("PostgreSQL DSN not provided"),
 		},
 		{
-			"no redis url repository",
+			"no redis url storage",
 			"test_dsn",
 			"test_dsn",
 			"",
@@ -163,13 +163,13 @@ func TestLoad(t *testing.T) {
 			errors.New("binary is not a valid logging_format option, valid options: map[json:true text:true]"),
 		},
 		{
-			"wrong repository option",
+			"wrong storage option",
 			"test_dsn",
 			"test_dsn",
 			"test_url",
-			"./testdata/test_config_invalid_repository_option.yaml",
+			"./testdata/test_config_invalid_storage_option.yaml",
 			nil,
-			errors.New("storage is not a valid repository option, valid options: map[memory:true mysql:true postgres:true redis:true]"),
+			errors.New("storage is not a valid storage option, valid options: map[memory:true mysql:true postgres:true redis:true]"),
 		},
 		{
 			"wrong timeout unit",
@@ -249,8 +249,8 @@ func TestLoadDefaultValues(t *testing.T) {
 		QueueCapacity: runtime.NumCPU() * 2,
 	}
 	scheduler := Scheduler{
-		RepositoryPollingInterval: 60,
-		JobQueuePollingInterval:   1,
+		StoragePollingInterval:  60,
+		JobQueuePollingInterval: 1,
 	}
 	mysql := MySQL{
 		DSN:                   "test_dsn",
@@ -265,7 +265,7 @@ func TestLoadDefaultValues(t *testing.T) {
 		MaxIdleConnections:    8,
 		MaxOpenConnections:    8,
 	}
-	repository := Repository{
+	storage := Storage{
 		Option:   "mysql",
 		MySQL:    mysql,
 		Redis:    redis,
@@ -276,7 +276,7 @@ func TestLoadDefaultValues(t *testing.T) {
 		JobQueue:          jobqueue,
 		WorkerPool:        wp,
 		Scheduler:         scheduler,
-		Repository:        repository,
+		Storage:           storage,
 		LoggingFormat:     "text",
 		TimeoutUnitOption: "second",
 		TimeoutUnit:       time.Second,
@@ -333,33 +333,33 @@ func TestLoadDefaultValues(t *testing.T) {
 				}
 			} else {
 				if strings.Contains(tt.name, "postgres") {
-					tt.expected.Repository.Option = "postgres"
-					tt.expected.Repository.MySQL.DSN = ""
-					tt.expected.Repository.Postgres.DSN = tt.postgresDSN
+					tt.expected.Storage.Option = "postgres"
+					tt.expected.Storage.MySQL.DSN = ""
+					tt.expected.Storage.Postgres.DSN = tt.postgresDSN
 				}
 				if strings.Contains(tt.name, "mysql") {
-					tt.expected.Repository.Option = "mysql"
-					tt.expected.Repository.Postgres.DSN = ""
-					tt.expected.Repository.MySQL.DSN = tt.mysqlDSN
+					tt.expected.Storage.Option = "mysql"
+					tt.expected.Storage.Postgres.DSN = ""
+					tt.expected.Storage.MySQL.DSN = tt.mysqlDSN
 				}
 				if strings.Contains(tt.name, "grpc") {
 					tt.expected.Server.Protocol = "grpc"
 				}
 				if strings.Contains(tt.name, "redis") {
-					tt.expected.Repository.Option = "redis"
-					tt.expected.Repository.MySQL.DSN = ""
-					tt.expected.Repository.Postgres.DSN = ""
-					tt.expected.Repository.Redis.URL = tt.redisURL
+					tt.expected.Storage.Option = "redis"
+					tt.expected.Storage.MySQL.DSN = ""
+					tt.expected.Storage.Postgres.DSN = ""
+					tt.expected.Storage.Redis.URL = tt.redisURL
 					tt.expected.JobQueue.Option = "redis"
 					tt.expected.JobQueue.Redis.URL = tt.redisURL
 					tt.expected.JobQueue.Redis.MinIdleConns = 10
 					tt.expected.JobQueue.Redis.PoolSize = 10
-					tt.expected.Repository.Redis.MinIdleConns = 10
-					tt.expected.Repository.Redis.PoolSize = 10
+					tt.expected.Storage.Redis.MinIdleConns = 10
+					tt.expected.Storage.Redis.PoolSize = 10
 					tt.expected.JobQueue.MemoryJobQueue.Capacity = 0
 				}
 				if strings.Contains(tt.name, "millisecond") {
-					tt.expected.Scheduler.RepositoryPollingInterval = 60000
+					tt.expected.Scheduler.StoragePollingInterval = 60000
 					tt.expected.Scheduler.JobQueuePollingInterval = 1000
 					tt.expected.TimeoutUnitOption = "millisecond"
 					tt.expected.TimeoutUnit = time.Millisecond

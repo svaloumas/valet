@@ -126,7 +126,7 @@ func (psql *PostgreSQL) Close() error {
 	return psql.DB.Close()
 }
 
-// CreateJob adds a new job to the repository.
+// CreateJob adds a new job to the storage.
 func (psql *PostgreSQL) CreateJob(j *domain.Job) error {
 	tx, err := psql.DB.Begin()
 	if err != nil {
@@ -157,7 +157,7 @@ func (psql *PostgreSQL) CreateJob(j *domain.Job) error {
 	return nil
 }
 
-// GetJob fetches a job from the repository.
+// GetJob fetches a job from the storage.
 func (psql *PostgreSQL) GetJob(id string) (*domain.Job, error) {
 	var query bytes.Buffer
 	query.WriteString("SELECT id, name, pipeline_id, next_job_id, task_name, task_params, ")
@@ -182,7 +182,7 @@ func (psql *PostgreSQL) GetJob(id string) (*domain.Job, error) {
 	return job, nil
 }
 
-// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
+// GetJobs fetches all jobs from the storage, optionally filters the jobs by status.
 func (psql *PostgreSQL) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
 	filterByStatus := ""
 	if status != domain.Undefined {
@@ -216,7 +216,7 @@ func (psql *PostgreSQL) GetJobs(status domain.JobStatus) ([]*domain.Job, error) 
 	return jobs, nil
 }
 
-// UpdateJob updates a job to the repository.
+// UpdateJob updates a job to the storage.
 func (psql *PostgreSQL) UpdateJob(id string, j *domain.Job) error {
 	tx, err := psql.DB.Begin()
 	if err != nil {
@@ -247,7 +247,7 @@ func (psql *PostgreSQL) UpdateJob(id string, j *domain.Job) error {
 	return nil
 }
 
-// DeleteJob deletes a job from the repository.
+// DeleteJob deletes a job from the storage.
 func (psql *PostgreSQL) DeleteJob(id string) error {
 	tx, err := psql.DB.Begin()
 	if err != nil {
@@ -339,7 +339,7 @@ func (psql *PostgreSQL) GetJobsByPipelineID(pipelineID string) ([]*domain.Job, e
 	return jobs, nil
 }
 
-// CreateJobResult adds new job result to the repository.
+// CreateJobResult adds new job result to the storage.
 func (psql *PostgreSQL) CreateJobResult(result *domain.JobResult) error {
 	tx, err := psql.DB.Begin()
 	if err != nil {
@@ -370,7 +370,7 @@ func (psql *PostgreSQL) CreateJobResult(result *domain.JobResult) error {
 	return nil
 }
 
-// GetJobResult fetches a job result from the repository.
+// GetJobResult fetches a job result from the storage.
 func (psql *PostgreSQL) GetJobResult(jobID string) (*domain.JobResult, error) {
 	var query bytes.Buffer
 	query.WriteString("SELECT job_id, metadata, error ")
@@ -393,7 +393,7 @@ func (psql *PostgreSQL) GetJobResult(jobID string) (*domain.JobResult, error) {
 	return result, nil
 }
 
-// UpdateJobResult updates a job result to the repository.
+// UpdateJobResult updates a job result to the storage.
 func (psql *PostgreSQL) UpdateJobResult(jobID string, result *domain.JobResult) error {
 	tx, err := psql.DB.Begin()
 	if err != nil {
@@ -423,7 +423,7 @@ func (psql *PostgreSQL) UpdateJobResult(jobID string, result *domain.JobResult) 
 	return nil
 }
 
-// DeleteJobResult deletes a job result from the repository.
+// DeleteJobResult deletes a job result from the storage.
 func (psql *PostgreSQL) DeleteJobResult(jobID string) error {
 	tx, err := psql.DB.Begin()
 	if err != nil {
@@ -443,7 +443,7 @@ func (psql *PostgreSQL) DeleteJobResult(jobID string) error {
 	return nil
 }
 
-// CreatePipeline adds a new pipeline and of its jobs to the repository.
+// CreatePipeline adds a new pipeline and of its jobs to the storage.
 func (psql *PostgreSQL) CreatePipeline(p *domain.Pipeline) error {
 	tx, err := psql.DB.Begin()
 	if err != nil {
@@ -493,7 +493,7 @@ func (psql *PostgreSQL) CreatePipeline(p *domain.Pipeline) error {
 	return nil
 }
 
-// GetPipeline fetches a pipeline from the repository.
+// GetPipeline fetches a pipeline from the storage.
 func (psql *PostgreSQL) GetPipeline(id string) (*domain.Pipeline, error) {
 	var query bytes.Buffer
 	query.WriteString("SELECT id, name, description, status, run_at, ")
@@ -514,7 +514,7 @@ func (psql *PostgreSQL) GetPipeline(id string) (*domain.Pipeline, error) {
 	return p, nil
 }
 
-// GetPipelines fetches all pipelines from the repository, optionally filters the pipelines by status.
+// GetPipelines fetches all pipelines from the storage, optionally filters the pipelines by status.
 func (psql *PostgreSQL) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, error) {
 	filterByStatus := ""
 	if status != domain.Undefined {
@@ -545,7 +545,7 @@ func (psql *PostgreSQL) GetPipelines(status domain.JobStatus) ([]*domain.Pipelin
 	return pipelines, nil
 }
 
-// UpdatePipeline updates a pipeline to the repository.
+// UpdatePipeline updates a pipeline to the storage.
 func (psql *PostgreSQL) UpdatePipeline(id string, p *domain.Pipeline) error {
 	tx, err := psql.DB.Begin()
 	if err != nil {
@@ -573,7 +573,7 @@ func (psql *PostgreSQL) UpdatePipeline(id string, p *domain.Pipeline) error {
 	return nil
 }
 
-// DeletePipeline deletes a pipeline and all its jobs from the repository.
+// DeletePipeline deletes a pipeline and all its jobs from the storage.
 func (psql *PostgreSQL) DeletePipeline(id string) error {
 	tx, err := psql.DB.Begin()
 	if err != nil {

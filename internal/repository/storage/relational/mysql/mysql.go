@@ -121,7 +121,7 @@ func (mySQL *MySQL) Close() error {
 	return mySQL.DB.Close()
 }
 
-// CreateJob adds a new job to the repository.
+// CreateJob adds a new job to the storage.
 func (mySQL *MySQL) CreateJob(j *domain.Job) error {
 	tx, err := mySQL.DB.Begin()
 	if err != nil {
@@ -152,7 +152,7 @@ func (mySQL *MySQL) CreateJob(j *domain.Job) error {
 	return nil
 }
 
-// GetJob fetches a job from the repository.
+// GetJob fetches a job from the storage.
 func (mySQL *MySQL) GetJob(id string) (*domain.Job, error) {
 	var query bytes.Buffer
 	query.WriteString("SELECT BIN_TO_UUID(id), pipeline_id, next_job_id, ")
@@ -178,7 +178,7 @@ func (mySQL *MySQL) GetJob(id string) (*domain.Job, error) {
 	return job, nil
 }
 
-// GetJobs fetches all jobs from the repository, optionally filters the jobs by status.
+// GetJobs fetches all jobs from the storage, optionally filters the jobs by status.
 func (mySQL *MySQL) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
 	filterByStatus := ""
 	if status != domain.Undefined {
@@ -212,7 +212,7 @@ func (mySQL *MySQL) GetJobs(status domain.JobStatus) ([]*domain.Job, error) {
 	return jobs, nil
 }
 
-// UpdateJob updates a job to the repository.
+// UpdateJob updates a job to the storage.
 func (mySQL *MySQL) UpdateJob(id string, j *domain.Job) error {
 	tx, err := mySQL.DB.Begin()
 	if err != nil {
@@ -243,7 +243,7 @@ func (mySQL *MySQL) UpdateJob(id string, j *domain.Job) error {
 	return nil
 }
 
-// DeleteJob deletes a job from the repository.
+// DeleteJob deletes a job from the storage.
 func (mySQL *MySQL) DeleteJob(id string) error {
 	tx, err := mySQL.DB.Begin()
 	if err != nil {
@@ -336,7 +336,7 @@ func (mySQL *MySQL) GetJobsByPipelineID(pipelineID string) ([]*domain.Job, error
 	return jobs, nil
 }
 
-// CreateJobResult adds new job result to the repository.
+// CreateJobResult adds new job result to the storage.
 func (mySQL *MySQL) CreateJobResult(result *domain.JobResult) error {
 	tx, err := mySQL.DB.Begin()
 	if err != nil {
@@ -367,7 +367,7 @@ func (mySQL *MySQL) CreateJobResult(result *domain.JobResult) error {
 	return nil
 }
 
-// GetJobResult fetches a job result from the repository.
+// GetJobResult fetches a job result from the storage.
 func (mySQL *MySQL) GetJobResult(jobID string) (*domain.JobResult, error) {
 	var query bytes.Buffer
 	query.WriteString("SELECT BIN_TO_UUID(job_id), metadata, error ")
@@ -390,7 +390,7 @@ func (mySQL *MySQL) GetJobResult(jobID string) (*domain.JobResult, error) {
 	return result, nil
 }
 
-// UpdateJobResult updates a job result to the repository.
+// UpdateJobResult updates a job result to the storage.
 func (mySQL *MySQL) UpdateJobResult(jobID string, result *domain.JobResult) error {
 	tx, err := mySQL.DB.Begin()
 	if err != nil {
@@ -420,7 +420,7 @@ func (mySQL *MySQL) UpdateJobResult(jobID string, result *domain.JobResult) erro
 	return nil
 }
 
-// DeleteJobResult deletes a job result from the repository.
+// DeleteJobResult deletes a job result from the storage.
 func (mySQL *MySQL) DeleteJobResult(jobID string) error {
 	tx, err := mySQL.DB.Begin()
 	if err != nil {
@@ -440,7 +440,7 @@ func (mySQL *MySQL) DeleteJobResult(jobID string) error {
 	return nil
 }
 
-// CreatePipeline adds a new pipeline and of its jobs to the repository.
+// CreatePipeline adds a new pipeline and of its jobs to the storage.
 func (mySQL *MySQL) CreatePipeline(p *domain.Pipeline) error {
 	tx, err := mySQL.DB.Begin()
 	if err != nil {
@@ -490,7 +490,7 @@ func (mySQL *MySQL) CreatePipeline(p *domain.Pipeline) error {
 	return nil
 }
 
-// GetPipeline fetches a pipeline from the repository.
+// GetPipeline fetches a pipeline from the storage.
 func (mySQL *MySQL) GetPipeline(id string) (*domain.Pipeline, error) {
 	var query bytes.Buffer
 	query.WriteString("SELECT BIN_TO_UUID(id), name, description, status, run_at, ")
@@ -511,7 +511,7 @@ func (mySQL *MySQL) GetPipeline(id string) (*domain.Pipeline, error) {
 	return p, nil
 }
 
-// GetPipelines fetches all pipelines from the repository, optionally filters the pipelines by status.
+// GetPipelines fetches all pipelines from the storage, optionally filters the pipelines by status.
 func (mySQL *MySQL) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, error) {
 	filterByStatus := ""
 	if status != domain.Undefined {
@@ -542,7 +542,7 @@ func (mySQL *MySQL) GetPipelines(status domain.JobStatus) ([]*domain.Pipeline, e
 	return pipelines, nil
 }
 
-// UpdatePipeline updates a pipeline to the repository.
+// UpdatePipeline updates a pipeline to the storage.
 func (mySQL *MySQL) UpdatePipeline(id string, p *domain.Pipeline) error {
 	tx, err := mySQL.DB.Begin()
 	if err != nil {
@@ -570,7 +570,7 @@ func (mySQL *MySQL) UpdatePipeline(id string, p *domain.Pipeline) error {
 	return nil
 }
 
-// DeletePipeline deletes a pipeline and all its jobs from the repository.
+// DeletePipeline deletes a pipeline and all its jobs from the storage.
 func (mySQL *MySQL) DeletePipeline(id string) error {
 	tx, err := mySQL.DB.Begin()
 	if err != nil {

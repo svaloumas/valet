@@ -21,7 +21,7 @@ var (
 		"text": true,
 		"json": true,
 	}
-	validRepositoryOptions = map[string]bool{
+	validStorageOptions = map[string]bool{
 		"memory":   true,
 		"mysql":    true,
 		"redis":    true,
@@ -98,11 +98,11 @@ type WorkerPool struct {
 }
 
 type Scheduler struct {
-	RepositoryPollingInterval int `yaml:"repository_polling_interval"`
-	JobQueuePollingInterval   int `yaml:"job_queue_polling_interval"`
+	StoragePollingInterval  int `yaml:"storage_polling_interval"`
+	JobQueuePollingInterval int `yaml:"job_queue_polling_interval"`
 }
 
-type Repository struct {
+type Storage struct {
 	Option   string   `yaml:"option"`
 	MySQL    MySQL    `yaml:"mysql"`
 	Postgres Postgres `yaml:"postgres"`
@@ -136,7 +136,7 @@ type Config struct {
 	JobQueue          JobQueue   `yaml:"job_queue"`
 	WorkerPool        WorkerPool `yaml:"worker_pool"`
 	Scheduler         Scheduler  `yaml:"scheduler"`
-	Repository        Repository `yaml:"repository"`
+	Storage           Storage    `yaml:"storage"`
 	TimeoutUnitOption string     `yaml:"timeout_unit"`
 	LoggingFormat     string     `yaml:"logging_format"`
 	TimeoutUnit       time.Duration
@@ -169,7 +169,7 @@ func (cfg *Config) Load(filepath string) error {
 	if err != nil {
 		return err
 	}
-	err = cfg.setRepositoryConfig()
+	err = cfg.setStorageConfig()
 	if err != nil {
 		return err
 	}
@@ -235,12 +235,12 @@ func (cfg *Config) setTimeoutUnitConfig() error {
 }
 
 func (cfg *Config) setSchedulerConfig() {
-	if cfg.Scheduler.RepositoryPollingInterval == 0 {
+	if cfg.Scheduler.StoragePollingInterval == 0 {
 		if cfg.TimeoutUnit == time.Second {
-			cfg.Scheduler.RepositoryPollingInterval = 60
+			cfg.Scheduler.StoragePollingInterval = 60
 			cfg.Scheduler.JobQueuePollingInterval = 1
 		} else {
-			cfg.Scheduler.RepositoryPollingInterval = 60000
+			cfg.Scheduler.StoragePollingInterval = 60000
 			cfg.Scheduler.JobQueuePollingInterval = 1000
 		}
 	}
@@ -253,58 +253,58 @@ func (cfg *Config) setLoggingFormatConfig() error {
 	return nil
 }
 
-func (cfg *Config) setRepositoryConfig() error {
-	if _, ok := validRepositoryOptions[cfg.Repository.Option]; !ok {
-		return fmt.Errorf("%s is not a valid repository option, valid options: %v", cfg.Repository.Option, validRepositoryOptions)
+func (cfg *Config) setStorageConfig() error {
+	if _, ok := validStorageOptions[cfg.Storage.Option]; !ok {
+		return fmt.Errorf("%s is not a valid storage option, valid options: %v", cfg.Storage.Option, validStorageOptions)
 	}
-	if cfg.Repository.Option == "mysql" {
+	if cfg.Storage.Option == "mysql" {
 		dsn := env.LoadVar("MYSQL_DSN")
 		if dsn == "" {
 			return errors.New("MySQL DSN not provided")
 		}
 		caPemFile := env.LoadVar("MYSQL_CA_PEM_FILE")
-		cfg.Repository.MySQL.DSN = dsn
-		cfg.Repository.MySQL.CaPemFile = caPemFile
+		cfg.Storage.MySQL.DSN = dsn
+		cfg.Storage.MySQL.CaPemFile = caPemFile
 
-		if cfg.Repository.MySQL.ConnectionMaxLifetime == 0 {
-			cfg.Repository.MySQL.ConnectionMaxLifetime = 3000
+		if cfg.Storage.MySQL.ConnectionMaxLifetime == 0 {
+			cfg.Storage.MySQL.ConnectionMaxLifetime = 3000
 		}
-		if cfg.Repository.MySQL.MaxIdleConnections == 0 {
-			cfg.Repository.MySQL.MaxIdleConnections = 8
+		if cfg.Storage.MySQL.MaxIdleConnections == 0 {
+			cfg.Storage.MySQL.MaxIdleConnections = 8
 		}
-		if cfg.Repository.MySQL.MaxOpenConnections == 0 {
-			cfg.Repository.MySQL.MaxOpenConnections = 8
+		if cfg.Storage.MySQL.MaxOpenConnections == 0 {
+			cfg.Storage.MySQL.MaxOpenConnections = 8
 		}
 	}
-	if cfg.Repository.Option == "postgres" {
+	if cfg.Storage.Option == "postgres" {
 		dsn := env.LoadVar("POSTGRES_DSN")
 		if dsn == "" {
 			return errors.New("PostgreSQL DSN not provided")
 		}
-		cfg.Repository.Postgres.DSN = dsn
+		cfg.Storage.Postgres.DSN = dsn
 
-		if cfg.Repository.Postgres.ConnectionMaxLifetime == 0 {
-			cfg.Repository.Postgres.ConnectionMaxLifetime = 3000
+		if cfg.Storage.Postgres.ConnectionMaxLifetime == 0 {
+			cfg.Storage.Postgres.ConnectionMaxLifetime = 3000
 		}
-		if cfg.Repository.Postgres.MaxIdleConnections == 0 {
-			cfg.Repository.Postgres.MaxIdleConnections = 8
+		if cfg.Storage.Postgres.MaxIdleConnections == 0 {
+			cfg.Storage.Postgres.MaxIdleConnections = 8
 		}
-		if cfg.Repository.Postgres.MaxOpenConnections == 0 {
-			cfg.Repository.Postgres.MaxOpenConnections = 8
+		if cfg.Storage.Postgres.MaxOpenConnections == 0 {
+			cfg.Storage.Postgres.MaxOpenConnections = 8
 		}
 	}
-	if cfg.Repository.Option == "redis" {
+	if cfg.Storage.Option == "redis" {
 		url := env.LoadVar("REDIS_URL")
 		if url == "" {
 			return errors.New("Redis URL not provided")
 		}
-		cfg.Repository.Redis.URL = url
+		cfg.Storage.Redis.URL = url
 
-		if cfg.Repository.Redis.PoolSize == 0 {
-			cfg.Repository.Redis.PoolSize = 10
+		if cfg.Storage.Redis.PoolSize == 0 {
+			cfg.Storage.Redis.PoolSize = 10
 		}
-		if cfg.Repository.Redis.MinIdleConns == 0 {
-			cfg.Repository.Redis.MinIdleConns = 10
+		if cfg.Storage.Redis.MinIdleConns == 0 {
+			cfg.Storage.Redis.MinIdleConns = 10
 		}
 	}
 	return nil

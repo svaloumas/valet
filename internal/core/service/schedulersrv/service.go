@@ -67,7 +67,7 @@ func (srv *schedulerservice) Dispatch(ctx context.Context, duration time.Duratio
 	}()
 }
 
-// Schedule polls the repository in given interval and schedules due jobs for execution.
+// Schedule polls the storage in given interval and schedules due jobs for execution.
 func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duration) {
 	ticker := time.NewTicker(duration)
 	go func() {
@@ -80,7 +80,7 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 			case <-ticker.C:
 				dueJobs, err := srv.storage.GetDueJobs()
 				if err != nil {
-					srv.logger.Errorf("could not get due jobs from repository: %s", err)
+					srv.logger.Errorf("could not get due jobs from storage: %s", err)
 					continue
 				}
 				for _, j := range dueJobs {
@@ -88,7 +88,7 @@ func (srv *schedulerservice) Schedule(ctx context.Context, duration time.Duratio
 						for job := j; job.HasNext(); job = job.Next {
 							job.Next, err = srv.storage.GetJob(job.NextJobID)
 							if err != nil {
-								srv.logger.Errorf("could not get piped due job from repository: %s", err)
+								srv.logger.Errorf("could not get piped due job from storage: %s", err)
 								continue
 							}
 						}
