@@ -1,4 +1,18 @@
 
+<a name="v0.8.7"></a>
+## [v0.8.7](https://github.com/svaloumas/valet/compare/v0.8.6...v0.8.7)
+
+> 2022-05-02
+
+### Chore
+
+* bump version to v0.8.7
+
+### Refactor
+
+* rename repository config to storage
+
+
 <a name="v0.8.6"></a>
 ## [v0.8.6](https://github.com/svaloumas/valet/compare/v0.8.5...v0.8.6)
 
