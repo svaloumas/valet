@@ -1846,9 +1846,7 @@ func TestWork(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actualResultChan := make(chan domain.JobResult, 1)
-
-			service.work(tt.job, actualResultChan, tt.previousResults)
+			actualResultChan := service.work(tt.job, tt.previousResults)
 
 			result := <-actualResultChan
 
