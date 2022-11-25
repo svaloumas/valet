@@ -44,15 +44,15 @@ func New(
 	storage port.Storage,
 	taskrepo *taskrepo.TaskRepository,
 	time rtime.Time, timeoutUnit time.Duration,
-	workers, queue_capacity int, logger *logrus.Logger) *workservice {
+	workers, queueCapacity int, logger *logrus.Logger) *workservice {
 
 	return &workservice{
 		storage:        storage,
 		taskrepo:       taskrepo,
 		workers:        workers,
-		queue_capacity: queue_capacity,
+		queue_capacity: queueCapacity,
 		timeoutUnit:    timeoutUnit,
-		queue:          make(chan work.Work, queue_capacity),
+		queue:          make(chan work.Work, queueCapacity),
 		time:           time,
 		logger:         logger,
 	}
@@ -60,33 +60,16 @@ func New(
 
 // Start starts the worker pool.
 func (srv *workservice) Start() {
+	srv.wg.Add(srv.workers)
 	for i := 0; i < srv.workers; i++ {
-		srv.wg.Add(1)
-		go srv.startWorker(i, srv.queue, &srv.wg)
+		srv.worker(i, srv.queue, &srv.wg)
 	}
 	srv.logger.Infof("set up %d workers with a queue of capacity %d", srv.workers, srv.queue_capacity)
 }
 
 // Dispatch dispatches a work to the worker pool.
-func (srv *workservice) Dispatch(w work.Work) {
-	workType := WorkTypeTask
-	for job := w.Job; ; job, workType = job.Next, WorkTypePipeline {
-		go func() {
-			result, ok := <-w.Result
-			if ok {
-				if err := srv.storage.CreateJobResult(&result); err != nil {
-					srv.logger.Errorf("could not create job result to the storage %s", err)
-				}
-			}
-		}()
-
-		if !job.HasNext() {
-			break
-		}
-	}
-	w.Type = workType
-
-	srv.queue <- w
+func (srv *workservice) Dispatch() chan<- work.Work {
+	return srv.queue
 }
 
 // CreateWork creates and return a new Work instance.
@@ -100,6 +83,13 @@ func (srv *workservice) Stop() {
 	close(srv.queue)
 	srv.logger.Info("waiting for ongoing tasks to finish...")
 	srv.wg.Wait()
+}
+
+func (srv *workservice) Exec(ctx context.Context, w work.Work) error {
+	if w.Type == WorkTypePipeline {
+		return srv.ExecPipelineWork(ctx, w)
+	}
+	return srv.ExecJobWork(ctx, w)
 }
 
 // ExecJobWork executes the job work.
@@ -278,22 +268,38 @@ func (srv *workservice) work(
 	return jobResultChan
 }
 
-func (srv *workservice) Exec(ctx context.Context, w work.Work) error {
-	if w.Type == WorkTypePipeline {
-		return srv.ExecPipelineWork(ctx, w)
-	}
-	return srv.ExecJobWork(ctx, w)
+func (srv *workservice) worker(id int, queue <-chan work.Work, wg *sync.WaitGroup) {
+	go func() {
+		defer wg.Done()
+		logPrefix := fmt.Sprintf("[worker] %d", id)
+		for work := range queue {
+			srv.waitForResults(&work)
+
+			srv.logger.Infof("%s executing %s...", logPrefix, work.Type)
+			if err := srv.Exec(context.Background(), work); err != nil {
+				srv.logger.Errorf("could not update job status: %s", err)
+			}
+			srv.logger.Infof("%s %s finished!", logPrefix, work.Type)
+		}
+		srv.logger.Infof("%s exiting...", logPrefix)
+	}()
 }
 
-func (srv *workservice) startWorker(id int, queue <-chan work.Work, wg *sync.WaitGroup) {
-	defer wg.Done()
-	logPrefix := fmt.Sprintf("[worker] %d", id)
-	for work := range queue {
-		srv.logger.Infof("%s executing %s...", logPrefix, work.Type)
-		if err := srv.Exec(context.Background(), work); err != nil {
-			srv.logger.Errorf("could not update job status: %s", err)
+func (srv *workservice) waitForResults(w *work.Work) {
+	workType := WorkTypeTask
+	for job := w.Job; ; job, workType = job.Next, WorkTypePipeline {
+		go func() {
+			result, ok := <-w.Result
+			if ok {
+				if err := srv.storage.CreateJobResult(&result); err != nil {
+					srv.logger.Errorf("could not create job result to the storage %s", err)
+				}
+			}
+		}()
+
+		if !job.HasNext() {
+			break
 		}
-		srv.logger.Infof("%s %s finished!", logPrefix, work.Type)
 	}
-	srv.logger.Infof("%s exiting...", logPrefix)
+	w.Type = workType
 }

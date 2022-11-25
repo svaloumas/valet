@@ -87,8 +87,14 @@ func (v *valet) Run() {
 
 	schedulerLogger := vlog.NewLogger("scheduler", cfg.LoggingFormat)
 	schedulerService := schedulersrv.New(jobQueue, storage, workService, rtime.New(), schedulerLogger)
-	schedulerService.Schedule(ctx, time.Duration(cfg.Scheduler.StoragePollingInterval)*cfg.TimeoutUnit)
-	schedulerService.Dispatch(ctx, time.Duration(cfg.Scheduler.JobQueuePollingInterval)*cfg.TimeoutUnit)
+
+	storagePollingInterval := time.Duration(cfg.Scheduler.StoragePollingInterval) * cfg.TimeoutUnit
+	scheduleWithSteward := schedulerService.NewSteward(storagePollingInterval, schedulerService.Schedule(storagePollingInterval))
+	scheduleWithSteward(ctx, 10*time.Minute)
+
+	jobQueuePollingInterval := time.Duration(cfg.Scheduler.JobQueuePollingInterval) * cfg.TimeoutUnit
+	dispatchWithSteward := schedulerService.NewSteward(jobQueuePollingInterval*5, schedulerService.Dispatch(jobQueuePollingInterval))
+	dispatchWithSteward(ctx, 10*time.Minute)
 
 	server := factory.ServerFactory(
 		cfg.Server, jobService, pipelineService, resultService,

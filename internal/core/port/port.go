@@ -9,6 +9,8 @@ import (
 	"github.com/svaloumas/valet/internal/core/service/worksrv/work"
 )
 
+type StartGoroutineFn func(ctx context.Context, pulseInterval time.Duration) (heartbeat <-chan struct{})
+
 // Storage represents a driven actor storage interface.
 type Storage interface {
 	// CreateJob adds a new job to the storage.
@@ -138,7 +140,7 @@ type WorkService interface {
 	Stop()
 
 	// Dispatch dispatches a work to the worker pool.
-	Dispatch(w work.Work)
+	Dispatch() chan<- work.Work
 
 	// CreateWork creates and return a new Work instance.
 	CreateWork(j *domain.Job) work.Work
@@ -159,10 +161,10 @@ type TaskService interface {
 // Scheduler represents a domain event listener.
 type Scheduler interface {
 	// Schedule polls the storage in given interval and schedules due jobs for execution.
-	Schedule(ctx context.Context, duration time.Duration)
+	Schedule(duration time.Duration) StartGoroutineFn
 	// Dispatch listens to the job queue for messages, consumes them and
 	// dispatches the jobs for execution.
-	Dispatch(ctx context.Context, duration time.Duration)
+	Dispatch(duration time.Duration) StartGoroutineFn
 }
 
 // Server represents a driver actor service interface.
