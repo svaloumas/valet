@@ -119,9 +119,7 @@ func (srv *workservice) ExecJobWork(ctx context.Context, w work.Work) error {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	jobResultChan := make(chan domain.JobResult, 1)
-
-	srv.work(w.Job, jobResultChan, nil)
+	jobResultChan := srv.work(w.Job, nil)
 
 	var jobResult domain.JobResult
 	select {
@@ -180,9 +178,8 @@ func (srv *workservice) ExecPipelineWork(ctx context.Context, w work.Work) error
 			timeout = time.Duration(job.Timeout) * w.TimeoutUnit
 		}
 		ctx, cancel := context.WithTimeout(ctx, timeout)
-		jobResultChan := make(chan domain.JobResult, 1)
 
-		srv.work(job, jobResultChan, jobResult.Metadata)
+		jobResultChan := srv.work(job, jobResult.Metadata)
 
 		select {
 		case <-ctx.Done():
@@ -238,10 +235,11 @@ func (srv *workservice) ExecPipelineWork(ctx context.Context, w work.Work) error
 
 func (srv *workservice) work(
 	job *domain.Job,
-	jobResultChan chan domain.JobResult,
-	previousJobResultsMetadata interface{}) {
+	previousJobResultsMetadata interface{}) <-chan domain.JobResult {
 
+	jobResultChan := make(chan domain.JobResult, 1)
 	go func() {
+		defer close(jobResultChan)
 		defer func() {
 			if p := recover(); p != nil {
 				result := domain.JobResult{
@@ -250,9 +248,9 @@ func (srv *workservice) work(
 					Error:    fmt.Errorf("%v", p).Error(),
 				}
 				jobResultChan <- result
-				close(jobResultChan)
 			}
 		}()
+
 		var errMsg string
 
 		// Should be already validated.
@@ -276,8 +274,8 @@ func (srv *workservice) work(
 			Error:    errMsg,
 		}
 		jobResultChan <- result
-		close(jobResultChan)
 	}()
+	return jobResultChan
 }
 
 func (srv *workservice) Exec(ctx context.Context, w work.Work) error {
