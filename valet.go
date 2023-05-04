@@ -2,6 +2,7 @@ package valet
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -118,14 +119,15 @@ func (v *valet) RegisterTask(name string, callback func(...interface{}) (interfa
 
 // DecodeTaskParams uses https://github.com/mitchellh/mapstructure
 // to decode task params to a pointer of map or struct.
-func DecodeTaskParams(args []interface{}, params interface{}) {
-	mapstructure.Decode(args[0], params)
+func DecodeTaskParams(args []interface{}, params interface{}) error {
+	return mapstructure.Decode(args[0], params)
 }
 
 // DecodeTaskParams uses https://github.com/mitchellh/mapstructure
 // to safely decode previous job's results metadata to a pointer of map or struct.
-func DecodePreviousJobResults(args []interface{}, results interface{}) {
+func DecodePreviousJobResults(args []interface{}, results interface{}) error {
 	if len(args) == 2 {
-		mapstructure.Decode(args[1], results)
+		return mapstructure.Decode(args[1], results)
 	}
+	return fmt.Errorf("wrong numbers of args given: got %d want 2", len(args))
 }
