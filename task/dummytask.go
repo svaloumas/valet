@@ -13,8 +13,12 @@ type DummyParams struct {
 func DummyTask(args ...interface{}) (interface{}, error) {
 	dummyParams := &DummyParams{}
 	var resultsMetadata string
-	valet.DecodeTaskParams(args, dummyParams)
-	valet.DecodePreviousJobResults(args, &resultsMetadata)
+	if err := valet.DecodeTaskParams(args, dummyParams); err != nil {
+		return nil, err
+	}
+	if err := valet.DecodePreviousJobResults(args, &resultsMetadata); err != nil {
+		return nil, err
+	}
 
 	metadata := downloadContent(dummyParams.URL, resultsMetadata)
 	return metadata, nil

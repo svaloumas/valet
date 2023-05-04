@@ -11,7 +11,6 @@ import (
 )
 
 func TestValetRegisterTask(t *testing.T) {
-
 	v := New("internal/config/testdata/test_config.yaml")
 	taskrepo := v.taskService.GetTaskRepository()
 
@@ -45,7 +44,9 @@ func TestDecodeTaskParams(t *testing.T) {
 		taskParams,
 	}
 
-	DecodeTaskParams(args, &testStruct)
+	if err := DecodeTaskParams(args, &testStruct); err != nil {
+		t.Errorf("DecodeTaskParaams returned unexpected error: got %s want nil", err)
+	}
 
 	if testStruct.Name != taskParams["name"] {
 		t.Errorf("DecodeTaskParaams decoded wrong struct name field: got %#v want #%v", testStruct.Name, taskParams["name"])
@@ -68,7 +69,9 @@ func TestDecodePreviousJobResults(t *testing.T) {
 		"some metadata",
 	}
 
-	DecodePreviousJobResults(args, &results)
+	if err := DecodePreviousJobResults(args, &results); err != nil {
+		t.Errorf("DecodePreviousJobResults returned unexpected error: got %s want nil", err)
+	}
 
 	if results != "some metadata" {
 		t.Errorf("DecodePreviousJobResults decoded wrong results: got %#v want %#v", results, "some metadata")
