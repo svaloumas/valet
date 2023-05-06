@@ -671,15 +671,17 @@ func (mr *MockWorkServiceMockRecorder) CreateWork(j interface{}) *gomock.Call {
 }
 
 // Dispatch mocks base method.
-func (m *MockWorkService) Dispatch(w work.Work) {
+func (m *MockWorkService) Dispatch() chan<- work.Work {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Dispatch", w)
+	ret := m.ctrl.Call(m, "Dispatch")
+	ret0, _ := ret[0].(chan<- work.Work)
+	return ret0
 }
 
 // Dispatch indicates an expected call of Dispatch.
-func (mr *MockWorkServiceMockRecorder) Dispatch(w interface{}) *gomock.Call {
+func (mr *MockWorkServiceMockRecorder) Dispatch() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockWorkService)(nil).Dispatch), w)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockWorkService)(nil).Dispatch))
 }
 
 // Exec mocks base method.

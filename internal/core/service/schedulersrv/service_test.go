@@ -30,6 +30,7 @@ func TestDispatch(t *testing.T) {
 		TimeoutUnit: time.Millisecond,
 	}
 	logger := &logrus.Logger{Out: ioutil.Discard}
+	workChan := make(chan work.Work, 1)
 
 	freezed := mock.NewMockTime(ctrl)
 	jobQueue := mock.NewMockJobQueue(ctrl)
@@ -41,9 +42,9 @@ func TestDispatch(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Dispatch(w).
-		Return().
-		Times(1)
+		Dispatch().
+		Return(workChan).
+		MinTimes(1)
 	workService.
 		EXPECT().
 		CreateWork(j).
@@ -56,7 +57,8 @@ func TestDispatch(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	schedulerService.Dispatch(ctx, 8*time.Millisecond)
+	startDispatch := schedulerService.Dispatch(8 * time.Millisecond)
+	startDispatch(ctx, 4*time.Millisecond)
 
 	// give some time for the scheduler to consume the job
 	time.Sleep(12 * time.Millisecond)
@@ -87,6 +89,7 @@ func TestDispatchPipeline(t *testing.T) {
 		TimeoutUnit: time.Millisecond,
 	}
 	logger := &logrus.Logger{Out: ioutil.Discard}
+	workChan := make(chan work.Work, 1)
 
 	freezed := mock.NewMockTime(ctrl)
 	jobQueue := mock.NewMockJobQueue(ctrl)
@@ -98,9 +101,9 @@ func TestDispatchPipeline(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Dispatch(w).
-		Return().
-		Times(1)
+		Dispatch().
+		Return(workChan).
+		MinTimes(1)
 	workService.
 		EXPECT().
 		CreateWork(j).
@@ -113,13 +116,14 @@ func TestDispatchPipeline(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	schedulerService.Dispatch(ctx, 8*time.Millisecond)
+	startDispatch := schedulerService.Dispatch(8 * time.Millisecond)
+	startDispatch(ctx, 4*time.Millisecond)
 
 	// give some time for the scheduler to consume the job
 	time.Sleep(12 * time.Millisecond)
 }
 
-func TestDispatchJobJobInQueue(t *testing.T) {
+func TestDispatchNoJobInQueue(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -140,7 +144,8 @@ func TestDispatchJobJobInQueue(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	schedulerService.Dispatch(ctx, 8*time.Millisecond)
+	startDispatch := schedulerService.Dispatch(8 * time.Millisecond)
+	startDispatch(ctx, 4*time.Millisecond)
 
 	// give some time for the scheduler to try to consume two jobs
 	time.Sleep(20 * time.Millisecond)
@@ -162,6 +167,7 @@ func TestSchedule(t *testing.T) {
 		TimeoutUnit: time.Millisecond,
 	}
 	logger := &logrus.Logger{Out: ioutil.Discard}
+	workChan := make(chan work.Work, 1)
 
 	dueJobs := []*domain.Job{j}
 
@@ -185,9 +191,9 @@ func TestSchedule(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Dispatch(w).
-		Return().
-		Times(1)
+		Dispatch().
+		Return(workChan).
+		MinTimes(1)
 	workService.
 		EXPECT().
 		CreateWork(j).
@@ -199,7 +205,8 @@ func TestSchedule(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	schedulerService.Schedule(ctx, 10*time.Millisecond)
+	startSchedule := schedulerService.Schedule(10 * time.Millisecond)
+	startSchedule(ctx, 4*time.Millisecond)
 
 	// give some time for the scheduler to schedule the job
 	time.Sleep(15 * time.Millisecond)
@@ -219,6 +226,7 @@ func TestScheduleErrorCases(t *testing.T) {
 		TimeoutUnit: time.Millisecond,
 	}
 	logger := &logrus.Logger{Out: ioutil.Discard}
+	workChan := make(chan work.Work, 1)
 
 	dueJobs := []*domain.Job{j}
 
@@ -253,9 +261,9 @@ func TestScheduleErrorCases(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Dispatch(w).
-		Return().
-		Times(1)
+		Dispatch().
+		Return(workChan).
+		MinTimes(1)
 	workService.
 		EXPECT().
 		CreateWork(j).
@@ -268,7 +276,8 @@ func TestScheduleErrorCases(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	schedulerService.Schedule(ctx, 10*time.Millisecond)
+	startSchedule := schedulerService.Schedule(10 * time.Millisecond)
+	startSchedule(ctx, 4*time.Millisecond)
 	// give some time for the scheduler to schedule two jobs
 	time.Sleep(25 * time.Millisecond)
 }
@@ -298,6 +307,7 @@ func TestSchedulePipeline(t *testing.T) {
 		TimeoutUnit: time.Millisecond,
 	}
 	logger := &logrus.Logger{Out: ioutil.Discard}
+	workChan := make(chan work.Work, 1)
 
 	dueJobs := []*domain.Job{j}
 
@@ -326,9 +336,9 @@ func TestSchedulePipeline(t *testing.T) {
 	workService := mock.NewMockWorkService(ctrl)
 	workService.
 		EXPECT().
-		Dispatch(w).
-		Return().
-		Times(1)
+		Dispatch().
+		Return(workChan).
+		MinTimes(1)
 	workService.
 		EXPECT().
 		CreateWork(j).
@@ -340,7 +350,8 @@ func TestSchedulePipeline(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	schedulerService.Schedule(ctx, 10*time.Millisecond)
+	startSchedule := schedulerService.Schedule(10 * time.Millisecond)
+	startSchedule(ctx, 4*time.Millisecond)
 
 	// give some time for the scheduler to schedule the job
 	time.Sleep(15 * time.Millisecond)
